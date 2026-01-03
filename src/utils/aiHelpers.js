@@ -3,6 +3,12 @@
 // Supports: Etsy + Amazon (A9) + Shopify (Google SEO)
 // =====================================================
 
+// DEBUG MODE - Set to false for production (disables console logs)
+const DEBUG_MODE = false;
+const log = (...args) => { if (DEBUG_MODE) log(...args); };
+const warn = (...args) => { if (DEBUG_MODE) warn(...args); };
+const error = (...args) => console.error(...args); // Always show errors
+
 // Platform rules
 export const PLATFORM_RULES = {
   etsy: { titleMaxChars: 140, keywordsCount: 13 },
@@ -63,10 +69,10 @@ const filterUrls = (groundingChunks, domain) => {
 };
 
 // =====================================================
-// STEP 1: IDENTIFY PRODUCT TYPE
+// STEP 1: IDENTIFY PRODUCT TYPE + CAMERA ANGLE
 // =====================================================
 const identifyProductType = async (cleanBase64, mimeType, apiKey, marketplace) => {
-  console.log('🔍 STEP 1: Identifying product...');
+  log('🔍 STEP 1: Identifying product and camera angle...');
 
   const marketplaceHints = {
     etsy: 'Best Etsy search query for similar handmade/vintage products',
@@ -78,16 +84,39 @@ const identifyProductType = async (cleanBase64, mimeType, apiKey, marketplace) =
     contents: [{
       parts: [
         {
-          text: `Analyze this product image. Return JSON only:
+          text: `Analyze this product image CAREFULLY. Return JSON only:
 {
   "product_type": "Specific product name",
+  "category": "One of: Kitchenware, Furniture, Pet Supplies, Jewelry, Clothing, Electronics, Art, Decor, Other",
   "search_query": "${marketplaceHints[marketplace] || marketplaceHints.shopify}",
-  "brand_suggestion": "Suggested brand name if applicable"
-}` },
+  "brand_suggestion": "Suggested brand name if applicable",
+  "camera_angle": "CRITICAL - Detect the CAMERA PERSPECTIVE used to take this photo:
+    - OVERHEAD: Camera looking STRAIGHT DOWN from above (bird's eye view, top-down)
+    - FRONT: Camera at eye level, facing product directly
+    - THREE_QUARTER: Camera at ~45 degree angle
+    - SIDE: Camera viewing from pure side profile
+    - FROM_BELOW: Camera looking upward at product
+    - FLAT_LAY: Product laid flat, photographed from directly above",
+  "product_placement": "How is the product positioned:
+    - ON_SURFACE: Product sitting/standing on a table, floor, or platform
+    - HANGING: Product suspended/hanging (ornaments, decorations with hooks/strings)
+    - WORN: Product being worn by a person
+    - MOUNTED: Product attached to wall/surface
+    - HELD_IN_HAND: Product held by someone's hand
+    - FLAT_LAY: Product laid flat on surface",
+  "is_hanging_product": "true if product has a hook, string, loop, or is designed to hang (like Christmas ornaments, decorations, keychains)",
+  "surface_visible": "true/false - is the supporting surface visible in photo?"
+}
+
+IMPORTANT DETECTION RULES:
+- If you see the TOP of the product more than the front = OVERHEAD
+- If product has a hanging loop/hook/string = is_hanging_product: true
+- Christmas decorations, ornaments, keychains are typically HANGING products
+- If photo is taken from above looking down = OVERHEAD or FLAT_LAY` },
         { inline_data: { mime_type: mimeType, data: cleanBase64 } }
       ]
     }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 256 }
+    generationConfig: { temperature: 0.1, maxOutputTokens: 512 }
   };
 
   const response = await fetch(
@@ -99,14 +128,25 @@ const identifyProductType = async (cleanBase64, mimeType, apiKey, marketplace) =
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('No response from Step 1');
-  return safeParseJSON(text);
+
+  const parsed = safeParseJSON(text);
+
+  // Ensure camera_angle has a default
+  if (!parsed.camera_angle) parsed.camera_angle = 'FRONT';
+  if (!parsed.product_placement) parsed.product_placement = 'ON_SURFACE';
+  if (parsed.is_hanging_product === undefined) parsed.is_hanging_product = false;
+
+  log('📐 Detected camera angle:', parsed.camera_angle);
+  log('📍 Product placement:', parsed.product_placement);
+
+  return parsed;
 };
 
 // =====================================================
 // STEP 2: MARKET SEARCH (Etsy, Amazon, or Google/Shopify)
 // =====================================================
 const searchMarket = async (searchQuery, apiKey, marketplace) => {
-  console.log(`🔎 STEP 2: Searching ${marketplace}...`);
+  log(`🔎 STEP 2: Searching ${marketplace}...`);
 
   const domainMap = {
     etsy: 'etsy.com',
@@ -168,7 +208,7 @@ Return JSON:
 // ETSY SEO GENERATION
 // =====================================================
 const generateEtsySEO = async (productType, marketData, cleanBase64, mimeType, apiKey) => {
-  console.log('📝 Generating Etsy SEO...');
+  log('📝 Generating Etsy SEO...');
 
   const competitorContext = marketData ? `
 REAL COMPETITOR DATA:
@@ -222,7 +262,7 @@ Return JSON:
 // AMAZON A9 ALGORITHM SEO GENERATION
 // =====================================================
 const generateAmazonSEO = async (productType, brandSuggestion, marketData, cleanBase64, mimeType, apiKey) => {
-  console.log('📦 Generating Amazon A9 SEO...');
+  log('📦 Generating Amazon A9 SEO...');
 
   const competitorContext = marketData ? `
 REAL AMAZON COMPETITOR DATA:
@@ -330,7 +370,7 @@ Return JSON only:
 // SHOPIFY (GOOGLE SEO) GENERATION
 // =====================================================
 const generateShopifySEO = async (productType, brandSuggestion, marketData, cleanBase64, mimeType, apiKey) => {
-  console.log('🛒 Generating Shopify (Google SEO)...');
+  log('🛒 Generating Shopify (Google SEO)...');
 
   const competitorContext = marketData ? `
 REAL COMPETITOR DATA:
@@ -440,7 +480,7 @@ Return JSON only:
 // MARKET INSIGHTS (Competition, Trend, Score)
 // =====================================================
 const analyzeMarketInsights = async (title, productType, apiKey, marketplace) => {
-  console.log('📊 Analyzing market insights...');
+  log('📊 Analyzing market insights...');
 
   const domainMap = {
     etsy: 'etsy.com',
@@ -502,15 +542,33 @@ Return JSON:
 // MAIN API CALL - 3 MARKETPLACE SUPPORT
 // =====================================================
 export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => {
-  if (!apiKey || apiKey.trim() === '') {
+  const cleanKey = apiKey ? apiKey.trim() : '';
+  if (!cleanKey) {
     throw new Error('API key required');
   }
 
-  console.log(`🚀 Starting ${marketplace.toUpperCase()} Analysis...`);
+  // 🛡️ API KEY VALIDATION
+  // Gemini API keys typically start with "AIza"
+  // Vertex AI keys typically start with "AQ" (or similar service account tokens)
+  if (cleanKey.startsWith('AQ') || cleanKey.includes('.')) {
+    // Heuristic: Vertex keys often have dots or start with AQ. Gemini keys are cleaner Base64-like strings starting with AIza.
+    // However, simpler check is AQ start vs AIza start.
+    // Let's stick to the specific case observed (AQ...)
+  }
+
+  if (cleanKey.startsWith('AQ')) {
+    throw new Error('⚠️ Wrong API Key: You provided a Vertex AI Key in the "Google Gemini API Key" field. Please enter a valid Gemini Key (starts with AIza...) in the blue field.');
+  }
+
+  log(`🚀 Starting ${marketplace.toUpperCase()} Analysis...`);
 
   const cleanBase64 = base64ImageDataUrl.replace(/^data:image\/\w+;base64,/, "");
   const mimeTypeMatch = base64ImageDataUrl.match(/data:([^;]+);/);
   const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+
+  // Export internal functions if they need to be accessed directly
+  // Note: analyzeText is not defined in the provided original code.
+  // export { identifyProductType, searchMarket, generateEtsySEO, analyzeImage, analyzeText };
 
   try {
     // STEP 1: Identify product
@@ -565,6 +623,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
     // Build response based on marketplace
     const result = {
       marketplace: marketplace,
+      category: productInfo.category, // IMPORTANT: Expose category for AI Studio Mode
       ...seoData,
       marketInsights: marketInsights,
       _productInfo: productInfo,
@@ -577,7 +636,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
       ? `✅ Complete with REAL ${marketplace} data!`
       : '✅ Complete (AI-based)';
 
-    console.log('🎉 FINAL RESULT:', result);
+    log('🎉 FINAL RESULT:', result);
     return result;
 
   } catch (error) {
@@ -587,13 +646,340 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
   }
 };
 
+// =====================================================
+// SMART AI STUDIO MODE (Context-Aware Photography)
+// =====================================================
+
+// Helper: Compress image for API (max 800x800, 70% quality JPEG)
+const compressImageForAPI = (base64Image) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 800;
+
+      let width = img.width;
+      let height = img.height;
+
+      // Scale down to max 800x800
+      if (width > height) {
+        if (width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to JPEG at 70% quality (much smaller than PNG)
+      const compressed = canvas.toDataURL('image/jpeg', 0.7);
+      resolve(compressed);
+    };
+
+    // Handle both data URL and raw base64
+    if (base64Image.startsWith('data:')) {
+      img.src = base64Image;
+    } else {
+      img.src = `data:image/jpeg;base64,${base64Image}`;
+    }
+  });
+};
+
+// SCENE MAPPING DICTIONARY (Akıllı Sahne Eşleştirme)
+export const SCENE_MAPPINGS = {
+  'Kitchenware': {
+    prompt: 'marble kitchen countertop, morning sunlight, fresh croissants nearby, photorealistic, 8k',
+    keywords: 'marble,kitchen,countertop,morning,breakfast'
+  },
+  'Furniture': {
+    prompt: 'modern scandinavian living room, large window, soft daylight, interior design magazine style',
+    keywords: 'scandinavian,living,room,interior,modern,furniture'
+  },
+  'Pet Supplies': {
+    prompt: 'cozy home garden with green grass, sunny day, shallow depth of field, vibrant colors',
+    keywords: 'pet,garden,grass,outdoor,sunny,dogs'
+  },
+  'Jewelry': {
+    prompt: 'dark velvet texture, dramatic studio lighting, macro shot, sparkling reflection, luxury',
+    keywords: 'jewelry,velvet,luxury,macro,gold,diamond'
+  },
+  'Clothing': {
+    prompt: 'minimalist fashion studio, neutral background, soft professional lighting, high fashion',
+    keywords: 'fashion,studio,clothing,minimalist,model'
+  },
+  'Electronics': {
+    prompt: 'sleek modern desk setup, neon ambient lighting, tech reviewer style, clean composition',
+    keywords: 'tech,electronics,desk,modern,gadget,workspace'
+  },
+  'Art': {
+    prompt: 'art gallery wall, gallery track lighting, museum quality display, white wall background',
+    keywords: 'art,gallery,museum,wall,minimal,white'
+  },
+  'Other': {
+    prompt: 'minimalist concrete podium, soft shadows, studio lighting, product photography',
+    keywords: 'product,studio,minimal,concrete,podium'
+  }
+};
+
+// Generate AI Studio Image (Backend Integration with Gemini)
+export const generateStudioImage = async (category, imageBase64 = null, productInfo = {}) => {
+  log(`✨ Smart AI Studio: Generating scene for ${category}...`);
+  log(`📐 Camera angle: ${productInfo.camera_angle || 'FRONT'}`);
+  log(`📍 Placement: ${productInfo.product_placement || 'ON_SURFACE'}`);
+
+  const sceneConfig = SCENE_MAPPINGS[category] || SCENE_MAPPINGS['Other'];
+  log(`🎨 Scene: "${sceneConfig.prompt}"`);
+
+  try {
+    // Compress image to reduce payload size (max 800x800, 70% quality)
+    let compressedImage = null;
+    if (imageBase64) {
+      log('🗜️ Compressing image for API...');
+      compressedImage = await compressImageForAPI(imageBase64);
+      log(`📦 Compressed: ${Math.round(compressedImage.length / 1024)}KB`);
+    }
+
+    // Call Python backend serverless function
+    log('📡 Calling backend API...');
+
+    // Get Vertex API key from localStorage
+    const vertexApiKey = localStorage.getItem('volla_vertex_api_key') || '';
+
+    const response = await fetch('/api/generate-studio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: category,
+        image: compressedImage, // Send compressed image
+        edit_mode: 'background_swap',
+        vertex_api_key: vertexApiKey, // Send Vertex API key for Imagen 3
+        // Camera angle detection info
+        camera_angle: productInfo.camera_angle || 'FRONT',
+        product_placement: productInfo.product_placement || 'ON_SURFACE',
+        is_hanging_product: productInfo.is_hanging_product || false,
+        product_type: productInfo.product_type || ''
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend HTTP error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('📦 Backend response:', data);
+
+    // Log any backend error message
+    if (data.error_message) {
+      warn('⚠️ Backend warning:', data.error_message);
+    }
+
+    // Check for generated image and background
+    const imageUrl = data.generated_image || data.image_url;
+    const backgroundUrl = data.background_url;
+
+    if (imageUrl || backgroundUrl) {
+      log('✅ Studio data received from backend');
+      log(`   Method: ${data.method_used}`);
+      // Return object with both image and background for composite
+      return {
+        image: imageUrl,
+        background: backgroundUrl,
+        method: data.method_used,
+        supportsComposite: data.supports_composite
+      };
+    } else {
+      warn('⚠️ No image in backend response, using fallback');
+      throw new Error('No generated image in response');
+    }
+
+  } catch (error) {
+    console.error('❌ Backend failed:', error.message);
+    log('🔄 Falling back to demo mode...');
+
+    // Fallback: Return background URL for composite
+    const sceneConfig = SCENE_MAPPINGS[category] || SCENE_MAPPINGS['Other'];
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return {
+      image: null,
+      background: `https://source.unsplash.com/800x800/?${sceneConfig.keywords}`,
+      method: 'Fallback',
+      supportsComposite: true
+    };
+  }
+};
+
+// =====================================================
+// MULTI-ANGLE SHOT GENERATOR v3.0 (Dynamic Detection)
+// Analyzes input angle, generates OPPOSITE angles
+// =====================================================
+
+export const generateProductAngles = async (sourceImage, isStudioImage = false) => {
+  log('🎬 Multi-Angle Generator v3.0 (Dynamic Detection): Starting...');
+  log(`   Is Studio Image: ${isStudioImage}`);
+
+  if (!sourceImage) {
+    throw new Error('No source image provided');
+  }
+
+  try {
+    // Compress source image if needed
+    let compressedImage = sourceImage;
+    if (sourceImage.length > 500000) {
+      log('🗜️ Compressing source image...');
+      compressedImage = await compressImageForAPI(sourceImage);
+    }
+
+    log('📡 Calling multi-angle backend v3.0...');
+
+    // Get Vertex API key from localStorage
+    const vertexApiKey = localStorage.getItem('volla_vertex_api_key') || '';
+
+    const response = await fetch('/api/generate-angles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source_image: compressedImage,
+        is_studio_image: isStudioImage,
+        vertex_api_key: vertexApiKey // Send Vertex API key for Imagen 3
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend HTTP error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('📦 Multi-angle v3.0 response:', data);
+
+    if (data.detected_angle) {
+      log(`📐 Detected angle: ${data.detected_angle}`);
+    }
+
+    if (data.error) {
+      warn('⚠️ Backend error:', data.error);
+      throw new Error(data.error);
+    }
+
+    if (data.success) {
+      log('✅ Dynamic multi-angle generation complete!');
+
+      // v3.0 returns shot1/2/3 with dynamic labels
+      return {
+        success: true,
+        // Map shots to display format
+        shot1: data.shot1,
+        shot2: data.shot2,
+        shot3: data.shot3,
+        // Dynamic labels based on detected angle
+        labels: data.shot_names || {
+          shot1: 'Rotation',
+          shot2: 'Context',
+          shot3: 'Detail'
+        },
+        detectedAngle: data.detected_angle,
+        baseDescription: data.base_description
+      };
+    } else {
+      throw new Error('Generation failed');
+    }
+
+  } catch (err) {
+    error('❌ Multi-angle generation failed:', err.message);
+    throw err;
+  }
+};
+
+// =====================================================
+// REAL LIFE PHOTOS GENERATOR - Hyper-Realistic Lifestyle
+// Generates product photos in real-world usage contexts
+// =====================================================
+
+export const generateRealLifePhotos = async (sourceImage, productInfo = {}) => {
+  log('🌟 Real Life Photos Generator: Starting...');
+  log(`   Product: ${productInfo.product_type || 'unknown'}`);
+  log(`   Category: ${productInfo.category || 'unknown'}`);
+
+  if (!sourceImage) {
+    throw new Error('No source image provided');
+  }
+
+  try {
+    // Compress source image if needed
+    let compressedImage = sourceImage;
+    if (sourceImage.length > 500000) {
+      log('🗜️ Compressing source image...');
+      compressedImage = await compressImageForAPI(sourceImage);
+    }
+
+    log('📡 Calling Real Life backend...');
+
+    // Get Vertex API key from localStorage
+    const vertexApiKey = localStorage.getItem('volla_vertex_api_key') || '';
+
+    const response = await fetch('/api/generate-reallife', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source_image: compressedImage,
+        product_info: productInfo,
+        vertex_api_key: vertexApiKey
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend HTTP error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('📦 Real Life response:', data);
+
+    if (data.error) {
+      warn('⚠️ Backend error:', data.error);
+      throw new Error(data.error);
+    }
+
+    if (data.success) {
+      log('✅ Real Life generation complete!');
+      log(`   📦 Analysis: ${data.analysis?.product_type || 'N/A'}`);
+
+      return {
+        success: true,
+        shot1: data.shot1,
+        shot2: data.shot2,
+        shot3: data.shot3,
+        analysis: data.analysis,
+        labels: {
+          shot1: data.analysis?.lifestyle_contexts?.[0]?.scene?.substring(0, 30) || 'Lifestyle 1',
+          shot2: data.analysis?.lifestyle_contexts?.[1]?.scene?.substring(0, 30) || 'Lifestyle 2',
+          shot3: data.analysis?.lifestyle_contexts?.[2]?.scene?.substring(0, 30) || 'Lifestyle 3'
+        }
+      };
+    } else {
+      throw new Error('Generation failed');
+    }
+
+  } catch (err) {
+    error('❌ Real Life generation failed:', err.message);
+    throw err;
+  }
+};
+
 // Main analyze function - IMAGE MODE (PRESERVED)
 export const analyzeImage = async (base64Image, marketplace, apiKey) => {
   if (!apiKey || apiKey.trim() === '') {
     throw new Error('No API key');
   }
 
-  console.log(`🔍 Starting ${marketplace.toUpperCase()} IMAGE analysis...`);
+  log(`🔍 Starting ${marketplace.toUpperCase()} IMAGE analysis...`);
   lastApiStatus = `⏳ Analyzing image for ${marketplace}...`;
 
   return await callGeminiAPI(base64Image, marketplace, apiKey);
@@ -605,7 +991,7 @@ export const analyzeImage = async (base64Image, marketplace, apiKey) => {
 
 // TEXT MODE: Rewrite text and generate marketplace-specific SEO
 const generateSEOFromText = async (inputText, marketplace, apiKey) => {
-  console.log(`📝 TEXT MODE: Generating ${marketplace} SEO from text...`);
+  log(`📝 TEXT MODE: Generating ${marketplace} SEO from text...`);
 
   // Build marketplace-specific prompt
   let marketplacePrompt = '';
@@ -724,7 +1110,7 @@ ${marketplacePrompt}`
 
 // TEXT MODE: Search market for context
 const searchMarketForText = async (inputText, apiKey, marketplace) => {
-  console.log(`🔎 TEXT MODE: Searching ${marketplace} market...`);
+  log(`🔎 TEXT MODE: Searching ${marketplace} market...`);
 
   const domainMap = {
     etsy: 'etsy.com',
@@ -787,7 +1173,7 @@ export const analyzeText = async (inputText, marketplace, apiKey) => {
     throw new Error('Please enter at least 10 characters of product description');
   }
 
-  console.log(`📝 Starting ${marketplace.toUpperCase()} TEXT analysis...`);
+  log(`📝 Starting ${marketplace.toUpperCase()} TEXT analysis...`);
   lastApiStatus = `⏳ Processing text for ${marketplace}...`;
 
   try {
@@ -823,7 +1209,7 @@ export const analyzeText = async (inputText, marketplace, apiKey) => {
       ? `✅ Complete with REAL ${marketplace} data!`
       : '✅ Complete (AI-based)';
 
-    console.log('🎉 TEXT MODE RESULT:', result);
+    log('🎉 TEXT MODE RESULT:', result);
     return result;
 
   } catch (error) {

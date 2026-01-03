@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, Key, Save } from 'lucide-react';
+import { X, Key, Save, Sparkles } from 'lucide-react';
 import { getLastApiStatus } from '../utils/aiHelpers';
 
 export default function SettingsModal({ isOpen, onClose }) {
     const [apiKey, setApiKey] = useState(localStorage.getItem('volla_api_key') || '');
+    const [vertexApiKey, setVertexApiKey] = useState(localStorage.getItem('volla_vertex_api_key') || '');
     const [saved, setSaved] = useState(false);
     const [apiStatus, setApiStatus] = useState('Waiting for scan...');
 
@@ -17,6 +18,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
     const handleSave = () => {
         localStorage.setItem('volla_api_key', apiKey);
+        localStorage.setItem('volla_vertex_api_key', vertexApiKey);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };
@@ -56,11 +58,12 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </p>
                 </div>
 
-                {/* API Key Input */}
+                {/* API Keys Section */}
                 <div className="space-y-4 mb-6">
+                    {/* Gemini API Key */}
                     <div>
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            Google Gemini API Key
+                            🔵 Google Gemini API Key
                         </label>
                         <input
                             type="password"
@@ -69,8 +72,26 @@ export default function SettingsModal({ isOpen, onClose }) {
                             placeholder="AIza..."
                             className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300"
                         />
-                        <p className="mt-2 text-xs text-zinc-500">
-                            Your API key is stored locally and never sent to our servers
+                        <p className="mt-1 text-xs text-zinc-500">
+                            For product analysis & SEO generation
+                        </p>
+                    </div>
+
+                    {/* Vertex API Key (Imagen 3) */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-amber-400" />
+                            Vertex AI API Key (Imagen 3)
+                        </label>
+                        <input
+                            type="password"
+                            value={vertexApiKey}
+                            onChange={(e) => setVertexApiKey(e.target.value)}
+                            placeholder="AQ.Ab8..."
+                            className="w-full px-4 py-3 bg-zinc-800 border border-amber-700/50 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                        />
+                        <p className="mt-1 text-xs text-zinc-500">
+                            For AI Studio & Multi-Angle Shots (BGSWAP)
                         </p>
                     </div>
                 </div>
@@ -96,9 +117,9 @@ export default function SettingsModal({ isOpen, onClose }) {
                 </button>
 
                 {/* Info */}
-                <div className="mt-4 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
+                <div className="mt-4 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg space-y-2">
                     <p className="text-xs text-zinc-400">
-                        💡 <strong className="text-white">How to get API key:</strong> Visit{' '}
+                        💡 <strong className="text-white">Gemini API:</strong>{' '}
                         <a
                             href="https://aistudio.google.com/app/apikey"
                             target="_blank"
@@ -106,6 +127,17 @@ export default function SettingsModal({ isOpen, onClose }) {
                             className="text-violet-400 hover:text-violet-300 underline"
                         >
                             Google AI Studio
+                        </a>
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                        ✨ <strong className="text-white">Vertex AI:</strong>{' '}
+                        <a
+                            href="https://console.cloud.google.com/vertex-ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-400 hover:text-amber-300 underline"
+                        >
+                            Google Cloud Console
                         </a>
                     </p>
                 </div>
@@ -131,11 +163,13 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </p>
                 </div>
 
-                {/* Powered by Gemini */}
+                {/* Powered by */}
                 <div className="mt-4 text-center">
                     <p className="text-xs text-zinc-600">
                         Powered by{' '}
-                        <span className="text-violet-400 font-semibold">Google Gemini 1.5 Flash</span>
+                        <span className="text-violet-400 font-semibold">Gemini</span>
+                        {' + '}
+                        <span className="text-amber-400 font-semibold">Imagen 3</span>
                     </p>
                 </div>
             </div>
@@ -160,3 +194,4 @@ export default function SettingsModal({ isOpen, onClose }) {
         </div>
     );
 }
+
