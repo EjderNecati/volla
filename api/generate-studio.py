@@ -54,6 +54,58 @@ except ImportError as e:
 # ===============================================
 
 def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type):
+    """Generate SHORT, FOCUSED prompt for Imagen 3 - less is more"""
+    
+    # CORE PRINCIPLE: Imagen 3 responds better to short, direct instructions
+    # Long rule-lists confuse the model. Be brief and clear.
+    
+    # Staging decision based on product type
+    product_lower = (product_type or "").lower()
+    staging_phrase = ""
+    
+    # Smart staging detection
+    if any(k in product_lower for k in ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'dress', 'blouse']):
+        staging_phrase = "on a minimal wooden clothes hanger"
+    elif any(k in product_lower for k in ['necklace', 'pendant', 'chain', 'bracelet']):
+        staging_phrase = "on an elegant black jewelry display stand"
+    elif any(k in product_lower for k in ['ring', 'earring']):
+        staging_phrase = "on a velvet jewelry display pad"
+    elif any(k in product_lower for k in ['ornament', 'keychain', 'decoration']) or is_hanging_product:
+        staging_phrase = "hanging from an elegant display hook"
+    elif any(k in product_lower for k in ['shoe', 'sneaker', 'boot']):
+        staging_phrase = "standing on floor"
+    elif any(k in product_lower for k in ['bag', 'purse', 'backpack']):
+        staging_phrase = "standing upright on surface"
+    elif any(k in product_lower for k in ['watch', 'clock']):
+        staging_phrase = "on a watch display stand"
+    elif any(k in product_lower for k in ['glass', 'cup', 'mug', 'bottle']):
+        staging_phrase = "standing on surface"
+    else:
+        staging_phrase = "placed naturally on surface"
+    
+    # Camera angle phrase
+    angle_phrases = {
+        "OVERHEAD": "from overhead view",
+        "FLAT_LAY": "flat lay from above",
+        "FRONT": "from front view",
+        "THREE_QUARTER": "from three-quarter angle",
+        "SIDE": "from side view",
+        "FROM_BELOW": "from low angle"
+    }
+    angle_phrase = angle_phrases.get(camera_angle, "from front view")
+    
+    # BGSWAP MODE: Prompt should describe ONLY the new background
+    # The model automatically preserves the subject/product
+    # Describing the product may confuse the model!
+    prompt = """Clean warm beige studio background (#E8DDD0). 
+Seamless cyclorama backdrop with soft diffused lighting.
+Professional product photography studio setup.
+Natural contact shadow beneath the product on the floor."""
+    
+    return prompt
+
+
+# Legacy static prompt (fallback)
     """Generate prompt based on detected camera angle and product type"""
     
     base_prompt = """Professional e-commerce product photography studio.
@@ -147,12 +199,45 @@ PRODUCT STAGING: WORN BY PERSON
 PRODUCT STAGING: WALL MOUNTED
 - Product mounted on clean wall surface
 - Visible mounting mechanism
+""",
+        "APPAREL_HANGER": """
+👕 PRODUCT STAGING: CLOTHING ON HANGER
+- T-shirts, shirts, jackets MUST be shown on a CLOTHES HANGER
+- Use a professional, minimal wooden or black velvet hanger
+- Hanger hook visible at top, clothing hanging naturally
+- Product hangs with gravity, slight natural drape
+- NO floating clothing - hanger provides support
+- This is how clothing is photographed in professional studios
+""",
+        "JEWELRY_STAND": """
+💎 PRODUCT STAGING: JEWELRY ON DISPLAY STAND
+- Necklaces, pendants, chains MUST be on jewelry display stand/bust
+- Use elegant black velvet or white jewelry bust/stand
+- Jewelry draped naturally over display form
+- NO floating jewelry - display stand provides support
+- This is how jewelry is photographed in professional studios
 """
     }
     
     # Get appropriate instructions
     angle_inst = angle_instructions.get(camera_angle, angle_instructions["FRONT"])
     placement_inst = placement_instructions.get(product_placement, placement_instructions["ON_SURFACE"])
+    
+    # SMART PRODUCT-TYPE DETECTION for staging
+    product_type_lower = (product_type or "").lower()
+    product_staging_override = ""
+    
+    # Clothing/Apparel detection
+    apparel_keywords = ['shirt', 't-shirt', 'tshirt', 'hoodie', 'jacket', 'sweater', 'blouse', 'dress', 'coat', 'vest', 'polo']
+    if any(keyword in product_type_lower for keyword in apparel_keywords):
+        product_staging_override = placement_instructions["APPAREL_HANGER"]
+        print(f"   👕 Detected APPAREL - Using hanger staging")
+    
+    # Jewelry detection
+    jewelry_keywords = ['necklace', 'pendant', 'chain', 'choker', 'collar']
+    if any(keyword in product_type_lower for keyword in jewelry_keywords):
+        product_staging_override = placement_instructions["JEWELRY_STAND"]
+        print(f"   💎 Detected JEWELRY - Using stand staging")
     
     # Special handling for hanging products
     hanging_override = ""
@@ -178,18 +263,129 @@ PRODUCT STAGING: WALL MOUNTED
 - Professional product photography - customer must believe this is real
 """
     
-    # Product preservation
+    # COMPREHENSIVE PRODUCT PRESERVATION - ALL MATERIALS, COMPONENTS, TEXTURES
     preservation = """
-PRODUCT PRESERVATION (CRITICAL):
-- Product must remain COMPLETELY UNCHANGED
-- Same color (exact shade)
-- Same design (all text, logos, prints preserved)
-- Same texture and material appearance
-- Same size and proportions
+═══════════════════════════════════════════════════════════════════════════════════
+⚠️⚠️⚠️ COMPLETE PRODUCT PRESERVATION - ABSOLUTE ZERO-TOLERANCE RULES ⚠️⚠️⚠️
+═══════════════════════════════════════════════════════════════════════════════════
+
+🔬 CRITICAL PRE-ANALYSIS (MANDATORY):
+Before generating, analyze the reference image component-by-component:
+1. What MATERIALS are present? (plastic, wood, metal, glass, fabric, acrylic, plexiglass, ceramic, leather, etc.)
+2. What COMPONENTS exist? (hinges, locks, screws, buttons, zippers, handles, latches, etc.)
+3. What TEXTURES are visible? (smooth, rough, woven, knit, brushed, matte, glossy, transparent, etc.)
+4. Any TEXT, LOGOS, PRINTS? (exact position, font, color, size)
+5. Multiple materials combined? (wood+glass, metal+plastic, fabric+leather, etc.)
+
+═══════════════════════════════════════════════════════════════════════════════════
+🧱 MATERIAL PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+TRANSPARENT/CLEAR MATERIALS (CRITICAL - DO NOT DELETE):
+- Glass, plexiglass, acrylic, clear plastic → MUST remain TRANSPARENT/CLEAR
+- You can see THROUGH these - this property MUST be preserved
+- Transparent panels reveal what's behind them - show this correctly
+- NEVER turn transparent into opaque, NEVER delete clear components
+
+WOOD → Stays wood (grain pattern, warm color, natural texture)
+METAL → Stays metal (shiny, brushed, or matte metallic surface)
+PLASTIC → Stays plastic (smooth, uniform, synthetic look)
+FABRIC → Stays fabric (woven texture, drape, folds)
+LEATHER → Stays leather (grain, slight sheen, natural creases)
+CERAMIC → Stays ceramic (smooth, glazed or matte finish)
+RUBBER → Stays rubber (matte, flexible appearance)
+
+🚫 MATERIAL TRANSFORMATION FORBIDDEN:
+- Knit fabric → NEVER becomes plastic
+- Plastic → NEVER becomes knit/woven
+- Wood → NEVER becomes metal
+- Glass/Plexiglass → NEVER becomes opaque/solid
+- Metal hardware → NEVER becomes plastic
+- Leather → NEVER becomes synthetic
+
+═══════════════════════════════════════════════════════════════════════════════════
+🔧 HARDWARE & COMPONENT PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+ALL FUNCTIONAL COMPONENTS MUST BE PRESERVED EXACTLY:
+- Hinges → Exact same position, size, color, type
+- Locks/Latches → Exact same mechanism, text on them preserved
+- Screws/Bolts → Exact count, position, color
+- Handles/Knobs → Exact shape, material, position
+- Zippers → Exact style, color, pull tab design
+- Buttons → Exact count, color, size, spacing
+- Buckles/Clasps → Exact mechanism, material
+- Wheels/Casters → Exact type, color, position
+- Vents/Openings → Exact size, pattern, position
+- Labels/Tags → Exact position, text, color
+
+TEXT ON HARDWARE: If a lock has "LOCK" written on it, that text stays.
+SMALL DETAAILS MATTER: If there are 4 screws, output has 4 screws.
+
+═══════════════════════════════════════════════════════════════════════════════════
+🎨 TEXTURE & PATTERN PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+TEXTURES MUST REMAIN IDENTICAL:
+- Woven patterns → Same weave style and density
+- Knit patterns → Same stitch type and size
+- Wood grain → Same grain direction and pattern
+- Brushed metal → Same brush direction
+- Matte surfaces → Stay matte
+- Glossy surfaces → Stay glossy
+
+PATTERNS:
+- Stripes → Same width, color, direction
+- Prints → Exact same design placement
+- Colorblock → Same color boundaries
+- Geometric patterns → Same angles and proportions
+
+═══════════════════════════════════════════════════════════════════════════════════
+✏️ TEXT/LOGO PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+🚫 FORBIDDEN:
+- NEVER move text/logo position
+- NEVER change font
+- NEVER change text color
+- NEVER add text that doesn't exist
+- NEVER delete text that exists
+- NEVER alter what the text says
+
+✅ REQUIRED:
+- Collar logo → Stays on collar only
+- Chest logo → Stays on chest only
+- Plain product → Stays plain, NO additions
+- Hardware labels → Preserved exactly
+
+═══════════════════════════════════════════════════════════════════════════════════
+🎯 COLOR PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+- Every color must match EXACTLY
+- Multi-color products: each color zone preserved
+- Color gradients preserved exactly
+- No color shifts or tint changes
+- White stays white (not cream)
+- Black stays black (not gray)
+
+═══════════════════════════════════════════════════════════════════════════════════
+📐 STRUCTURE & PROPORTION PRESERVATION (100% MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════════
+
+- Same overall size/proportions
+- Same component positions
+- Same angles between parts
+- Same gaps/spacing
+- Assembly structure unchanged
+- If product has specific geometry → preserved exactly
+
+═══════════════════════════════════════════════════════════════════════════════════
 """
+
     
-    # Combine all parts
-    full_prompt = base_prompt + angle_inst + placement_inst + hanging_override + anti_floating + preservation
+    # Combine all parts with priority order
+    full_prompt = base_prompt + angle_inst + placement_inst + product_staging_override + hanging_override + anti_floating + preservation
     
     return full_prompt
 
@@ -365,7 +561,30 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None):
                 reference_image=types.Image(image_bytes=image_bytes)
             )
             
-            # Edit with BGSWAP mode
+            # Try INPAINT with auto background mask FIRST
+            # This automatically masks background and preserves the product
+            try:
+                print(f"   Trying INPAINT with MASK_MODE_BACKGROUND...")
+                response = client.models.edit_image(
+                    model=model_name,
+                    prompt=prompt_to_use,
+                    reference_images=[reference_image],
+                    config=types.EditImageConfig(
+                        edit_mode='EDIT_MODE_INPAINT_INSERTION',
+                        mask_mode='MASK_MODE_BACKGROUND',
+                        number_of_images=1
+                    )
+                )
+                
+                if response.generated_images:
+                    img_bytes = response.generated_images[0].image.image_bytes
+                    img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                    print(f"   ✅ Success with INPAINT + MASK_MODE_BACKGROUND")
+                    return f"data:image/png;base64,{img_b64}"
+            except Exception as inpaint_error:
+                print(f"   ⚠️ INPAINT failed: {str(inpaint_error)[:50]}, trying BGSWAP...")
+            
+            # Fallback to BGSWAP mode
             response = client.models.edit_image(
                 model=model_name,
                 prompt=prompt_to_use,
@@ -380,7 +599,7 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None):
             if response.generated_images:
                 img_bytes = response.generated_images[0].image.image_bytes
                 img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                print(f"   ✅ Success with {model_name}")
+                print(f"   ✅ Success with {model_name} BGSWAP")
                 return f"data:image/png;base64,{img_b64}"
                 
         except Exception as e:

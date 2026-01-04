@@ -822,9 +822,9 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
 // Analyzes input angle, generates OPPOSITE angles
 // =====================================================
 
-export const generateProductAngles = async (sourceImage, isStudioImage = false) => {
+export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO') => {
   log('🎬 Multi-Angle Generator v3.0 (Dynamic Detection): Starting...');
-  log(`   Is Studio Image: ${isStudioImage}`);
+  log(`   Source Context: ${sourceContext}`);
 
   if (!sourceImage) {
     throw new Error('No source image provided');
@@ -848,7 +848,7 @@ export const generateProductAngles = async (sourceImage, isStudioImage = false) 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         source_image: compressedImage,
-        is_studio_image: isStudioImage,
+        source_context: sourceContext, // NEW: 'STUDIO' or 'LIFE' - tells backend to preserve scene
         vertex_api_key: vertexApiKey // Send Vertex API key for Imagen 3
       })
     });

@@ -96,6 +96,14 @@ STAGING_MAP = {
         "angles": ["front view ghost mannequin", "side view", "back view"],
         "staging": "Ghost mannequin 3D effect, bottom hem touching floor/surface"
     },
+    "APPAREL_HANGER": {
+        "angles": ["front view on hanger", "side view on hanger", "back view on hanger"],
+        "staging": "Clothing hanging on minimal wooden or black velvet clothes hanger, hanger hook visible at top, natural drape with gravity"
+    },
+    "JEWELRY_STAND": {
+        "angles": ["front view on display stand", "side view on bust", "three-quarter on jewelry form"],
+        "staging": "Jewelry displayed on elegant black velvet or white jewelry bust/stand, draped naturally over display form"
+    },
     "WALL_MOUNTED": {
         "angles": ["straight-on front", "angled left view", "angled right view"],
         "staging": "Mounted on clean wall with visible mounting hardware"
@@ -142,12 +150,15 @@ class handler(BaseHTTPRequestHandler):
             source_image = data.get('image', '') or data.get('source_image', '')
             product_desc = data.get('productDescription', 'Product item')
             request_vertex_key = data.get('vertex_api_key', '')
+            # NEW: Source context from frontend (STUDIO or LIFE)
+            source_context = data.get('source_context', 'STUDIO')
             
             # Use request key or fall back to env var
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
             
             print(f"🖼️ Image: {len(source_image)} chars")
             print(f"📦 Product: {product_desc[:50]}...")
+            print(f"🎬 Source Context: {source_context}")
             print(f"🔑 Vertex Key: {'from request' if request_vertex_key else 'from env'}")
             
             results = {
@@ -198,6 +209,13 @@ class handler(BaseHTTPRequestHandler):
             print(f"   🎯 Category: {category}")
             print(f"   🎄 Is Hanging Product: {is_hanging_product}")
             
+            # Step 1b: Analyze scene if LIFE context
+            scene_info = None
+            if source_context == 'LIFE':
+                print("🏞️ Analyzing Real Life scene...")
+                scene_info = analyze_scene(image_bytes)
+                print(f"   🌍 Scene: {scene_info.get('location', 'Unknown')}")
+            
             # Get staging config
             config = STAGING_MAP.get(category, STAGING_MAP['STANDARD_GROUND'])
             angles = config['angles']
@@ -223,7 +241,9 @@ class handler(BaseHTTPRequestHandler):
                     staging=staging,
                     product_desc=product_desc,
                     api_key=active_vertex_key,
-                    is_hanging_product=is_hanging_product
+                    is_hanging_product=is_hanging_product,
+                    source_context=source_context,
+                    scene_info=scene_info
                 )
                 
                 if shot_image:
@@ -279,7 +299,53 @@ def classify_physics(image_bytes):
     return {'category': 'STANDARD_GROUND', 'detected_object': 'Product'}
 
 
-def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False):
+# ===============================================
+# SCENE ANALYSIS FOR LIFE CONTEXT
+# ===============================================
+
+SCENE_ANALYSIS_PROMPT = """You are an expert scene analyst for product photography.
+
+Analyze this Real Life / Lifestyle product image and describe the scene:
+
+Respond ONLY with JSON:
+{
+    "scene_type": "indoor" or "outdoor",
+    "location": "Brief location description (living room, office, garden, cafe, etc.)",
+    "lighting": "Lighting type (natural daylight, warm indoor, golden hour, professional studio)",
+    "atmosphere": "Color mood (warm, cool, neutral, vibrant)",
+    "key_elements": "Main environmental elements visible (furniture, plants, architecture, nature)"
+}"""
+
+
+def analyze_scene(image_bytes):
+    """Analyze the scene/environment of a Real Life image"""
+    try:
+        if genai_old:
+            model = genai_old.GenerativeModel('gemini-2.0-flash-exp')
+            response = model.generate_content([
+                SCENE_ANALYSIS_PROMPT,
+                {"mime_type": "image/jpeg", "data": image_bytes}
+            ])
+            
+            if response.text:
+                text = response.text.strip()
+                if '{' in text and '}' in text:
+                    start = text.index('{')
+                    end = text.rindex('}') + 1
+                    return json.loads(text[start:end])
+    except Exception as e:
+        print(f"   ⚠️ Scene analysis failed: {e}")
+    
+    return {
+        'scene_type': 'indoor',
+        'location': 'lifestyle setting',
+        'lighting': 'natural',
+        'atmosphere': 'neutral',
+        'key_elements': 'environmental context'
+    }
+
+
+def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None):
     """Generate a single angle shot using Imagen 3 with reference image"""
     
     # Special staging for hanging products
@@ -295,42 +361,71 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
 - The display/stand/hook must be clearly visible in the image
 """
     
-    # Build the prompt
-    prompt = f"""Professional product photography - {angle_description}
+    # ═══════════════════════════════════════════════════════════════════
+    # CONTEXT-AWARE PROMPT BUILDING
+    # ═══════════════════════════════════════════════════════════════════
+    
+    if source_context == 'LIFE' and scene_info:
+        # LIFE MODE: Preserve the Real Life scene environment
+        scene_type = scene_info.get('scene_type', 'indoor')
+        location = scene_info.get('location', 'lifestyle setting')
+        lighting = scene_info.get('lighting', 'natural')
+        atmosphere = scene_info.get('atmosphere', 'neutral')
+        key_elements = scene_info.get('key_elements', 'environmental context')
+        
+        prompt = f"""LIFESTYLE SCENE PRODUCT PHOTOGRAPHY - {angle_description}
+
+🏞️ SCENE PRESERVATION MODE (CRITICAL):
+You are showing the product from a different angle WITHIN THE SAME REAL-LIFE SCENE.
+This is NOT a studio shot - preserve the EXACT environment!
 
 REFERENCE IMAGE:
-Use the provided reference image as the EXACT product to show.
-The product must remain 100% IDENTICAL:
-- Same color (exact shade)
-- Same design (all text, logos, prints preserved)
-- Same texture and material appearance
-- Same components (hardware, details)
+Use the provided reference image. Preserve BOTH:
+1. The EXACT product (100% identical: color, design, texture, details)
+2. The EXACT scene environment (location, lighting, atmosphere)
+
+SCENE CONTEXT TO PRESERVE:
+- Scene type: {scene_type}
+- Location: {location}
+- Lighting: {lighting}
+- Atmosphere: {atmosphere}
+- Key elements: {key_elements}
 
 CAMERA ANGLE:
 Show the product from: {angle_description}
-This is like rotating a camera around a frozen product.
-
-STAGING:
-{staging}
+Rotate camera around the product, but keep it in the SAME SCENE.
 {hanging_instruction}
 
-BACKGROUND:
-Clean, warm beige studio backdrop (#E8DDD0)
-Professional product photography lighting
-Soft, realistic contact shadow
-
-🚫 ABSOLUTE ANTI-FLOATING RULES (NEVER VIOLATE):
-- Product must NEVER appear floating in mid-air
-- Product must ALWAYS have visible contact with a surface OR visible hanging support
-- If it's a hanging product: MUST show on a STAND, HOOK, or DISPLAY
-- If it sits on surface: MUST show contact point and shadow
-- The image MUST look like a REAL PHOTOGRAPH, not CGI
-- NO FLOATING OBJECTS - this is CRITICAL for professional quality
-- Customer must believe this is a real photo taken by a professional photographer
+⚠️ CRITICAL RULES:
+- Product must remain 100% IDENTICAL in appearance
+- Scene/environment must remain the SAME as the reference
+- Only change is the viewing angle of the product
+- Lighting and color grading must match the original scene
+- If there are people, props, or environmental elements, maintain consistent context
+- NO studio background - this is a REAL LIFE scene
 
 PRODUCT: {product_desc}
 
-OUTPUT: The IDENTICAL product from the specified camera angle, properly grounded or displayed with professional studio styling."""
+OUTPUT: The IDENTICAL product from {angle_description}, naturally placed in the SAME lifestyle scene."""
+    
+    else:
+        # ULTRA-MINIMAL PROMPT - Complex prompts may confuse model
+        prompt = f"""Show this exact product from {angle_description} on clean beige studio background.
+
+CRITICAL: The product must remain EXACTLY the same:
+- Same shape and structure
+- Same components (all bars, doors, panels, hardware)
+- Same colors
+- Same proportions
+- Same materials (transparent stays transparent)
+
+Do NOT change the product. Do NOT redesign it. Do NOT simplify it.
+Only change the viewing angle and background.
+
+STAGING: {staging}
+{hanging_instruction}
+
+Product: {product_desc}"""
 
     # Try Imagen 3 first if we have an API key
     if api_key:

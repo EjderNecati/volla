@@ -80,6 +80,36 @@ const EtsySEOMaster = () => {
     const [realLifeLoading, setRealLifeLoading] = useState(false);
     const [realLifeError, setRealLifeError] = useState(null);
 
+    // ═══════════════════════════════════════════════════════════════════
+    // SESSION GALLERY STATE - For selecting individual generated images
+    // ═══════════════════════════════════════════════════════════════════
+    const [galleryImages, setGalleryImages] = useState([]); // [{id, type, imageData, label}]
+    const [selectedGalleryImage, setSelectedGalleryImage] = useState(null); // Currently selected for main view
+
+    // Add image to gallery with UNIQUE ID
+    const addToGallery = (type, imageData, label) => {
+        // Use Date.now() + random to ensure unique IDs even when adding multiple images quickly
+        const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newImage = { id: uniqueId, type, imageData, label };
+        setGalleryImages(prev => [...prev, newImage]);
+        console.log('📸 Added to gallery:', type, label, uniqueId);
+        return newImage.id;
+    };
+
+    // Clear gallery for new analysis
+    const clearGallery = () => {
+        setGalleryImages([]);
+        setSelectedGalleryImage(null);
+    };
+
+    // Get the image to use for generation (selected gallery image OR studio/original)
+    const getSourceImageForGeneration = () => {
+        if (selectedGalleryImage) {
+            return selectedGalleryImage.imageData;
+        }
+        // Fallback: use studio image if on studio tab, otherwise original
+        return (activeTab === 'studio' && studioImage) ? studioImage : image;
+    };
 
     // History State
     const [history, setHistory] = useState([]);
@@ -356,12 +386,21 @@ const EtsySEOMaster = () => {
                 // Store both the generated image and background
                 if (studioResult.image) {
                     setStudioImage(studioResult.image);
+                    // Add studio image to gallery
+                    addToGallery('STUDIO', studioResult.image, 'AI Studio');
                 }
                 if (studioResult.background) {
                     setStudioBackground(studioResult.background);
                 }
                 // Studio mode activated
                 setActiveTab('studio'); // Auto-switch to studio tab
+            }
+
+            // Add original image to gallery
+            clearGallery(); // Clear old gallery first
+            addToGallery('ORIGINAL', fullDataUrl, 'Original');
+            if (studioResult?.image) {
+                addToGallery('STUDIO', studioResult.image, 'AI Studio');
             }
 
             // Add to history after successful analysis with optimized image AND studio image
@@ -459,6 +498,8 @@ const EtsySEOMaster = () => {
         setRealLifeImages({ shot1: null, shot2: null, shot3: null });
         setRealLifeLabels({ shot1: 'Lifestyle 1', shot2: 'Lifestyle 2', shot3: 'Lifestyle 3' });
         setRealLifeError(null);
+        // Reset Gallery state
+        clearGallery();
         // Reset session tracker
         setCurrentSessionId(null);
     };
@@ -470,17 +511,23 @@ const EtsySEOMaster = () => {
         setAngleImages({ shot1: null, shot2: null, shot3: null });
 
         try {
-            // CONTEXT SWITCHER: Detect source image
-            // If user is viewing AI Studio image, use that; otherwise use original
-            const isStudioSource = activeTab === 'studio' && studioImage;
-            const sourceImage = isStudioSource ? studioImage : image;
+            // SESSION GALLERY: Use selected gallery image if available
+            const sourceImage = getSourceImageForGeneration();
 
             if (!sourceImage) {
                 throw new Error('No source image available');
             }
 
-            // Pass context to backend for dynamic angle detection
-            const result = await generateProductAngles(sourceImage, isStudioSource);
+            console.log('📸 Generating angles from:', selectedGalleryImage?.label || 'main image');
+
+            // Determine source context based on selected image type
+            // If LIFE image selected → preserve scene environment
+            // If STUDIO/ORIGINAL or no selection → use clean studio background
+            const sourceContext = selectedGalleryImage?.type === 'LIFE' ? 'LIFE' : 'STUDIO';
+            console.log('🎬 Source context:', sourceContext);
+
+            // Pass source context to backend for scene-aware generation
+            const result = await generateProductAngles(sourceImage, sourceContext);
 
             if (result.success) {
                 // v3.0: Set dynamic images and labels
@@ -498,6 +545,12 @@ const EtsySEOMaster = () => {
                 if (result.detectedAngle) {
                     setDetectedAngle(result.detectedAngle);
                 }
+
+                // Add generated shots to gallery for individual selection
+                const shotLabels = result.labels || { shot1: 'Shot 1', shot2: 'Shot 2', shot3: 'Shot 3' };
+                if (result.shot1) addToGallery('SHOT', result.shot1, shotLabels.shot1);
+                if (result.shot2) addToGallery('SHOT', result.shot2, shotLabels.shot2);
+                if (result.shot3) addToGallery('SHOT', result.shot3, shotLabels.shot3);
 
                 // SAVE TO HISTORY: Update the ACTIVE session with angle images
                 const sessionId = getActiveSessionId();
@@ -522,9 +575,8 @@ const EtsySEOMaster = () => {
         setRealLifeImages({ shot1: null, shot2: null, shot3: null });
 
         try {
-            // CONTEXT SWITCHER: Detect source image
-            const isStudioSource = activeTab === 'studio' && studioImage;
-            const sourceImage = isStudioSource ? studioImage : image;
+            // SESSION GALLERY: Use selected gallery image if available
+            const sourceImage = getSourceImageForGeneration();
 
             if (!sourceImage) {
                 throw new Error('No source image available');
@@ -552,6 +604,13 @@ const EtsySEOMaster = () => {
                 if (result.labels) {
                     setRealLifeLabels(result.labels);
                 }
+
+                // Add Real Life photos to gallery for individual selection
+                console.log('🏞️ Adding Real Life photos to gallery');
+                const lifeLabels = result.labels || { shot1: 'Life 1', shot2: 'Life 2', shot3: 'Life 3' };
+                if (result.shot1) addToGallery('LIFE', result.shot1, lifeLabels.shot1);
+                if (result.shot2) addToGallery('LIFE', result.shot2, lifeLabels.shot2);
+                if (result.shot3) addToGallery('LIFE', result.shot3, lifeLabels.shot3);
 
                 // SAVE TO HISTORY
                 const sessionId = getActiveSessionId();
@@ -1105,7 +1164,20 @@ const EtsySEOMaster = () => {
 
                                 {/* Image Display */}
                                 <div className="relative w-full h-72 rounded-2xl overflow-hidden shadow-lg border border-slate-800 group">
-                                    {activeTab === 'studio' && (studioImage || studioBackground) ? (
+                                    {/* PRIORITY 1: Selected Gallery Image */}
+                                    {selectedGalleryImage ? (
+                                        <>
+                                            <img
+                                                src={selectedGalleryImage.imageData}
+                                                className="w-full h-full object-contain bg-slate-950"
+                                                alt={selectedGalleryImage.label}
+                                            />
+                                            {/* Selection badge */}
+                                            <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white text-xs font-medium flex items-center gap-1">
+                                                <Check size={12} /> {selectedGalleryImage.label}
+                                            </div>
+                                        </>
+                                    ) : activeTab === 'studio' && (studioImage || studioBackground) ? (
                                         <>
                                             {/* AI Studio View */}
                                             {studioImage ? (
@@ -1170,144 +1242,123 @@ const EtsySEOMaster = () => {
                             </div>
                         )}
 
-                        {/* Multi-Angle Shot Generator Section - ONLY visible on AI Studio tab */}
-                        {activeTab === 'studio' && studioImage && (
-                            <div className="mt-4 space-y-4">
-                                {/* Generate Buttons Row */}
-                                {!anglesLoading && !realLifeLoading && !angleImages.shot1 && !realLifeImages.shot1 && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={handleGenerateAngles}
-                                            className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
-                                        >
-                                            <Camera size={18} />
-                                            3 Shots
-                                        </button>
-                                        <button
-                                            onClick={handleGenerateRealLife}
-                                            className="py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
-                                        >
-                                            🌟 Real Life
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Loading State - Skeleton Loaders */}
-                                {anglesLoading && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2 text-slate-400 text-sm">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent"></div>
-                                            Calculating Geometry & Lighting...
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {['Side', 'Top', 'Detail'].map((label) => (
-                                                <div key={label} className="space-y-2">
-                                                    <div className="animate-pulse bg-slate-800 rounded-xl aspect-square"></div>
-                                                    <div className="text-xs text-slate-500 text-center">{label}</div>
+                        {/* ═══════════════════════════════════════════════════════════ */}
+                        {/* FILM STRIP: Clickable thumbnail gallery of all images */}
+                        {/* ═══════════════════════════════════════════════════════════ */}
+                        {galleryImages.length > 0 && (
+                            <div className="mt-4 p-3 bg-slate-900/80 border border-slate-700/50 rounded-xl">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                        Select Image for Next Generation
+                                    </span>
+                                    <span className="text-xs text-slate-500">
+                                        {galleryImages.length} image{galleryImages.length !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                    {galleryImages.map((img) => {
+                                        const isSelected = selectedGalleryImage?.id === img.id;
+                                        const typeColors = {
+                                            'ORIGINAL': 'bg-blue-500',
+                                            'STUDIO': 'bg-purple-500',
+                                            'LIFE': 'bg-green-500',
+                                            'SHOT': 'bg-amber-500'
+                                        };
+                                        return (
+                                            <button
+                                                key={img.id}
+                                                onClick={() => {
+                                                    // Direct selection - click any image to select it
+                                                    // Only clear if clicking the SAME already-selected image
+                                                    if (isSelected) {
+                                                        setSelectedGalleryImage(null);
+                                                        console.log('🎯 Cleared selection');
+                                                    } else {
+                                                        setSelectedGalleryImage(img);
+                                                        console.log('🎯 Selected:', img.label);
+                                                    }
+                                                }}
+                                                className={`
+                                                    relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden
+                                                    border-2 transition-all duration-200
+                                                    ${isSelected
+                                                        ? 'border-indigo-500 ring-2 ring-indigo-500/50 scale-105'
+                                                        : 'border-slate-600 hover:border-slate-400'
+                                                    }
+                                                `}
+                                            >
+                                                <img
+                                                    src={img.imageData}
+                                                    alt={img.label}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className={`absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-[8px] font-bold uppercase ${typeColors[img.type]} text-white`}>
+                                                    {img.type === 'LIFE' ? 'LIFE' : img.type.slice(0, 4)}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Error State */}
-                                {anglesError && (
-                                    <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm flex items-center gap-2">
-                                        <AlertCircle size={16} />
-                                        {anglesError}
-                                    </div>
-                                )}
-
-                                {/* Success - Clean Minimalist Gallery */}
-                                {(angleImages.shot1 || angleImages.shot2 || angleImages.shot3) && (
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {['shot1', 'shot2', 'shot3'].map((key) => (
-                                            <div key={key} className="relative group rounded-xl overflow-hidden border border-slate-700 aspect-square bg-slate-900">
-                                                {angleImages[key] ? (
-                                                    <>
-                                                        <img
-                                                            src={angleImages[key]}
-                                                            alt={`Generated view ${key}`}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        {/* Download Button */}
-                                                        <a
-                                                            href={angleImages[key]}
-                                                            download={`product_${key}.png`}
-                                                            className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-purple-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
-                                                        >
-                                                            <Download size={14} />
-                                                        </a>
-                                                    </>
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-600">
-                                                        <X size={24} />
+                                                {isSelected && (
+                                                    <div className="absolute inset-0 bg-indigo-500/20 flex items-center justify-center">
+                                                        <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                                                            <Check size={12} className="text-white" />
+                                                        </div>
                                                     </div>
                                                 )}
-                                            </div>
-                                        ))}
-                                    </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {selectedGalleryImage && (
+                                    <p className="text-xs text-indigo-400 mt-2 text-center">
+                                        ✨ "{selectedGalleryImage.label}" selected - Next generation will use this image
+                                    </p>
                                 )}
+                            </div>
+                        )}
 
-                                {/* Real Life Loading State */}
-                                {realLifeLoading && (
-                                    <div className="space-y-3 mt-4">
-                                        <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
-                                            🌟 Generating Real Life Scenes...
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {['Scene 1', 'Scene 2', 'Scene 3'].map((label) => (
-                                                <div key={label} className="space-y-2">
-                                                    <div className="animate-pulse bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-xl aspect-square"></div>
-                                                    <div className="text-xs text-emerald-500 text-center">{label}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                        {/* ═══════════════════════════════════════════════════════════ */}
+                        {/* ACTION BUTTONS - Always visible when image is ready */}
+                        {/* ═══════════════════════════════════════════════════════════ */}
+                        {(studioImage || selectedGalleryImage || (activeTab === 'original' && image)) && (
+                            <div className="mt-4 space-y-3">
+                                {/* Info text about selected source */}
+                                <div className="text-center text-xs text-slate-400">
+                                    Generate from: <span className="text-indigo-400 font-medium">
+                                        {selectedGalleryImage?.label || (studioImage ? 'AI Studio' : 'Original')}
+                                    </span>
+                                </div>
 
-                                {/* Real Life Error State */}
-                                {realLifeError && (
-                                    <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm flex items-center gap-2 mt-4">
+                                {/* Buttons Row - Always visible */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handleGenerateAngles}
+                                        disabled={anglesLoading}
+                                        className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
+                                    >
+                                        {anglesLoading ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                        ) : (
+                                            <Camera size={18} />
+                                        )}
+                                        {anglesLoading ? 'Generating...' : '3 Shots'}
+                                    </button>
+                                    <button
+                                        onClick={handleGenerateRealLife}
+                                        disabled={realLifeLoading}
+                                        className="py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
+                                    >
+                                        {realLifeLoading ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                        ) : (
+                                            <span>🌟</span>
+                                        )}
+                                        {realLifeLoading ? 'Generating...' : 'Real Life'}
+                                    </button>
+                                </div>
+
+                                {/* Error Messages */}
+                                {(anglesError || realLifeError) && (
+                                    <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-sm flex items-center gap-2">
                                         <AlertCircle size={16} />
-                                        {realLifeError}
-                                    </div>
-                                )}
-
-                                {/* Real Life Results Gallery */}
-                                {(realLifeImages.shot1 || realLifeImages.shot2 || realLifeImages.shot3) && (
-                                    <div className="mt-4">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-emerald-400 text-xs font-medium">🌟 Real Life Photos</span>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {['shot1', 'shot2', 'shot3'].map((key) => (
-                                                <div key={key} className="relative group rounded-xl overflow-hidden border border-emerald-700/50 aspect-square bg-slate-900">
-                                                    {realLifeImages[key] ? (
-                                                        <>
-                                                            <img
-                                                                src={realLifeImages[key]}
-                                                                alt={`Real life view ${key}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                            {/* Download Button */}
-                                                            <a
-                                                                href={realLifeImages[key]}
-                                                                download={`real_life_${key}.png`}
-                                                                className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-emerald-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
-                                                            >
-                                                                <Download size={14} />
-                                                            </a>
-                                                        </>
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-600">
-                                                            <X size={24} />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+                                        {anglesError || realLifeError}
                                     </div>
                                 )}
                             </div>
