@@ -41,14 +41,14 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
                     <img
                         src={scannedImage || "/src/assets/product_placeholder.png"}
                         alt="Scanned product"
-                        className="w-16 h-16 rounded-lg object-cover border-2 border-violet-500/50 shadow-lg"
+                        className="w-16 h-16 rounded-lg object-cover border border-[#E8E7E4]"
                     />
                 </div>
 
                 {/* New Scan Button */}
                 <button
                     onClick={onNewScan}
-                    className="flex items-center gap-2 px-4 py-2 bg-transparent border border-zinc-700 text-zinc-300 rounded-lg hover:border-violet-500 hover:text-violet-400 transition-all duration-300 hover:bg-zinc-800/50"
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8E7E4] text-[#1A1A1A] rounded-md hover:bg-[#E8E7E4] hover:border-[#E8E7E4] transition-colors"
                 >
                     <RotateCcw className="w-4 h-4" />
                     <span className="text-sm font-medium">New Scan</span>
@@ -56,12 +56,12 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
             </div>
 
             {/* Card 1: Optimized Title */}
-            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 space-y-3">
+            <div className="bg-[#F5F4F1] border border-white rounded-lg p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-violet-400">Title for {selectedPlatform}</h3>
+                    <h3 className="text-sm font-semibold text-[#1A1A1A]">Title for {selectedPlatform}</h3>
                     <button
                         onClick={() => copyToClipboard(displayResults.title, 'title')}
-                        className="flex-shrink-0 p-2 rounded-lg bg-zinc-800 hover:bg-violet-500/20 text-zinc-400 hover:text-violet-400 transition-all duration-300"
+                        className="flex-shrink-0 p-2 rounded-md bg-white hover:bg-[#E8E7E4] text-[#5C5C5C] hover:text-[#1A1A1A] transition-colors"
                         title="Copy title"
                     >
                         {copiedStates['title'] ? (
@@ -77,12 +77,12 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
             </div>
 
             {/* Card 2: Product Description */}
-            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 space-y-3">
+            <div className="bg-[#F5F4F1] border border-white rounded-lg p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-violet-400">Product Description</h3>
+                    <h3 className="text-sm font-semibold text-[#1A1A1A]">Product Description</h3>
                     <button
                         onClick={() => copyToClipboard(displayResults.description, 'description')}
-                        className="flex-shrink-0 p-2 rounded-lg bg-zinc-800 hover:bg-violet-500/20 text-zinc-400 hover:text-violet-400 transition-all duration-300"
+                        className="flex-shrink-0 p-2 rounded-md bg-white hover:bg-[#E8E7E4] text-[#5C5C5C] hover:text-[#1A1A1A] transition-colors"
                         title="Copy description"
                     >
                         {copiedStates['description'] ? (
@@ -92,14 +92,14 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
                         )}
                     </button>
                 </div>
-                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-[#1A1A1A] leading-relaxed whitespace-pre-line">
                     {displayResults.description}
                 </p>
             </div>
 
             {/* Card 3: Keywords */}
-            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-violet-400">Hidden Keywords</h3>
+            <div className="bg-[#F5F4F1] border border-white rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-[#1A1A1A]">Hidden Keywords</h3>
 
                 {/* Keyword Tags */}
                 <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
                         <button
                             key={index}
                             onClick={() => copyToClipboard(keyword, `keyword-${index}`)}
-                            className="px-3 py-1.5 bg-zinc-800 hover:bg-violet-500/20 border border-zinc-700 hover:border-violet-500/50 rounded-full text-xs font-medium text-zinc-300 hover:text-violet-300 transition-all duration-300 hover:scale-105"
+                            className="px-3 py-1.5 bg-white hover:bg-[#E8E7E4] border border-[#E8E7E4] hover:border-[#E8E7E4] rounded-md text-xs font-medium text-[#1A1A1A] hover:text-zinc-100 transition-colors"
                         >
                             {copiedStates[`keyword-${index}`] ? (
                                 <span className="flex items-center gap-1 text-emerald-400">
@@ -124,7 +124,7 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
                 {/* Copy All Button */}
                 <button
                     onClick={copyAllKeywords}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-violet-500/50 flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 bg-[#E06847] hover:bg-[#C85A3D] text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
                 >
                     {copiedStates['all-keywords'] ? (
                         <>
@@ -141,14 +141,14 @@ export default function ResultsScreen({ selectedPlatform, onNewScan, results, sc
             </div>
 
             {/* Card 3: Pricing Strategy */}
-            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-violet-400">Estimated Price</h3>
+            <div className="bg-[#F5F4F1] border border-white rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-[#1A1A1A]">Estimated Price</h3>
                 <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-emerald-400">
                         {displayResults.priceRange}
                     </span>
                 </div>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-[#8C8C8C]">
                     Based on current {selectedPlatform} market trends and competition analysis
                 </p>
             </div>

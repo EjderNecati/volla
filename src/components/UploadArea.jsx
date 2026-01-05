@@ -68,13 +68,13 @@ export default function UploadArea({ selectedPlatform, credits, onShowPaywall, o
                         onClick={handleClick}
                         className={`
               border-2 border-dashed rounded-3xl
-              bg-zinc-900/50 backdrop-blur-sm
+              bg-[#F5F4F1]/50 backdrop-blur-sm
               p-12
               transition-all duration-300 ease-out
               cursor-pointer
               ${credits === 0
                                 ? 'border-red-500/50 hover:border-red-500 hover:bg-red-900/20'
-                                : 'border-zinc-700 hover:border-violet-500 hover:bg-zinc-900/80 hover:scale-[1.02]'
+                                : 'border-[#E8E7E4] hover:border-[#E06847] hover:bg-[#F5F4F1]/80 hover:scale-[1.02]'
                             }
             `}
                     >
@@ -83,7 +83,7 @@ export default function UploadArea({ selectedPlatform, credits, onShowPaywall, o
               absolute inset-0 rounded-3xl transition-all duration-300
               ${credits === 0
                                 ? 'bg-gradient-to-br from-red-500/0 to-red-500/0 group-hover:from-red-500/10 group-hover:to-red-500/10'
-                                : 'bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/10 group-hover:to-purple-500/10'
+                                : 'bg-gradient-to-br from-[#E06847]/0 to-purple-500/0 group-hover:from-[#E06847]/10 group-hover:to-purple-500/10'
                             }
             `} />
 
@@ -93,13 +93,13 @@ export default function UploadArea({ selectedPlatform, credits, onShowPaywall, o
                             <div className="relative">
                                 <div className={`
                   absolute inset-0 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-300
-                  ${credits === 0 ? 'bg-red-500/20' : 'bg-violet-500/20'}
+                  ${credits === 0 ? 'bg-red-500/20' : 'bg-[#E06847]/20'}
                 `} />
                                 <div className={`
                   relative p-6 rounded-full transition-all duration-300
                   ${credits === 0
-                                        ? 'bg-zinc-800 group-hover:bg-zinc-700'
-                                        : 'bg-zinc-800 group-hover:bg-zinc-700'
+                                        ? 'bg-white group-hover:bg-[#E8E7E4]'
+                                        : 'bg-white group-hover:bg-[#E8E7E4]'
                                     }
                 `}>
                                     {credits === 0 ? (
@@ -122,7 +122,7 @@ export default function UploadArea({ selectedPlatform, credits, onShowPaywall, o
                                     {credits === 0 ? 'Unlock More Scans' : 'Snap or Upload Product'}
                                     <Sparkles className={`w-4 h-4 ${credits === 0 ? 'text-red-400' : 'text-violet-400'}`} />
                                 </h3>
-                                <p className="text-sm text-zinc-400 max-w-xs transition-all duration-300">
+                                <p className="text-sm text-[#5C5C5C] max-w-xs transition-all duration-300">
                                     {credits === 0 ? 'Upgrade to PRO for unlimited AI scans' : subtext}
                                 </p>
                             </div>

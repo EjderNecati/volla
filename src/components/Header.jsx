@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react';
 
 export default function Header() {
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-800">
+        <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-[#FAF9F6]/80 backdrop-blur-lg border-b border-[#E8E7E4]">
             {/* Logo */}
             <div className="flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-violet-500" />

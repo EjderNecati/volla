@@ -9,7 +9,7 @@ const navItems = [
 
 export default function BottomNav({ activeTab, onTabChange }) {
     return (
-        <nav className="sticky bottom-0 z-50 bg-zinc-900/80 backdrop-blur-lg border-t border-zinc-800">
+        <nav className="sticky bottom-0 z-50 bg-[#FAF9F6]/80 backdrop-blur-lg border-t border-white">
             <div className="flex items-center justify-around px-6 py-3">
                 {navItems.map(({ id, icon: Icon, label }) => (
                     <button
@@ -21,7 +21,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
               p-2 rounded-xl transition-all duration-300
               ${activeTab === id
                                 ? 'bg-violet-500 shadow-lg shadow-violet-500/50'
-                                : 'bg-transparent group-hover:bg-zinc-800'
+                                : 'bg-transparent group-hover:bg-white'
                             }
             `}>
                             <Icon
@@ -29,7 +29,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
                   w-6 h-6 transition-colors duration-300
                   ${activeTab === id
                                         ? 'text-white'
-                                        : 'text-zinc-400 group-hover:text-white'
+                                        : 'text-[#5C5C5C] group-hover:text-white'
                                     }
                 `}
                             />
@@ -38,7 +38,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
               text-xs font-medium transition-colors duration-300
               ${activeTab === id
                                 ? 'text-violet-400'
-                                : 'text-zinc-500 group-hover:text-zinc-400'
+                                : 'text-[#8C8C8C] group-hover:text-[#5C5C5C]'
                             }
             `}>
                             {label}

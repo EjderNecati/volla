@@ -10,36 +10,36 @@ import { Camera, Sparkles, Users, RotateCcw } from 'lucide-react';
 const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
     if (!assets || assets.length === 0) return null;
 
-    // Get icon and color based on asset type
+    // Get icon and style based on asset type - matte colors
     const getAssetStyle = (type) => {
         switch (type) {
             case 'ORIGINAL':
-                return { icon: Camera, color: 'bg-blue-500', label: 'Orig' };
+                return { icon: Camera, color: 'bg-[#E8E7E4]', label: 'Orig' };
             case 'STUDIO':
-                return { icon: Sparkles, color: 'bg-purple-500', label: 'Studio' };
+                return { icon: Sparkles, color: 'bg-[#E06847]', label: 'Studio' };
             case 'REALLIFE':
-                return { icon: Users, color: 'bg-green-500', label: 'Life' };
+                return { icon: Users, color: 'bg-emerald-600', label: 'Life' };
             case 'SHOT':
-                return { icon: RotateCcw, color: 'bg-amber-500', label: 'Shot' };
+                return { icon: RotateCcw, color: 'bg-[#8C8C8C]', label: 'Shot' };
             default:
-                return { icon: Camera, color: 'bg-slate-500', label: '?' };
+                return { icon: Camera, color: 'bg-[#E8E7E4]', label: '?' };
         }
     };
 
     return (
-        <div className="w-full bg-slate-900/80 backdrop-blur-sm border-t border-slate-700/50 py-3 px-4">
+        <div className="w-full bg-[#F5F4F1] border-t border-[#E8E7E4] py-3 px-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-[#8C8C8C] uppercase tracking-wider">
                     Session Gallery
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#E8E7E4]">
                     {assets.length} asset{assets.length !== 1 ? 's' : ''}
                 </span>
             </div>
 
             {/* Film Strip */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-800">
+            <div className="flex gap-3 overflow-x-auto pb-2">
                 {assets.map((asset) => {
                     const { icon: Icon, color, label } = getAssetStyle(asset.type);
                     const isActive = asset.id === activeAssetId;
@@ -50,11 +50,11 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
                             onClick={() => onAssetClick(asset.id)}
                             className={`
                                 relative flex-shrink-0 group
-                                w-20 h-20 rounded-lg overflow-hidden
-                                border-2 transition-all duration-200
+                                w-20 h-20 rounded-md overflow-hidden
+                                border transition-all duration-150
                                 ${isActive
-                                    ? 'border-indigo-500 ring-2 ring-indigo-500/50 scale-105'
-                                    : 'border-slate-700 hover:border-slate-500'
+                                    ? 'border-white ring-1 ring-white/20'
+                                    : 'border-zinc-700 hover:border-[#8C8C8C]'
                                 }
                             `}
                         >
@@ -68,8 +68,8 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
                             {/* Type Badge */}
                             <div className={`
                                 absolute top-1 left-1 
-                                px-1.5 py-0.5 rounded text-[9px] font-bold uppercase
-                                ${color} text-white shadow-lg
+                                px-1.5 py-0.5 rounded text-[9px] font-medium uppercase
+                                ${color} text-white
                             `}>
                                 {label}
                             </div>
@@ -87,7 +87,7 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
                             {/* Active Indicator */}
                             {isActive && (
                                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
                                 </div>
                             )}
                         </button>
@@ -96,7 +96,7 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
             </div>
 
             {/* Helper Text */}
-            <p className="text-[10px] text-slate-500 mt-1 text-center">
+            <p className="text-[10px] text-[#E8E7E4] mt-1 text-center">
                 Click any image to select it, then use the action buttons above
             </p>
         </div>

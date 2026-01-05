@@ -86,6 +86,11 @@ const EtsySEOMaster = () => {
     const [galleryImages, setGalleryImages] = useState([]); // [{id, type, imageData, label}]
     const [selectedGalleryImage, setSelectedGalleryImage] = useState(null); // Currently selected for main view
 
+    // Sync marketplace to localStorage for SettingsModal theming
+    useEffect(() => {
+        localStorage.setItem('volla_marketplace', marketplace);
+    }, [marketplace]);
+
     // Add image to gallery with UNIQUE ID
     const addToGallery = (type, imageData, label) => {
         // Use Date.now() + random to ensure unique IDs even when adding multiple images quickly
@@ -644,18 +649,18 @@ const EtsySEOMaster = () => {
             case 'LOW': return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
             case 'MEDIUM': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
             case 'HIGH': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-slate-400 bg-slate-500/20 border-slate-500/30';
+            default: return 'text-[#5C5C5C] bg-[#6F7A6C]/20 border-[#6F7A6C]/30';
         }
     };
 
-    // Quiet Luxury label styling based on marketplace
+    // Quiet Luxury label styling based on marketplace - MINIMAL VERSION
     const getLuxuryLabelClass = (marketplace) => {
-        const baseClass = 'font-sans text-[11px] tracking-[0.25em] uppercase font-bold border-b border-white/5 pb-2 mb-3 inline-block';
+        const baseClass = 'font-sans text-[11px] tracking-[0.2em] uppercase font-bold mb-2';
         switch (marketplace) {
-            case 'etsy': return `${baseClass} text-orange-200/60`;
-            case 'amazon': return `${baseClass} text-amber-200/60`;
-            case 'shopify': return `${baseClass} text-emerald-200/60`;
-            default: return `${baseClass} text-slate-200/60`;
+            case 'etsy': return `${baseClass} text-orange-600`;
+            case 'amazon': return `${baseClass} text-amber-600`;
+            case 'shopify': return `${baseClass} text-emerald-600`;
+            default: return `${baseClass} text-[#1A1A1A]`;
         }
     };
 
@@ -686,7 +691,7 @@ const EtsySEOMaster = () => {
             case 'etsy': return 'from-orange-500 to-orange-600';
             case 'amazon': return 'from-amber-500 to-yellow-500';
             case 'shopify': return 'from-green-500 to-emerald-500';
-            default: return 'from-indigo-500 to-purple-500';
+            default: return 'from-[#D4C49A] to-[#BCA879]';
         }
     };
 
@@ -695,7 +700,7 @@ const EtsySEOMaster = () => {
             case 'etsy': return { icon: '🏪', text: 'ETSY', color: 'bg-orange-500', dotColor: 'bg-orange-500' };
             case 'amazon': return { icon: '📦', text: 'AMAZON', color: 'bg-amber-500', dotColor: 'bg-amber-500' };
             case 'shopify': return { icon: '🛒', text: 'SHOPIFY', color: 'bg-green-500', dotColor: 'bg-green-500' };
-            default: return { icon: '📊', text: 'SEO', color: 'bg-slate-500', dotColor: 'bg-slate-500' };
+            default: return { icon: '📊', text: 'SEO', color: 'bg-[#6F7A6C]', dotColor: 'bg-[#6F7A6C]' };
         }
     };
 
@@ -714,7 +719,7 @@ const EtsySEOMaster = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white font-poppins selection:bg-indigo-500 selection:text-white">
+        <div className="min-h-screen bg-[#FAF9F6] text-[#1A1A1A] font-poppins selection:bg-[#E06847] selection:text-[#0D1818]">
 
             {/* ═══════════════════════════════════════════════════════ */}
             {/* HISTORY SLIDE-OVER PANEL */}
@@ -723,18 +728,18 @@ const EtsySEOMaster = () => {
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] transition-opacity"
+                        className="fixed inset-0 bg-[#FAF9F6]/80 backdrop-blur-sm z-[90] transition-opacity"
                         onClick={() => setShowHistory(false)}
                     />
 
                     {/* Panel */}
-                    <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-slate-900 border-l border-slate-800 z-[95] shadow-2xl animate-slide-in-right overflow-hidden flex flex-col">
+                    <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white border-l border-[#E8E7E4] z-[95] shadow-2xl animate-slide-in-right overflow-hidden flex flex-col">
                         {/* Header */}
-                        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                        <div className="p-5 border-b border-[#E8E7E4] flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Clock size={20} className="text-indigo-400" />
-                                <h2 className="text-lg font-semibold">Recent Analyses</h2>
-                                <span className="text-xs px-2 py-0.5 bg-slate-800 rounded-full text-slate-400">
+                                <Clock size={20} className={`${marketplace === 'amazon' ? 'text-[#FF9900]' : marketplace === 'shopify' ? 'text-[#96BF48]' : 'text-[#F1641E]'}`} />
+                                <h2 className="text-lg font-semibold text-[#1A1A1A]">Recent Analyses</h2>
+                                <span className="text-xs px-2 py-0.5 bg-[#F5F4F1] rounded-full text-[#5C5C5C]">
                                     {history.length}/{MAX_HISTORY}
                                 </span>
                             </div>
@@ -750,7 +755,7 @@ const EtsySEOMaster = () => {
                                 )}
                                 <button
                                     onClick={() => setShowHistory(false)}
-                                    className="p-2 hover:bg-slate-800 rounded-lg transition"
+                                    className="p-2 hover:bg-[#F5F4F1] text-[#5C5C5C] hover:text-[#1A1A1A] rounded-lg transition"
                                 >
                                     <X size={18} />
                                 </button>
@@ -761,9 +766,9 @@ const EtsySEOMaster = () => {
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                             {history.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                                    <Clock size={48} className="text-slate-700 mb-4" />
-                                    <p className="text-slate-500 text-sm">No analysis history yet</p>
-                                    <p className="text-slate-600 text-xs mt-1">Your analyses will appear here</p>
+                                    <Clock size={48} className="text-[#4B5046] mb-4" />
+                                    <p className="text-[#8C8C8C] text-sm">No analysis history yet</p>
+                                    <p className="text-[#4B5046] text-xs mt-1">Your analyses will appear here</p>
                                 </div>
                             ) : (
                                 history.map((entry) => {
@@ -772,11 +777,11 @@ const EtsySEOMaster = () => {
                                         <button
                                             key={entry.id}
                                             onClick={() => restoreFromHistory(entry)}
-                                            className="w-full p-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-xl transition-all text-left group"
+                                            className="w-full p-4 bg-[#F5F4F1] hover:bg-white border border-[#E8E7E4] hover:border-[#E06847] rounded-xl transition-all text-left group"
                                         >
                                             <div className="flex items-center gap-3">
                                                 {/* Thumbnail */}
-                                                <div className="w-12 h-12 rounded-lg bg-slate-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                                <div className="w-12 h-12 rounded-lg bg-[#FAF9F6] flex-shrink-0 overflow-hidden flex items-center justify-center">
                                                     {entry.image ? (
                                                         <img
                                                             src={entry.image}
@@ -784,22 +789,22 @@ const EtsySEOMaster = () => {
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        <Type size={20} className="text-slate-500" />
+                                                        <Type size={20} className="text-[#8C8C8C]" />
                                                     )}
                                                 </div>
 
                                                 {/* Content */}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition">
+                                                    <p className="text-sm font-medium text-[#1A1A1A] truncate group-hover:text-[#1A1A1A] transition">
                                                         {entry.title?.substring(0, 40) || 'Untitled'}
                                                         {entry.title?.length > 40 && '...'}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-1.5">
-                                                        <span className="font-sans text-[10px] tracking-[0.15em] uppercase text-slate-400/60">
+                                                        <span className="font-sans text-[10px] tracking-[0.15em] uppercase text-[#5C5C5C]/60">
                                                             {formatTimeAgo(entry.timestamp)}
                                                         </span>
-                                                        <span className="text-slate-700">•</span>
-                                                        <span className="font-sans text-[10px] tracking-[0.15em] uppercase text-slate-400/60 flex items-center gap-1">
+                                                        <span className="text-[#4B5046]">•</span>
+                                                        <span className="font-sans text-[10px] tracking-[0.15em] uppercase text-[#5C5C5C]/60 flex items-center gap-1">
                                                             {entry.inputMode === 'text' ? (
                                                                 <><Type size={10} className="inline-block" /> TEXT</>
                                                             ) : (
@@ -826,26 +831,26 @@ const EtsySEOMaster = () => {
             {/* ═══════════════════════════════════════════════════════ */}
             {showSettings && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                    <div className="bg-[#F5F4F1] border border-[#E8E7E4] rounded-2xl p-6 w-full max-w-md shadow-2xl">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
-                                <Key className="w-5 h-5 text-indigo-400" />
+                                <Key className="w-5 h-5 text-[#E06847]" />
                                 <h2 className="text-lg font-semibold">API Key Settings</h2>
                             </div>
-                            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-800 rounded-full transition">
+                            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-white rounded-full transition">
                                 <X size={18} />
                             </button>
                         </div>
 
-                        <p className="text-sm text-slate-400 mb-4">
+                        <p className="text-sm text-[#5C5C5C] mb-4">
                             Enter your Gemini API key. Get free at{' '}
-                            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
+                            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-[#E06847] hover:underline">
                                 Google AI Studio
                             </a>
                         </p>
 
                         <div className="mb-4">
-                            <label className="block text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-[#E06847] uppercase tracking-wider mb-2">
                                 🔵 Google Gemini API Key
                             </label>
                             <input
@@ -853,7 +858,7 @@ const EtsySEOMaster = () => {
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="AIza..."
-                                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+                                className="w-full px-4 py-3 bg-white border border-[#E8E7E4] rounded-xl text-white placeholder-[#6F7A6C] focus:outline-none focus:border-[#D4C49A] transition"
                             />
                         </div>
 
@@ -866,9 +871,9 @@ const EtsySEOMaster = () => {
                                 value={vertexApiKey}
                                 onChange={(e) => setVertexApiKey(e.target.value)}
                                 placeholder="AQ.Ab8..."
-                                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                                className="w-full px-4 py-3 bg-white border border-[#E8E7E4] rounded-xl text-white placeholder-[#6F7A6C] focus:outline-none focus:border-amber-500 transition"
                             />
-                            <p className="text-[10px] text-slate-500 mt-1">
+                            <p className="text-[10px] text-[#8C8C8C] mt-1">
                                 Required for AI Studio & Multi-Angle shots.
                             </p>
                         </div>
@@ -876,7 +881,7 @@ const EtsySEOMaster = () => {
                         <button
                             onClick={saveApiKey}
                             disabled={!apiKey.trim()}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-medium transition"
+                            className="w-full py-3 bg-[#E06847] hover:bg-[#D4C49A] disabled:bg-[#4B5046] disabled:cursor-not-allowed rounded-xl font-medium transition"
                         >
                             Save API Key
                         </button>
@@ -887,13 +892,13 @@ const EtsySEOMaster = () => {
             {/* ═══════════════════════════════════════════════════════ */}
             {/* HEADER */}
             {/* ═══════════════════════════════════════════════════════ */}
-            <header className="fixed top-0 w-full p-6 flex justify-between items-center z-50 bg-slate-950/80 backdrop-blur-md">
-                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            <header className="header-luxury w-full px-6 py-4 flex justify-between items-center">
+                <h1 className="text-xl font-bold tracking-tight text-gold">
                     VOLLA
                 </h1>
                 <div className="flex items-center gap-3">
                     {results?._grounded && (
-                        <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30">
+                        <span className="badge-gold">
                             🔍 LIVE DATA
                         </span>
                     )}
@@ -901,11 +906,11 @@ const EtsySEOMaster = () => {
                     {/* History Button */}
                     <button
                         onClick={() => setShowHistory(true)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 border border-slate-700 hover:bg-slate-700 transition relative"
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-[#E8E7E4] transition-all relative text-[#5C5C5C] ${marketplace === 'amazon' ? 'hover:border-[#FF9900] hover:text-[#FF9900]' : marketplace === 'shopify' ? 'hover:border-[#96BF48] hover:text-[#96BF48]' : 'hover:border-[#F1641E] hover:text-[#F1641E]'}`}
                     >
-                        <Clock size={16} />
+                        <Clock size={18} />
                         {history.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 text-[10px] font-bold rounded-full flex items-center justify-center">
+                            <span className={`absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center ${marketplace === 'amazon' ? 'bg-[#FF9900] text-black' : marketplace === 'shopify' ? 'bg-[#96BF48] text-white' : 'bg-[#F1641E] text-white'}`}>
                                 {history.length}
                             </span>
                         )}
@@ -914,107 +919,110 @@ const EtsySEOMaster = () => {
                     {/* Settings Button */}
                     <button
                         onClick={() => setShowSettings(true)}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition ${hasApiKey ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-amber-500/20 border border-amber-500/50 text-amber-400'}`}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${hasApiKey ? `bg-white border border-[#E8E7E4] text-[#5C5C5C] ${marketplace === 'amazon' ? 'hover:border-[#FF9900] hover:text-[#FF9900]' : marketplace === 'shopify' ? 'hover:border-[#96BF48] hover:text-[#96BF48]' : 'hover:border-[#F1641E] hover:text-[#F1641E]'}` : 'bg-[#E06847]/20 border border-[#BCA879]/50 text-[#E06847]'}`}
                     >
-                        <Settings size={16} />
+                        <Settings size={18} />
                     </button>
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 pt-24 pb-32 max-w-md md:max-w-2xl">
+            <main className="container mx-auto px-4 py-8 max-w-md md:max-w-2xl">
 
                 {/* SELECTION TOGGLES */}
                 {!results && !loading && (
                     <>
                         {/* PLATFORM SELECTOR */}
-                        <div className="flex justify-center mb-4">
-                            <div className="bg-slate-900 border border-slate-800 rounded-full p-1 flex">
+                        <div className="flex justify-center mb-6">
+                            <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1 shadow-sm">
                                 <button
                                     onClick={() => setMarketplace('etsy')}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${marketplace === 'etsy'
-                                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
-                                        }`}
+                                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${marketplace === 'etsy'
+                                        ? 'bg-[#F1641E] text-white shadow-sm'
+                                        : 'text-[#5C5C5C] hover:bg-white hover:text-[#1A1A1A]'}`}
                                 >
-                                    <Store size={16} />
-                                    <span>Etsy</span>
+                                    <div className="flex items-center gap-2">
+                                        <Store size={16} />
+                                        <span>ETSY</span>
+                                    </div>
                                 </button>
                                 <button
                                     onClick={() => setMarketplace('amazon')}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${marketplace === 'amazon'
-                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
-                                        }`}
+                                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${marketplace === 'amazon'
+                                        ? 'bg-[#FF9900] text-black shadow-sm'
+                                        : 'text-[#5C5C5C] hover:bg-white hover:text-[#1A1A1A]'}`}
                                 >
-                                    <ShoppingBag size={16} />
-                                    <span>Amazon</span>
+                                    <div className="flex items-center gap-2">
+                                        <ShoppingBag size={16} />
+                                        <span>AMAZON</span>
+                                    </div>
                                 </button>
                                 <button
                                     onClick={() => setMarketplace('shopify')}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${marketplace === 'shopify'
-                                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
-                                        }`}
+                                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${marketplace === 'shopify'
+                                        ? 'bg-[#96BF48] text-white shadow-sm'
+                                        : 'text-[#5C5C5C] hover:bg-white hover:text-[#1A1A1A]'}`}
                                 >
-                                    <ShoppingCart size={16} />
-                                    <span>Shopify</span>
+                                    <div className="flex items-center gap-2">
+                                        <ShoppingCart size={16} />
+                                        <span>SHOPIFY</span>
+                                    </div>
                                 </button>
                             </div>
                         </div>
 
                         {/* INPUT MODE SELECTOR */}
                         <div className="flex justify-center mb-8">
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-full p-1 flex">
+                            <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1 shadow-sm">
                                 <button
                                     onClick={() => setInputMode('image')}
-                                    className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${inputMode === 'image'
-                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
-                                        }`}
+                                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${inputMode === 'image'
+                                        ? `${marketplace === 'amazon' ? 'bg-[#FF9900] text-black' : marketplace === 'shopify' ? 'bg-[#96BF48] text-white' : 'bg-[#F1641E] text-white'} shadow-sm`
+                                        : 'text-[#5C5C5C] hover:bg-white hover:text-[#1A1A1A]'}`}
                                 >
-                                    <Camera size={16} />
-                                    <span>Photo</span>
+                                    <div className="flex items-center gap-2">
+                                        <Camera size={16} />
+                                        <span>Photo</span>
+                                    </div>
                                 </button>
                                 <button
                                     onClick={() => setInputMode('text')}
-                                    className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${inputMode === 'text'
-                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
-                                        }`}
+                                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${inputMode === 'text'
+                                        ? `${marketplace === 'amazon' ? 'bg-[#FF9900] text-black' : marketplace === 'shopify' ? 'bg-[#96BF48] text-white' : 'bg-[#F1641E] text-white'} shadow-sm`
+                                        : 'text-[#5C5C5C] hover:bg-white hover:text-[#1A1A1A]'}`}
                                 >
-                                    <Type size={16} />
-                                    <span>Text</span>
+                                    <div className="flex items-center gap-2">
+                                        <Type size={16} />
+                                        <span>Text</span>
+                                    </div>
                                 </button>
                             </div>
                         </div>
                     </>
                 )}
 
-                {/* STATE 1A: IMAGE MODE */}
                 {!image && !results && !loading && inputMode === 'image' && (
                     <div className="flex flex-col items-center justify-center h-[50vh] text-center space-y-6">
-                        <div className="relative group cursor-pointer">
-                            <div className={`absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 bg-gradient-to-r ${getMarketplaceColor(marketplace)}`}></div>
-                            <label className="relative flex flex-col items-center justify-center w-48 h-48 rounded-3xl bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 transition-all cursor-pointer shadow-2xl">
-                                <Upload className="w-12 h-12 text-slate-400 group-hover:text-indigo-400 mb-2 transition-colors" />
-                                <span className="text-sm text-slate-400 font-medium">Upload Photo</span>
-                                <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
-                            </label>
-                        </div>
-                        <p className="text-slate-500 text-sm max-w-xs">
+                        {/* Upload Zone */}
+                        <label className={`w-64 h-48 flex flex-col items-center justify-center cursor-pointer bg-white border-2 border-dashed border-[#D4D3D0] rounded-2xl p-12 text-center transition-all hover-lift ${marketplace === 'amazon' ? 'hover:border-[#FF9900] hover:bg-[#FF9900]/5' : marketplace === 'shopify' ? 'hover:border-[#96BF48] hover:bg-[#96BF48]/5' : 'hover:border-[#F1641E] hover:bg-[#F1641E]/5'}`}>
+                            <Upload className="w-12 h-12 text-[#8C8C8C] mb-3" />
+                            <span className="text-[#1A1A1A] font-medium">Upload Photo</span>
+                            <span className="text-[#5C5C5C] text-sm mt-1">Click or drag & drop</span>
+                            <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
+                        </label>
+                        <p className="text-[#8C8C8C] text-sm max-w-xs">
                             Upload your product photo for AI-optimized {marketplace.toUpperCase()} listing.
                         </p>
 
                         {/* Smart AI Studio Mode Toggle */}
-                        <div className="mt-6 flex items-center gap-3 px-5 py-3 bg-slate-900/50 border border-slate-800 rounded-xl">
-                            <Sparkles className="w-4 h-4 text-indigo-400" />
+                        <div className="mt-6 flex items-center gap-3 px-5 py-3 bg-white border border-[#E8E7E4] rounded-xl">
+                            <Sparkles className={`w-4 h-4 ${marketplace === 'amazon' ? 'text-[#FF9900]' : marketplace === 'shopify' ? 'text-[#96BF48]' : 'text-[#F1641E]'}`} />
                             <div className="flex-1">
-                                <p className="font-sans text-[11px] tracking-[0.15em] uppercase text-slate-300 font-bold">AI STUDIO MODE</p>
-                                <p className="text-[10px] text-slate-500">Context-aware product photography</p>
+                                <p className="font-sans text-[11px] tracking-[0.15em] uppercase text-[#1A1A1A] font-bold">AI STUDIO MODE</p>
+                                <p className="text-[10px] text-[#8C8C8C]">Context-aware product photography</p>
                             </div>
                             <button
                                 onClick={() => setStudioModeEnabled(!studioModeEnabled)}
-                                className={`relative w-11 h-6 rounded-full transition-colors ${studioModeEnabled ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                                className={`relative w-11 h-6 rounded-full transition-colors ${studioModeEnabled ? (marketplace === 'amazon' ? 'bg-[#FF9900]' : marketplace === 'shopify' ? 'bg-[#96BF48]' : 'bg-[#F1641E]') : 'bg-[#D4D3D0]'}`}
                             >
                                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${studioModeEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                             </button>
@@ -1036,25 +1044,25 @@ const EtsySEOMaster = () => {
                 {!results && !loading && inputMode === 'text' && (
                     <div className="flex flex-col items-center justify-center space-y-6">
                         <div className="w-full max-w-lg">
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className="bg-[#F5F4F1] border border-[#E8E7E4] rounded-2xl p-5 shadow-xl">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <Type size={18} className="text-indigo-400" />
-                                    <span className="text-sm font-medium text-slate-300">Product Description</span>
+                                    <Type size={18} className={`${marketplace === 'amazon' ? 'text-[#FF9900]' : marketplace === 'shopify' ? 'text-[#96BF48]' : 'text-[#F1641E]'}`} />
+                                    <span className="text-sm font-medium text-[#1A1A1A]">Product Description</span>
                                 </div>
                                 <textarea
                                     value={textInput}
                                     onChange={(e) => setTextInput(e.target.value)}
                                     placeholder="Enter your product title, description, or any text you want to optimize for SEO..."
-                                    className="w-full h-48 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition resize-none"
+                                    className={`w-full h-48 px-4 py-3 bg-white border border-[#E8E7E4] rounded-xl text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none transition resize-none ${marketplace === 'amazon' ? 'focus:border-[#FF9900]' : marketplace === 'shopify' ? 'focus:border-[#96BF48]' : 'focus:border-[#F1641E]'}`}
                                 />
                                 <div className="flex justify-between items-center mt-3">
-                                    <span className="text-xs text-slate-500">{textInput.length} characters</span>
+                                    <span className="text-xs text-[#8C8C8C]">{textInput.length} characters</span>
                                     <button
                                         onClick={handleTextSubmit}
                                         disabled={!hasApiKey || textInput.trim().length < 10}
                                         className={`px-6 py-2.5 rounded-full font-medium transition-all flex items-center gap-2 ${hasApiKey && textInput.trim().length >= 10
                                             ? `bg-gradient-to-r ${getMarketplaceColor(marketplace)} text-white shadow-lg hover:opacity-90`
-                                            : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                            : 'bg-[#4B5046] text-[#5C5C5C] cursor-not-allowed'
                                             }`}
                                     >
                                         <Sparkles size={16} />
@@ -1063,7 +1071,7 @@ const EtsySEOMaster = () => {
                                 </div>
                             </div>
                         </div>
-                        <p className="text-slate-500 text-sm max-w-xs text-center">
+                        <p className="text-[#8C8C8C] text-sm max-w-xs text-center">
                             AI will rewrite your text and generate optimized {marketplace.toUpperCase()} listing content.
                         </p>
 
@@ -1083,18 +1091,18 @@ const EtsySEOMaster = () => {
                 {loading && (
                     <div className="flex flex-col items-center justify-center h-[60vh]">
                         {image && inputMode === 'image' && (
-                            <div className="w-32 h-32 rounded-2xl overflow-hidden mb-6 border-2 border-slate-700 relative">
+                            <div className="w-32 h-32 rounded-2xl overflow-hidden mb-6 border-2 border-[#E8E7E4] relative">
                                 <img src={image} className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-60" alt="" />
                                 <img src={image} className="relative z-10 w-full h-full object-contain" alt="Analyzing" />
                             </div>
                         )}
                         {inputMode === 'text' && (
-                            <div className="w-32 h-32 rounded-2xl bg-slate-900 border-2 border-slate-700 flex items-center justify-center mb-6">
-                                <Type size={40} className="text-slate-600" />
+                            <div className="w-32 h-32 rounded-2xl bg-[#F5F4F1] border-2 border-[#E8E7E4] flex items-center justify-center mb-6">
+                                <Type size={40} className="text-[#4B5046]" />
                             </div>
                         )}
                         <div className="relative w-16 h-16">
-                            <div className="absolute top-0 left-0 w-full h-full border-4 border-slate-800 rounded-full"></div>
+                            <div className="absolute top-0 left-0 w-full h-full border-4 border-[#E8E7E4] rounded-full"></div>
                             <div className={`absolute top-0 left-0 w-full h-full border-4 rounded-full animate-spin border-t-transparent ${marketplace === 'amazon' ? 'border-amber-500' :
                                 marketplace === 'shopify' ? 'border-green-500' : 'border-orange-500'
                                 }`}></div>
@@ -1102,11 +1110,13 @@ const EtsySEOMaster = () => {
                                 marketplace === 'shopify' ? 'text-green-400' : 'text-orange-400'
                                 }`} />
                         </div>
-                        <p className={`mt-6 font-medium animate-pulse ${marketplace === 'amazon' ? 'text-amber-300' :
-                            marketplace === 'shopify' ? 'text-green-300' : 'text-orange-300'
-                            }`}>
-                            {loadingStep || 'Analyzing...'}
-                        </p>
+                        <div className={`mt-6 px-6 py-4 rounded-xl border-2 ${marketplace === 'amazon' ? 'border-[#FF9900]/30 bg-[#FF9900]/5' : marketplace === 'shopify' ? 'border-[#96BF48]/30 bg-[#96BF48]/5' : 'border-[#F1641E]/30 bg-[#F1641E]/5'}`}>
+                            <p className={`font-bold text-lg drop-shadow-sm ${marketplace === 'amazon' ? 'text-amber-600' :
+                                marketplace === 'shopify' ? 'text-green-600' : 'text-orange-600'
+                                }`}>
+                                {loadingStep || 'Analyzing...'}
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -1117,8 +1127,8 @@ const EtsySEOMaster = () => {
                             <AlertCircle className="w-8 h-8 text-red-400" />
                         </div>
                         <h2 className="text-xl font-semibold text-red-400 mb-2">Error Occurred</h2>
-                        <p className="text-slate-400 text-sm mb-6 max-w-xs">{error}</p>
-                        <button onClick={handleNewAnalysis} className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-full transition">
+                        <p className="text-[#5C5C5C] text-sm mb-6 max-w-xs">{error}</p>
+                        <button onClick={handleNewAnalysis} className="px-6 py-3 bg-white hover:bg-[#4B5046] rounded-full transition">
                             Try Again
                         </button>
                     </div>
@@ -1140,12 +1150,12 @@ const EtsySEOMaster = () => {
                             <div className="space-y-4">
                                 {/* Tab Header (only show if Studio Mode enabled and studio image exists) */}
                                 {studioModeEnabled && studioImage && (
-                                    <div className="flex justify-center gap-2 p-1 bg-slate-900/50 border border-slate-800 rounded-xl">
+                                    <div className="flex justify-center gap-2 p-1 bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl">
                                         <button
                                             onClick={() => setActiveTab('original')}
                                             className={`flex-1 py-2 px-4 rounded-lg font-sans text-[11px] tracking-[0.15em] uppercase font-bold transition-all ${activeTab === 'original'
-                                                ? 'bg-slate-700 text-white'
-                                                : 'text-slate-500 hover:text-slate-300'
+                                                ? 'bg-[#1A1A1A] text-white'
+                                                : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
                                                 }`}
                                         >
                                             ORIGINAL
@@ -1153,8 +1163,8 @@ const EtsySEOMaster = () => {
                                         <button
                                             onClick={() => setActiveTab('studio')}
                                             className={`flex-1 py-2 px-4 rounded-lg font-sans text-[11px] tracking-[0.15em] uppercase font-bold transition-all ${activeTab === 'studio'
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'text-slate-500 hover:text-slate-300'
+                                                ? `${marketplace === 'amazon' ? 'bg-[#FF9900]' : marketplace === 'shopify' ? 'bg-[#96BF48]' : 'bg-[#F1641E]'} text-white`
+                                                : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
                                                 }`}
                                         >
                                             ✨ AI STUDIO
@@ -1163,30 +1173,42 @@ const EtsySEOMaster = () => {
                                 )}
 
                                 {/* Image Display */}
-                                <div className="relative w-full h-72 rounded-2xl overflow-hidden shadow-lg border border-slate-800 group">
+                                <div className="relative w-full h-72 rounded-2xl overflow-hidden shadow-lg border border-[#E8E7E4] group">
                                     {/* PRIORITY 1: Selected Gallery Image */}
                                     {selectedGalleryImage ? (
                                         <>
+                                            {/* Blur background */}
                                             <img
                                                 src={selectedGalleryImage.imageData}
-                                                className="w-full h-full object-contain bg-slate-950"
+                                                className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
+                                                alt=""
+                                            />
+                                            {/* Main image */}
+                                            <img
+                                                src={selectedGalleryImage.imageData}
+                                                className="relative z-10 w-full h-full object-contain"
                                                 alt={selectedGalleryImage.label}
                                             />
-                                            {/* Selection badge */}
-                                            <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white text-xs font-medium flex items-center gap-1">
-                                                <Check size={12} /> {selectedGalleryImage.label}
-                                            </div>
                                         </>
                                     ) : activeTab === 'studio' && (studioImage || studioBackground) ? (
                                         <>
                                             {/* AI Studio View */}
                                             {studioImage ? (
                                                 // AI Generated Image (full replacement)
-                                                <img
-                                                    src={studioImage}
-                                                    className="w-full h-full object-contain"
-                                                    alt="AI Generated"
-                                                />
+                                                <>
+                                                    {/* Blur background */}
+                                                    <img
+                                                        src={studioImage}
+                                                        className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
+                                                        alt=""
+                                                    />
+                                                    {/* Main image */}
+                                                    <img
+                                                        src={studioImage}
+                                                        className="relative z-10 w-full h-full object-contain"
+                                                        alt="AI Generated"
+                                                    />
+                                                </>
                                             ) : (
                                                 // Fallback: Composite view
                                                 <>
@@ -1203,10 +1225,6 @@ const EtsySEOMaster = () => {
                                                     />
                                                 </>
                                             )}
-                                            {/* Studio badge */}
-                                            <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white text-xs font-medium flex items-center gap-1">
-                                                <Sparkles size={12} /> {studioImage ? 'AI Generated' : 'AI Studio'}
-                                            </div>
                                         </>
                                     ) : (
                                         <>
@@ -1246,12 +1264,12 @@ const EtsySEOMaster = () => {
                         {/* FILM STRIP: Clickable thumbnail gallery of all images */}
                         {/* ═══════════════════════════════════════════════════════════ */}
                         {galleryImages.length > 0 && (
-                            <div className="mt-4 p-3 bg-slate-900/80 border border-slate-700/50 rounded-xl">
+                            <div className="mt-4 p-3 bg-[#F5F4F1]/80 border border-[#E8E7E4]/50 rounded-xl">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                    <span className="text-xs font-medium text-[#5C5C5C] uppercase tracking-wider">
                                         Select Image for Next Generation
                                     </span>
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-[#8C8C8C]">
                                         {galleryImages.length} image{galleryImages.length !== 1 ? 's' : ''}
                                     </span>
                                 </div>
@@ -1260,9 +1278,9 @@ const EtsySEOMaster = () => {
                                         const isSelected = selectedGalleryImage?.id === img.id;
                                         const typeColors = {
                                             'ORIGINAL': 'bg-blue-500',
-                                            'STUDIO': 'bg-purple-500',
-                                            'LIFE': 'bg-green-500',
-                                            'SHOT': 'bg-amber-500'
+                                            'STUDIO': marketplace === 'amazon' ? 'bg-[#FF9900]' : marketplace === 'shopify' ? 'bg-[#96BF48]' : 'bg-[#F1641E]',
+                                            'LIFE': marketplace === 'amazon' ? 'bg-[#FF9900]' : marketplace === 'shopify' ? 'bg-[#96BF48]' : 'bg-[#F1641E]',
+                                            'SHOT': marketplace === 'amazon' ? 'bg-[#FF9900]' : marketplace === 'shopify' ? 'bg-[#96BF48]' : 'bg-[#F1641E]'
                                         };
                                         return (
                                             <button
@@ -1282,8 +1300,8 @@ const EtsySEOMaster = () => {
                                                     relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden
                                                     border-2 transition-all duration-200
                                                     ${isSelected
-                                                        ? 'border-indigo-500 ring-2 ring-indigo-500/50 scale-105'
-                                                        : 'border-slate-600 hover:border-slate-400'
+                                                        ? 'border-[#D4C49A] ring-2 ring-[#D4C49A]/50 scale-105'
+                                                        : 'border-[#E8E7E4] hover:border-[#8A9486]'
                                                     }
                                                 `}
                                             >
@@ -1296,8 +1314,8 @@ const EtsySEOMaster = () => {
                                                     {img.type === 'LIFE' ? 'LIFE' : img.type.slice(0, 4)}
                                                 </div>
                                                 {isSelected && (
-                                                    <div className="absolute inset-0 bg-indigo-500/20 flex items-center justify-center">
-                                                        <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                                                    <div className="absolute inset-0 bg-[#D4C49A]/20 flex items-center justify-center">
+                                                        <div className="w-5 h-5 bg-[#D4C49A] rounded-full flex items-center justify-center">
                                                             <Check size={12} className="text-white" />
                                                         </div>
                                                     </div>
@@ -1307,7 +1325,7 @@ const EtsySEOMaster = () => {
                                     })}
                                 </div>
                                 {selectedGalleryImage && (
-                                    <p className="text-xs text-indigo-400 mt-2 text-center">
+                                    <p className={`text-xs mt-2 text-center ${marketplace === 'amazon' ? 'text-[#FF9900]' : marketplace === 'shopify' ? 'text-[#96BF48]' : 'text-[#F1641E]'}`}>
                                         ✨ "{selectedGalleryImage.label}" selected - Next generation will use this image
                                     </p>
                                 )}
@@ -1319,19 +1337,12 @@ const EtsySEOMaster = () => {
                         {/* ═══════════════════════════════════════════════════════════ */}
                         {(studioImage || selectedGalleryImage || (activeTab === 'original' && image)) && (
                             <div className="mt-4 space-y-3">
-                                {/* Info text about selected source */}
-                                <div className="text-center text-xs text-slate-400">
-                                    Generate from: <span className="text-indigo-400 font-medium">
-                                        {selectedGalleryImage?.label || (studioImage ? 'AI Studio' : 'Original')}
-                                    </span>
-                                </div>
-
                                 {/* Buttons Row - Always visible */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={handleGenerateAngles}
                                         disabled={anglesLoading}
-                                        className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
+                                        className="py-3 px-4 bg-gradient-to-r from-[#BCA879] to-[#A69361] hover:from-[#D4C49A] hover:to-[#BCA879] disabled:opacity-50 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg"
                                     >
                                         {anglesLoading ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -1366,14 +1377,14 @@ const EtsySEOMaster = () => {
 
                         {/* Text Mode Preview */}
                         {inputMode === 'text' && (
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4">
+                            <div className="bg-[#F5F4F1]/50 border border-[#E8E7E4] rounded-2xl p-4">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs text-slate-500">Original Input</span>
-                                    <button onClick={handleNewAnalysis} className="p-1.5 bg-slate-800 rounded-full text-slate-400 hover:text-red-400 transition">
+                                    <span className="text-xs text-[#8C8C8C]">Original Input</span>
+                                    <button onClick={handleNewAnalysis} className="p-1.5 bg-white rounded-full text-[#5C5C5C] hover:text-red-400 transition">
                                         <X size={14} />
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-400 line-clamp-2">{textInput}</p>
+                                <p className="text-sm text-[#5C5C5C] line-clamp-2">{textInput}</p>
                                 {results.price && (
                                     <div className="mt-3 inline-block px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-full text-sm font-medium">
                                         {results.price}
@@ -1383,94 +1394,94 @@ const EtsySEOMaster = () => {
                         )}
 
                         {/* TITLE CARD */}
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                        <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <span className={getLuxuryLabelClass(results.marketplace)}>
                                         {results.marketplace === 'shopify' ? 'PRODUCT TITLE' :
                                             results.marketplace === 'amazon' ? 'A9 TITLE' : 'SEO TITLE'}
                                     </span>
-                                    <span className="text-[10px] text-slate-500/50 ml-2">
+                                    <span className="text-[10px] text-[#8C8C8C]/50 ml-2">
                                         {results.title.length}/{results.marketplace === 'amazon' ? 200 : results.marketplace === 'shopify' ? 70 : 140}
                                     </span>
                                 </div>
-                                <button onClick={() => copyToClipboard(results.title, 'title')} className="text-slate-400 hover:text-white transition">
+                                <button onClick={() => copyToClipboard(results.title, 'title')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                     {copiedField === 'title' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                 </button>
                             </div>
-                            <p className="text-lg font-medium leading-relaxed text-slate-100">{results.title}</p>
+                            <p className="text-lg font-medium leading-relaxed text-[#1A1A1A]">{results.title}</p>
                         </div>
 
                         {/* SHOPIFY CARDS */}
                         {results.marketplace === 'shopify' && results.meta_title && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <span className={getLuxuryLabelClass('shopify')}>META TITLE</span>
-                                        <span className="text-[10px] text-slate-500/50 ml-2">{results.meta_title.length}/60</span>
+                                        <span className="text-[10px] text-[#8C8C8C]/50 ml-2">{results.meta_title.length}/60</span>
                                     </div>
-                                    <button onClick={() => copyToClipboard(results.meta_title, 'meta_title')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.meta_title, 'meta_title')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'meta_title' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-300">{results.meta_title}</p>
+                                <p className="text-sm text-[#1A1A1A]">{results.meta_title}</p>
                             </div>
                         )}
 
                         {results.marketplace === 'shopify' && results.meta_description && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <span className={getLuxuryLabelClass('shopify')}>META DESCRIPTION</span>
-                                        <span className="text-[10px] text-slate-500/50 ml-2">{results.meta_description.length}/160</span>
+                                        <span className="text-[10px] text-[#8C8C8C]/50 ml-2">{results.meta_description.length}/160</span>
                                     </div>
-                                    <button onClick={() => copyToClipboard(results.meta_description, 'meta_description')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.meta_description, 'meta_description')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'meta_description' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-300">{results.meta_description}</p>
+                                <p className="text-sm text-[#1A1A1A]">{results.meta_description}</p>
                             </div>
                         )}
 
                         {results.marketplace === 'shopify' && results.html_description && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <span className={getLuxuryLabelClass('shopify')}>HTML DESCRIPTION</span>
-                                    <button onClick={() => copyToClipboard(results.html_description, 'html_description')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.html_description, 'html_description')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'html_description' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <div className="text-sm text-slate-300 leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: results.html_description }} />
-                                <div className="mt-4 pt-4 border-t border-slate-700">
-                                    <p className="text-xs text-slate-500 mb-2">📋 Raw HTML:</p>
-                                    <pre className="text-xs text-slate-400 bg-slate-800/50 p-3 rounded-xl overflow-x-auto">{results.html_description}</pre>
+                                <div className="text-sm text-[#1A1A1A] leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: results.html_description }} />
+                                <div className="mt-4 pt-4 border-t border-[#E8E7E4]">
+                                    <p className="text-xs text-[#8C8C8C] mb-2">📋 Raw HTML:</p>
+                                    <pre className="text-xs text-[#5C5C5C] bg-white/50 p-3 rounded-xl overflow-x-auto">{results.html_description}</pre>
                                 </div>
                             </div>
                         )}
 
                         {results.marketplace === 'shopify' && results.alt_text && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <span className={getLuxuryLabelClass('shopify')}>IMAGE ALT TEXT</span>
-                                    <button onClick={() => copyToClipboard(results.alt_text, 'alt_text')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.alt_text, 'alt_text')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'alt_text' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-300">{results.alt_text}</p>
+                                <p className="text-sm text-[#1A1A1A]">{results.alt_text}</p>
                             </div>
                         )}
 
                         {results.marketplace === 'shopify' && results.tags && results.tags.length > 0 && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start mb-4">
                                     <span className={getLuxuryLabelClass('shopify')}>TAGS</span>
-                                    <button onClick={() => copyToClipboard(results.tags, 'tags')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.tags, 'tags')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'tags' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {results.tags.map((tag, i) => (
-                                        <span key={i} className="px-3 py-1.5 bg-slate-800 text-slate-300 text-sm rounded-full border border-slate-700">{tag}</span>
+                                        <span key={i} className="px-3 py-1.5 bg-white text-[#1A1A1A] text-sm rounded-full border border-[#E8E7E4]">{tag}</span>
                                     ))}
                                 </div>
                             </div>
@@ -1478,51 +1489,51 @@ const EtsySEOMaster = () => {
 
                         {/* ETSY CARDS */}
                         {results.marketplace === 'etsy' && results.tags && results.tags.length > 0 && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <span className={getLuxuryLabelClass('etsy')}>TAGS</span>
-                                        <span className="text-[10px] text-slate-500/50 ml-2">{results.tags.length}/13</span>
+                                        <span className="text-[10px] text-[#8C8C8C]/50 ml-2">{results.tags.length}/13</span>
                                     </div>
-                                    <button onClick={() => copyToClipboard(results.tags, 'tags')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.tags, 'tags')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'tags' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {results.tags.map((tag, i) => (
-                                        <span key={i} className="px-3 py-1.5 bg-slate-800 text-slate-300 text-sm rounded-full border border-slate-700">{tag}</span>
+                                        <span key={i} className="px-3 py-1.5 bg-white text-[#1A1A1A] text-sm rounded-full border border-[#E8E7E4]">{tag}</span>
                                     ))}
                                 </div>
                             </div>
                         )}
 
                         {results.marketplace === 'etsy' && results.description && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <span className={getLuxuryLabelClass('etsy')}>DESCRIPTION</span>
-                                    <button onClick={() => copyToClipboard(results.description, 'description')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.description, 'description')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'description' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-400 leading-loose whitespace-pre-wrap">{results.description}</p>
+                                <p className="text-sm text-[#5C5C5C] leading-loose whitespace-pre-wrap">{results.description}</p>
                             </div>
                         )}
 
                         {/* AMAZON CARDS */}
                         {results.marketplace === 'amazon' && results.bullets && results.bullets.length > 0 && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <span className={getLuxuryLabelClass('amazon')}>BULLET POINTS</span>
-                                        <span className="text-[10px] text-slate-500/50 ml-2">{results.bullets.length}/5</span>
+                                        <span className="text-[10px] text-[#8C8C8C]/50 ml-2">{results.bullets.length}/5</span>
                                     </div>
-                                    <button onClick={() => copyToClipboard(results.bullets.join('\n'), 'bullets')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.bullets.join('\n'), 'bullets')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'bullets' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
                                 <ul className="space-y-3">
                                     {results.bullets.map((bullet, i) => (
-                                        <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                        <li key={i} className="flex items-start gap-2 text-sm text-[#1A1A1A]">
                                             <span className="text-amber-400 font-bold">•</span>
                                             <span>{bullet}</span>
                                         </li>
@@ -1532,31 +1543,31 @@ const EtsySEOMaster = () => {
                         )}
 
                         {results.marketplace === 'amazon' && results.search_terms && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <span className={getLuxuryLabelClass('amazon')}>BACKEND KEYWORDS</span>
-                                        <span className="text-[10px] text-slate-500/50 ml-2">{new Blob([results.search_terms]).size}/249 bytes</span>
+                                        <span className="text-[10px] text-[#8C8C8C]/50 ml-2">{new Blob([results.search_terms]).size}/249 bytes</span>
                                     </div>
-                                    <button onClick={() => copyToClipboard(results.search_terms, 'search_terms')} className="text-slate-400 hover:text-white transition">
+                                    <button onClick={() => copyToClipboard(results.search_terms, 'search_terms')} className="text-[#5C5C5C] hover:text-[#1A1A1A] transition">
                                         {copiedField === 'search_terms' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                                <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/50 p-3 rounded-xl font-mono">{results.search_terms}</p>
+                                <p className="text-sm text-[#5C5C5C] leading-relaxed bg-white/50 p-3 rounded-xl font-mono">{results.search_terms}</p>
                             </div>
                         )}
 
                         {/* COMMON: Competitor Analysis */}
                         {results.competitorAnalysis && (
-                            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <span className={getLuxuryLabelClass(results.marketplace)}>COMPETITOR ANALYSIS</span>
-                                <p className="text-sm text-slate-400">{results.competitorAnalysis}</p>
+                                <p className="text-sm text-[#5C5C5C]">{results.competitorAnalysis}</p>
                             </div>
                         )}
 
                         {/* COMMON: Market Insights */}
                         {results.marketInsights && (
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <span className={getLuxuryLabelClass(results.marketplace)}>MARKET INSIGHTS</span>
                                     {results._grounded && (
@@ -1565,40 +1576,40 @@ const EtsySEOMaster = () => {
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3 mb-4">
-                                    <div className="bg-slate-800/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
-                                        <Users className="w-4 h-4 text-slate-400" />
+                                    <div className="bg-white/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
+                                        <Users className="w-4 h-4 text-[#5C5C5C]" />
                                         <span className={`text-xs font-bold px-2 py-1 rounded-full border ${getCompetitionColor(results.marketInsights.competitionLevel)}`}>
                                             {results.marketInsights.competitionLevel || 'N/A'}
                                         </span>
-                                        <p className="text-xs text-slate-500">Competition</p>
+                                        <p className="text-xs text-[#8C8C8C]">Competition</p>
                                     </div>
 
-                                    <div className="bg-slate-800/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
+                                    <div className="bg-white/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
                                         <TrendIcon direction={results.marketInsights.trendDirection} />
                                         <span className={`text-sm font-bold ${getTrendColor(results.marketInsights.trendDirection)}`}>
                                             {results.marketInsights.trendDirection || 'N/A'}
                                         </span>
-                                        <p className="text-xs text-slate-500">12-Mo Trend</p>
+                                        <p className="text-xs text-[#8C8C8C]">12-Mo Trend</p>
                                     </div>
 
-                                    <div className="bg-slate-800/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
-                                        <Target className="w-4 h-4 text-slate-400" />
+                                    <div className="bg-white/50 rounded-xl p-3 flex flex-col items-center justify-between h-24">
+                                        <Target className="w-4 h-4 text-[#5C5C5C]" />
                                         <span className={`text-xl font-bold ${getScoreColor(results.marketInsights.opportunityScore)}`}>
                                             {results.marketInsights.opportunityScore || 0}
                                         </span>
-                                        <p className="text-xs text-slate-500">Opp. Score</p>
+                                        <p className="text-xs text-[#8C8C8C]">Opp. Score</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2 text-xs">
                                     {results.marketInsights.competitionReason && (
-                                        <p className="text-slate-400"><span className="text-purple-400 font-medium">Competition:</span> {results.marketInsights.competitionReason}</p>
+                                        <p className="text-[#5C5C5C]"><span className="text-purple-400 font-medium">Competition:</span> {results.marketInsights.competitionReason}</p>
                                     )}
                                     {results.marketInsights.trendReason && (
-                                        <p className="text-slate-400"><span className="text-purple-400 font-medium">Trend:</span> {results.marketInsights.trendReason}</p>
+                                        <p className="text-[#5C5C5C]"><span className="text-purple-400 font-medium">Trend:</span> {results.marketInsights.trendReason}</p>
                                     )}
                                     {results.marketInsights.opportunityReason && (
-                                        <p className="text-slate-400"><span className="text-purple-400 font-medium">Opportunity:</span> {results.marketInsights.opportunityReason}</p>
+                                        <p className="text-[#5C5C5C]"><span className="text-purple-400 font-medium">Opportunity:</span> {results.marketInsights.opportunityReason}</p>
                                     )}
                                 </div>
                             </div>

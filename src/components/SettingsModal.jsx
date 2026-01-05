@@ -8,6 +8,10 @@ export default function SettingsModal({ isOpen, onClose }) {
     const [saved, setSaved] = useState(false);
     const [apiStatus, setApiStatus] = useState('Waiting for scan...');
 
+    // Get current marketplace from localStorage for dynamic theming
+    const marketplace = localStorage.getItem('volla_marketplace') || 'etsy';
+    const platformColor = marketplace === 'amazon' ? '#FF9900' : marketplace === 'shopify' ? '#96BF48' : '#F1641E';
+
     if (!isOpen) return null;
 
     // Update status when modal opens
@@ -31,29 +35,29 @@ export default function SettingsModal({ isOpen, onClose }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-zinc-950/90 backdrop-blur-xl"
+                className="absolute inset-0 bg-black/40/95 backdrop-blur-xl"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative bg-zinc-900 border-2 border-zinc-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="relative bg-white border border-[#E8E7E4] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all duration-300"
+                    className="absolute top-4 right-4 p-1 rounded-lg bg-[#F5F4F1] hover:bg-[#4B5046] text-[#8C8C8C] hover:text-[#1A1A1A] transition-all duration-300"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-zinc-800 to-zinc-700 rounded-full mb-4">
-                        <Key className="w-8 h-8 text-violet-400" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#1D3232] to-[#142424] border border-[#E8E7E4] rounded-full mb-4">
+                        <Key className="w-8 h-8" style={{ color: platformColor }} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">
+                    <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">
                         Settings
                     </h2>
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-[#8C8C8C]">
                         Configure your AI integration
                     </p>
                 </div>
@@ -62,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <div className="space-y-4 mb-6">
                     {/* Gemini API Key */}
                     <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                        <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
                             🔵 Google Gemini API Key
                         </label>
                         <input
@@ -70,17 +74,17 @@ export default function SettingsModal({ isOpen, onClose }) {
                             value={apiKey}
                             onChange={(e) => setApiKey(e.target.value)}
                             placeholder="AIza..."
-                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300"
+                            className="input-luxury"
                         />
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-[#8C8C8C]">
                             For product analysis & SEO generation
                         </p>
                     </div>
 
                     {/* Vertex API Key (Imagen 3) */}
                     <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-400" />
+                        <label className="block text-sm font-medium text-[#1A1A1A] mb-2 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" style={{ color: platformColor }} />
                             Vertex AI API Key (Imagen 3)
                         </label>
                         <input
@@ -88,9 +92,9 @@ export default function SettingsModal({ isOpen, onClose }) {
                             value={vertexApiKey}
                             onChange={(e) => setVertexApiKey(e.target.value)}
                             placeholder="AQ.Ab8..."
-                            className="w-full px-4 py-3 bg-zinc-800 border border-amber-700/50 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                            className="input-luxury"
                         />
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-[#8C8C8C]">
                             For AI Studio & Multi-Angle Shots (BGSWAP)
                         </p>
                     </div>
@@ -99,11 +103,11 @@ export default function SettingsModal({ isOpen, onClose }) {
                 {/* Save Button */}
                 <button
                     onClick={handleSave}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-lg shadow-violet-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
+                    className="btn-luxury w-full flex items-center justify-center gap-2"
                 >
                     {saved ? (
                         <>
-                            <span className="w-5 h-5 border-2 border-white rounded-full flex items-center justify-center">
+                            <span className="w-5 h-5 border-2 border-[#0D1818] rounded-full flex items-center justify-center">
                                 ✓
                             </span>
                             Saved!
@@ -117,25 +121,27 @@ export default function SettingsModal({ isOpen, onClose }) {
                 </button>
 
                 {/* Info */}
-                <div className="mt-4 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg space-y-2">
-                    <p className="text-xs text-zinc-400">
-                        💡 <strong className="text-white">Gemini API:</strong>{' '}
+                <div className="mt-4 p-3 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg space-y-2">
+                    <p className="text-xs text-[#5C5C5C]">
+                        💡 <strong className="text-[#1A1A1A]">Gemini API:</strong>{' '}
                         <a
                             href="https://aistudio.google.com/app/apikey"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-violet-400 hover:text-violet-300 underline"
+                            className="hover:underline"
+                            style={{ color: platformColor }}
                         >
                             Google AI Studio
                         </a>
                     </p>
-                    <p className="text-xs text-zinc-400">
-                        ✨ <strong className="text-white">Vertex AI:</strong>{' '}
+                    <p className="text-xs text-[#5C5C5C]">
+                        ✨ <strong className="text-[#1A1A1A]">Vertex AI:</strong>{' '}
                         <a
                             href="https://console.cloud.google.com/vertex-ai"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-amber-400 hover:text-amber-300 underline"
+                            className="hover:underline"
+                            style={{ color: platformColor }}
                         >
                             Google Cloud Console
                         </a>
@@ -143,33 +149,33 @@ export default function SettingsModal({ isOpen, onClose }) {
                 </div>
 
                 {/* DEBUG: Last API Status */}
-                <div className="mt-4 p-4 bg-zinc-800 border border-zinc-700 rounded-lg">
+                <div className="mt-4 p-4 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-violet-400">Debug: Last API Status</h3>
+                        <h3 className="text-sm font-semibold" style={{ color: platformColor }}>Debug: Last API Status</h3>
                         <button
                             onClick={handleRefreshStatus}
-                            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                            className="text-xs text-[#8C8C8C] hover:text-[#1A1A1A] transition-colors"
                         >
                             🔄 Refresh
                         </button>
                     </div>
-                    <div className="bg-zinc-900 rounded p-2">
-                        <code className="text-xs text-emerald-400 font-mono break-all">
+                    <div className="bg-black/40 rounded p-2">
+                        <code className="text-xs text-[#E06847] font-mono break-all">
                             {apiStatus}
                         </code>
                     </div>
-                    <p className="mt-2 text-xs text-zinc-500">
+                    <p className="mt-2 text-xs text-[#8C8C8C]">
                         This shows the result of the last scan attempt
                     </p>
                 </div>
 
                 {/* Powered by */}
                 <div className="mt-4 text-center">
-                    <p className="text-xs text-zinc-600">
+                    <p className="text-xs text-[#8C8C8C]">
                         Powered by{' '}
-                        <span className="text-violet-400 font-semibold">Gemini</span>
+                        <span className="text-[#E06847] font-semibold">Gemini</span>
                         {' + '}
-                        <span className="text-amber-400 font-semibold">Imagen 3</span>
+                        <span className="text-[#E06847] font-semibold">Imagen 3</span>
                     </p>
                 </div>
             </div>

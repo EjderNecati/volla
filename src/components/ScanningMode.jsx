@@ -34,7 +34,7 @@ export default function ScanningMode({ selectedPlatform, onComplete, scannedImag
         {/* Scanning Container */}
         <div className="relative">
           {/* Product Image with Blur */}
-          <div className="relative rounded-2xl overflow-hidden bg-zinc-900 border-2 border-violet-500/50 shadow-2xl shadow-violet-500/20">
+          <div className="relative rounded-2xl overflow-hidden bg-[#F5F4F1] border-2 border-[#E06847]/50 shadow-2xl shadow-[#E06847]/20">
             <img
               src={scannedImage || "/src/assets/product_placeholder.png"}
               alt="Product being scanned"
@@ -51,7 +51,7 @@ export default function ScanningMode({ selectedPlatform, onComplete, scannedImag
 
             {/* Scanning Grid Overlay */}
             {!isComplete && (
-              <div className="absolute inset-0 bg-gradient-to-b from-violet-500/10 via-transparent to-violet-500/10 pointer-events-none">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#E06847]/10 via-transparent to-[#E06847]/10 pointer-events-none">
                 <div className="w-full h-full" style={{
                   backgroundImage: `
                     linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
@@ -64,10 +64,10 @@ export default function ScanningMode({ selectedPlatform, onComplete, scannedImag
           </div>
 
           {/* Corner Accents */}
-          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-violet-400"></div>
-          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-violet-400"></div>
-          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-violet-400"></div>
-          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-violet-400"></div>
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#E06847]"></div>
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#E06847]"></div>
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#E06847]"></div>
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#E06847]"></div>
         </div>
 
         {/* Status Text */}
@@ -76,22 +76,22 @@ export default function ScanningMode({ selectedPlatform, onComplete, scannedImag
             <>
               {/* AI Status */}
               <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse delay-75"></div>
-                <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse delay-150"></div>
+                <div className="w-2 h-2 bg-[#E06847] rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-[#E06847] rounded-full animate-pulse delay-75"></div>
+                <div className="w-2 h-2 bg-[#E06847] rounded-full animate-pulse delay-150"></div>
               </div>
 
               {/* Dynamic Status Message */}
               <div className="min-h-[3rem] flex items-center justify-center">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2 animate-pulse">
-                  <Sparkles className="w-5 h-5 text-violet-400" />
+                  <Sparkles className="w-5 h-5 text-[#E06847]" />
                   {statusMessages[currentStatus]}
                 </h3>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-violet-500 to-purple-500 animate-progress"></div>
+              <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#E06847] to-purple-500 animate-progress"></div>
               </div>
             </>
           ) : (
@@ -105,7 +105,7 @@ export default function ScanningMode({ selectedPlatform, onComplete, scannedImag
               {/* Analysis Complete Button */}
               <button
                 onClick={onComplete}
-                className="w-full py-4 px-6 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-violet-500/50 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/60"
+                className="w-full py-4 px-6 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-[#E06847] hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-[#E06847]/50 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#E06847]/60"
               >
                 View Analysis Results
               </button>

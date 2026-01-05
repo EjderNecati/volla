@@ -15,7 +15,7 @@ export default function PlatformSwitcher({ selectedPlatform, onPlatformChange })
               transition-all duration-300 ease-out
               ${selectedPlatform === platform
                                 ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/50 scale-105'
-                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                : 'bg-white text-[#5C5C5C] hover:bg-[#E8E7E4] hover:text-white'
                             }
             `}
                     >

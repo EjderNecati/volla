@@ -30,8 +30,8 @@ const DynamicActionBar = ({
                         icon: Sparkles,
                         onClick: onGenerateStudio,
                         loading: isStudioLoading,
-                        color: 'from-purple-600 to-purple-700',
-                        visible: true, // Always show for original
+                        color: 'bg-[#E06847] hover:bg-[#C85A3D]',
+                        visible: true,
                         description: 'Professional studio background'
                     },
                     {
@@ -41,7 +41,7 @@ const DynamicActionBar = ({
                         icon: Users,
                         onClick: onGenerateRealLife,
                         loading: isRealLifeLoading,
-                        color: 'from-green-600 to-emerald-700',
+                        color: 'bg-emerald-600 hover:bg-emerald-500',
                         visible: true,
                         description: 'Lifestyle photos with models'
                     }
@@ -56,7 +56,7 @@ const DynamicActionBar = ({
                         icon: RotateCcw,
                         onClick: onGenerateShots,
                         loading: isShotsLoading,
-                        color: 'from-amber-600 to-orange-700',
+                        color: 'bg-[#E8E7E4] hover:bg-[#8C8C8C]',
                         visible: true,
                         description: 'Multi-angle product shots'
                     },
@@ -135,11 +135,11 @@ const DynamicActionBar = ({
     if (buttons.length === 0) return null;
 
     return (
-        <div className="w-full py-4 px-4 bg-slate-900/50 border-t border-b border-slate-800">
+        <div className="w-full py-4 px-4 bg-[#F5F4F1] border-t border-b border-white">
             {/* Context Label */}
             <div className="text-center mb-3">
-                <span className="text-xs text-slate-400 uppercase tracking-wider">
-                    Actions for: <span className="text-indigo-400 font-medium">{activeAssetType || 'None'}</span>
+                <span className="text-xs text-[#8C8C8C] uppercase tracking-wider">
+                    Actions for: <span className="text-[#1A1A1A] font-medium">{activeAssetType || 'None'}</span>
                 </span>
             </div>
 
@@ -154,11 +154,10 @@ const DynamicActionBar = ({
                             disabled={btn.loading}
                             className={`
                                 relative group flex items-center gap-2
-                                px-5 py-3 rounded-xl
-                                bg-gradient-to-r ${btn.color}
-                                hover:shadow-lg hover:shadow-${btn.color.split('-')[1]}-500/25
+                                px-5 py-3 rounded-md
+                                ${btn.color}
                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                transition-all duration-200
+                                transition-colors
                                 text-white font-medium
                             `}
                         >
@@ -173,7 +172,7 @@ const DynamicActionBar = ({
                             {/* Tooltip */}
                             <div className="
                                 absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-                                px-2 py-1 rounded text-xs bg-slate-800 text-slate-300
+                                px-2 py-1 rounded text-xs bg-white border border-[#E8E7E4] text-[#1A1A1A]
                                 opacity-0 group-hover:opacity-100 transition-opacity
                                 pointer-events-none whitespace-nowrap
                             ">
