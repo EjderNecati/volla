@@ -1,0 +1,558 @@
+{
+    "_meta": {
+        "language": "Français",
+        "locale": "fr",
+        "version": "1.0.0",
+        "lastUpdated": "2026-01-09"
+    },
+    "common": {
+        "loading": "Chargement...",
+        "error": "Erreur",
+        "success": "Succès",
+        "cancel": "Annuler",
+        "confirm": "Confirmer",
+        "save": "Enregistrer",
+        "delete": "Supprimer",
+        "edit": "Modifier",
+        "copy": "Copier",
+        "copied": "Copié !",
+        "download": "Télécharger",
+        "upload": "Téléverser",
+        "generate": "Générer",
+        "generating": "Génération...",
+        "analyzing": "Analyse...",
+        "close": "Fermer",
+        "back": "Retour",
+        "next": "Suivant",
+        "yes": "Oui",
+        "no": "Non",
+        "ok": "OK",
+        "done": "Terminé",
+        "new": "Nouveau",
+        "open": "Ouvrir",
+        "resume": "Reprendre",
+        "clear": "Effacer",
+        "clearAll": "Tout Effacer",
+        "reset": "Réinitialiser",
+        "settings": "Paramètres",
+        "search": "Rechercher",
+        "filter": "Filtrer",
+        "sort": "Trier",
+        "view": "Afficher",
+        "preview": "Aperçu",
+        "share": "Partager",
+        "export": "Exporter",
+        "import": "Importer",
+        "optional": "optionnel",
+        "dragOrClick": "Cliquez ou glissez-déposez",
+        "tryAgain": "Réessayer"
+    },
+    "nav": {
+        "home": "Accueil",
+        "analysis": "Analyse",
+        "aiStudio": "Studio IA",
+        "shots": "Prises",
+        "realLife": "Vie Réelle",
+        "history": "Historique",
+        "settings": "Paramètres",
+        "openStudio": "Ouvrir Studio"
+    },
+    "app": {
+        "name": "Volla",
+        "tagline": "Scanner de Produits IA",
+        "version": "v2.0"
+    },
+    "home": {
+        "welcomeBack": "Bon retour",
+        "quickTools": "Outils rapides et travaux récents",
+        "quickStart": "Démarrage Rapide",
+        "selectMarketplace": "Sélectionnez votre marketplace",
+        "selectMarketplaceFirst": "Sélectionnez d'abord un marketplace",
+        "openingStudio": "Ouverture du Studio IA...",
+        "uploadProductPhoto": "Téléverser Photo Produit",
+        "getAIOptimized": "Obtenez des photos optimisées IA pour {{marketplace}}",
+        "recentProjects": "Projets Récents",
+        "viewAll": "Voir Tout →",
+        "noRecentProjects": "Aucun projet récent",
+        "moreTools": "Plus d'Outils",
+        "untitledProject": "Projet Sans Titre",
+        "aiStudioDescription": "Suite complète de photographie de produits",
+        "textAnalysisDescription": "Optimisation SEO pour les annonces de produits"
+    },
+    "handsfree": {
+        "title": "Architecte de Prompts",
+        "subtitle": "Paramètres professionnels d'angle et de cadrage pour la génération de prompts",
+        "sourceImage": "Image Source",
+        "uploadImage": "Téléverser Image",
+        "customDirective": "Directive Personnalisée",
+        "customDirectivePlaceholder": "Ex.: Angle arrière, gros plan pied...",
+        "generatePrompt": "Générer Prompt",
+        "generatedPrompt": "Prompt Généré",
+        "copyAll": "Tout Copier",
+        "generateImage": "Générer Image",
+        "generateImageGemini": "Générer Image (Gemini)",
+        "generatedImage": "Image Générée",
+        "imageReady": "Image Prête",
+        "imageWillAppear": "L'image apparaîtra ici",
+        "promptReady": "Prompt prêt !",
+        "promptFailed": "Échec de la génération du prompt",
+        "imageFailed": "Échec de la génération d'image",
+        "analyzingProduct": "Analyse du produit...",
+        "buildingPrompt": "Construction du prompt professionnel...",
+        "generatingImage": "Génération d'Image...",
+        "promptLabel": "Prompt :"
+    },
+    "camera": {
+        "title": "Angle de Caméra",
+        "angles": {
+            "eyeLevel": "Niveau des Yeux",
+            "shoulder": "Épaule",
+            "waist": "Taille",
+            "knee": "Genou",
+            "ground": "Sol",
+            "wormEye": "Vue du Sol",
+            "lowAngle": "Contre-Plongée",
+            "highAngle": "Plongée",
+            "birdEye": "Vue d'Oiseau",
+            "drone": "Drone",
+            "satellite": "Satellite",
+            "dutch": "Dutch"
+        }
+    },
+    "shotScale": {
+        "title": "Échelle de Plan",
+        "scales": {
+            "extremeClose": "Très Gros Plan",
+            "closeUp": "Gros Plan",
+            "mediumClose": "Plan Rapproché",
+            "medium": "Plan Moyen",
+            "mediumFull": "Plan Américain",
+            "fullShot": "Plan Pied",
+            "wide": "Plan Large",
+            "extremeWide": "Plan Très Large",
+            "cowboyShot": "Plan Cowboy",
+            "choker": "Plan Serré"
+        }
+    },
+    "lens": {
+        "title": "Préférence Objectif",
+        "options": {
+            "8mmFisheye": "8mm Fisheye",
+            "14mmUltra": "14mm Ultra",
+            "24mmWide": "24mm Grand Angle",
+            "35mmClassic": "35mm Classique",
+            "50mmNatural": "50mm Naturel",
+            "85mmPortrait": "85mm Portrait",
+            "200mmTele": "200mm Téléobjectif",
+            "anamorphic": "Anamorphique",
+            "iphone17Pro": "iPhone 17 Pro",
+            "retro": "Rétro",
+            "phaseOneIQ4": "Phase One IQ4",
+            "arriAlexa35": "ARRI Alexa 35"
+        }
+    },
+    "aspectRatio": {
+        "title": "Format d'Image",
+        "ratios": {
+            "original": "Original",
+            "1:1": "1:1",
+            "4:3": "4:3",
+            "3:2": "3:2",
+            "16:9": "16:9",
+            "3:4": "3:4",
+            "2:3": "2:3",
+            "9:16": "9:16",
+            "21:9": "21:9",
+            "5:4": "5:4",
+            "4:5": "4:5",
+            "2.35:1": "2.35:1"
+        }
+    },
+    "settings": {
+        "title": "Paramètres",
+        "subtitle": "Configurez vos clés API et préférences",
+        "apiConfiguration": "Configuration API",
+        "storageManagement": "Gestion du Stockage",
+        "apiKeySettings": "Paramètres Clé API",
+        "geminiApiKey": "Clé API Gemini",
+        "geminiApiKeyLabel": "Clé API Google Gemini",
+        "geminiApiKeyHelp": "Requise pour l'analyse SEO",
+        "vertexApiKeyLabel": "Clé API Vertex AI (Imagen 3)",
+        "vertexApiKeyHelp": "Requise pour Studio IA et prises multi-angles",
+        "projects": "Projets",
+        "photos": "Photos",
+        "clearAllProjects": "Supprimer Tous les Projets",
+        "resetAllData": "Réinitialiser Toutes les Données",
+        "confirmDeleteProjects": "⚠️ Êtes-vous sûr de vouloir supprimer tous les projets ?\n\nCette action est irréversible !",
+        "confirmDeleteAll": "🔴 Êtes-vous sûr de vouloir supprimer TOUTES les données ?\n\nCela supprimera TOUT, y compris vos clés API !",
+        "confirmDeleteHistory": "Êtes-vous sûr de vouloir supprimer tout l'historique ?",
+        "saved": "Enregistré !",
+        "saveSettings": "Enregistrer Paramètres",
+        "cleared": "Effacé !",
+        "enterApiKey": "Entrez votre clé API",
+        "saveKey": "Enregistrer Clé",
+        "getApiKey": "Obtenir Clé API",
+        "language": "Langue",
+        "selectLanguage": "Sélectionnez votre langue préférée",
+        "aboutApp": "À Propos de l'Application",
+        "aboutDescription": "Vos clés API sont stockées en toute sécurité dans votre navigateur. Elles ne quittent jamais votre appareil.",
+        "resetWarning": "⚠️ Cela supprimera tout, y compris les clés API"
+    },
+    "analysis": {
+        "title": "Analyse de Texte",
+        "subtitle": "Générez du contenu optimisé SEO à partir des informations produit",
+        "recentAnalyses": "Analyses Récentes",
+        "newAnalysis": "Nouvelle Analyse",
+        "newScan": "Nouveau Scan",
+        "marketplace": "Marketplace",
+        "productName": "Nom du Produit",
+        "productDescription": "Description du Produit",
+        "referenceLink": "Lien Concurrent / Référence",
+        "inputMode": "Mode d'Entrée",
+        "imageMode": "Image",
+        "textMode": "Texte",
+        "analyzingFor": "Analyse IA pour {{marketplace}}...",
+        "analysisCompleteFor": "Analyse terminée pour {{marketplace}}",
+        "analyzeAnother": "Analyser un Autre Produit",
+        "preparingImage": "Préparation de l'image...",
+        "processingText": "Traitement du texte pour {{marketplace}}...",
+        "generateSEO": "Générer Contenu SEO",
+        "apiKeyNotice": "Ajoutez votre clé API Gemini dans les Paramètres pour commencer",
+        "noHistory": "Aucun historique d'analyse",
+        "analysesWillAppear": "Vos analyses apparaîtront ici"
+    },
+    "studio": {
+        "title": "Studio IA",
+        "normal": "Normal",
+        "handsfree": "Mains Libres",
+        "studioImage": "Image Studio IA",
+        "original": "Original",
+        "uploadPhoto": "Téléverser Photo",
+        "chooseImage": "Choisir Image",
+        "uploadDescription": "Téléversez votre photo produit pour une annonce {{marketplace}} optimisée IA.",
+        "aiStudioMode": "MODE STUDIO IA",
+        "contextAware": "Photographie produit contextuelle",
+        "addApiKey": "Ajouter Clé API pour Commencer",
+        "newAnalysis": "Nouvelle Analyse",
+        "generating": "Génération...",
+        "analyzing": "Analyse...",
+        "textModeDescription": "L'IA réécrira votre texte et générera du contenu optimisé pour {{marketplace}}.",
+        "generatingStudio": "Génération du Studio...",
+        "generatingShots": "Génération des Prises...",
+        "generatingRealLife": "Génération Vie Réelle...",
+        "assets": "ressources",
+        "uploadForAnalysis": "Téléversez une image pour l'analyse SEO",
+        "addApiKeySettings": "Ajoutez la clé API Gemini dans les Paramètres"
+    },
+    "shots": {
+        "title": "Prises Multi-Angles",
+        "generateAngles": "Générer Angles",
+        "shot1": "Prise 1",
+        "shot2": "Prise 2",
+        "shot3": "Prise 3"
+    },
+    "realLife": {
+        "title": "Photos Vie Réelle",
+        "generateRealLife": "Générer Vie Réelle",
+        "lifestyle1": "Style de Vie 1",
+        "lifestyle2": "Style de Vie 2",
+        "lifestyle3": "Style de Vie 3"
+    },
+    "marketplace": {
+        "etsy": "Etsy",
+        "amazon": "Amazon",
+        "shopify": "Shopify"
+    },
+    "results": {
+        "seoTitle": "Titre SEO",
+        "productTitle": "Titre Produit",
+        "productDescription": "Description Produit",
+        "htmlDescription": "Description HTML",
+        "hiddenKeywords": "Mots-Clés Cachés",
+        "keywords": "Mots-Clés",
+        "tags": "Étiquettes",
+        "suggestedPrice": "Prix Suggéré",
+        "estimatedPrice": "Prix Estimé",
+        "recommendedPrice": "Prix Recommandé",
+        "liveData": "DONNÉES EN DIRECT",
+        "aiAnalysis": "ANALYSE IA",
+        "noKeywords": "Aucun mot-clé généré",
+        "copied": "Copié",
+        "copy": "Copier"
+    },
+    "history": {
+        "title": "Historique",
+        "storageUsage": "Utilisation du Stockage",
+        "resumeProject": "Reprendre Projet",
+        "openAIStudio": "Ouvrir Studio IA",
+        "noProjects": "Aucun projet",
+        "startScanning": "Commencez à scanner des produits pour construire votre historique"
+    },
+    "paywall": {
+        "limitedTimeOffer": "Offre à Durée Limitée",
+        "cancelAnytime": "Annulez à tout moment",
+        "subscribe": "S'abonner",
+        "restore": "Restaurer l'Achat"
+    },
+    "time": {
+        "justNow": "À L'INSTANT",
+        "minutesAgo": "IL Y A {{count}}M",
+        "hoursAgo": "IL Y A {{count}}H",
+        "daysAgo": "IL Y A {{count}}J"
+    },
+    "errors": {
+        "promptFailed": "Échec de la génération du prompt",
+        "imageFailed": "Échec de la génération d'image",
+        "apiKeyMissing": "Veuillez fournir une clé API Gemini valide dans les Paramètres (icône engrenage).",
+        "uploadFailed": "Échec du téléversement",
+        "analysisError": "Erreur d'analyse",
+        "invalidApiKey": "Clé API invalide – ouvrez les Paramètres (icône engrenage) et entrez une clé Gemini valide.",
+        "noSourceImage": "Aucune image source disponible",
+        "generationFailed": "Échec de la génération",
+        "minChars": "Veuillez entrer au moins {{count}} caractères"
+    },
+    "tooltips": {
+        "copy": "Copier dans le presse-papiers",
+        "download": "Télécharger l'image",
+        "delete": "Supprimer l'élément",
+        "settings": "Ouvrir les paramètres"
+    },
+    "credits": {
+        "insufficient": "Crédits Insuffisants",
+        "feature": "Fonctionnalité",
+        "required": "Requis",
+        "available": "Disponible",
+        "needed": "Besoin",
+        "moreCredits": "crédits supplémentaires",
+        "upgrade": "Améliorer le Plan",
+        "creditsUnit": "crédits",
+        "costLabel": "crédits"
+    },
+    "pricing": {
+        "title": "Choisissez Votre Plan",
+        "subtitle": "Libérez toute la puissance de la photographie produit IA",
+        "currentPlan": "Plan Actuel",
+        "credits": "Crédits",
+        "monthly": "Mensuel",
+        "yearly": "Annuel",
+        "month": "mois",
+        "monthlyCredits": "Crédits Mensuels",
+        "billedYearly": "facturé annuellement",
+        "selectPlan": "Sélectionner le Plan",
+        "contactUs": "Contactez-nous",
+        "custom": "Personnalisé",
+        "tailored": "Adapté à vos besoins",
+        "unlimited": "Illimité",
+        "popular": "POPULAIRE",
+        "creditCosts": "Coûts des Crédits",
+        "free": "Gratuit",
+        "slogan": "Transformez vos photos produits en aimants à ventes"
+    },
+    "plans": {
+        "feature": {
+            "credits20": "20 Crédits (unique)",
+            "credits100": "100 Crédits/mois",
+            "credits400": "400 Crédits/mois",
+            "credits1200": "1200 Crédits/mois",
+            "unlimitedCredits": "Crédits Illimités",
+            "allFeatures": "Toutes les fonctionnalités incluses",
+            "standardQueue": "File d'attente standard",
+            "priorityQueue": "File d'attente prioritaire",
+            "highPriorityQueue": "Haute priorité",
+            "topPriorityQueue": "Priorité maximale",
+            "dedicatedManager": "Gestionnaire de compte dédié",
+            "customOnboarding": "Intégration personnalisée"
+        }
+    },
+    "landing": {
+        "nav": {
+            "features": "Fonctionnalités",
+            "howItWorks": "Comment ça marche",
+            "pricing": "Tarifs",
+            "logIn": "Connexion",
+            "startFree": "Commencer gratuitement"
+        },
+        "hero": {
+            "badge": "La première et unique plateforme au monde de ce type",
+            "headline1": "Transformez les photos de produits en",
+            "headline2": "machines à vendre",
+            "subheadline": "Photographie de produits et optimisation SEO propulsées par l'IA pour Etsy, Amazon et Shopify en un clic. Résultats professionnels sans compétences professionnelles.",
+            "ctaPrimary": "Commencer gratuitement — 20 crédits",
+            "ctaSecondary": "Voir la démo",
+            "sellers": "10 000+ vendeurs",
+            "rating": "Note 4,9/5",
+            "noCard": "Aucune carte bancaire requise"
+        },
+        "logos": {
+            "optimizedFor": "Optimisé pour les plus grandes marketplaces au monde"
+        },
+        "features": {
+            "title": "Tout ce dont vous avez besoin sur une plateforme",
+            "subtitle": "Des photos de produits générées par IA au SEO spécifique à chaque marketplace — le tout propulsé par une IA de pointe.",
+            "studio": {
+                "title": "Studio photo IA",
+                "description": "Transformez n'importe quelle photo de produit en prises de studio professionnelles avec éclairage et arrière-plans parfaits."
+            },
+            "reallife": {
+                "title": "Prises de vue réelles",
+                "description": "Générez des images lifestyle montrant vos produits dans des contextes réels qui résonnent avec les acheteurs."
+            },
+            "angles": {
+                "title": "Vues multi-angles",
+                "description": "Créez plusieurs angles et perspectives de produits à partir d'une seule photo pour des annonces complètes."
+            },
+            "seo": {
+                "title": "Optimisation SEO",
+                "description": "Obtenez des titres, mots-clés, descriptions et stratégies de prix spécifiques à chaque marketplace alimentés par l'IA."
+            },
+            "learnMore": "En savoir plus"
+        },
+        "valueProp": {
+            "line1": "Une plateforme.",
+            "line2": "Toutes les marketplaces.",
+            "line3": "Zéro effort.",
+            "activeSellers": "Vendeurs actifs",
+            "imagesGenerated": "Images générées",
+            "satisfaction": "Satisfaction client"
+        },
+        "howItWorks": {
+            "title": "De la photo aux ventes en 60 secondes",
+            "subtitle": "Trois étapes simples. C'est tout.",
+            "step1": {
+                "title": "Télécharger votre photo",
+                "description": "Téléchargez n'importe quelle photo de produit — capture mobile, prise de studio basique ou même une maquette."
+            },
+            "step2": {
+                "title": "Choisir votre marketplace",
+                "description": "Sélectionnez Etsy, Amazon ou Shopify. Chaque plateforme reçoit une optimisation spécialisée."
+            },
+            "step3": {
+                "title": "Tout obtenir instantanément",
+                "description": "Recevez des images générées par IA, titres SEO, mots-clés, descriptions et prix — en quelques secondes."
+            }
+        },
+        "pricing": {
+            "title": "Tarifs simples et transparents",
+            "subtitle": "Commencez gratuitement. Évoluez avec votre croissance.",
+            "mostPopular": "Le plus populaire",
+            "monthly": "Mensuel",
+            "yearly": "Annuel",
+            "billedYearly": "Facturé annuellement",
+            "year": "an",
+            "perMonth": "/mois",
+            "creditsMonth": "crédits/mois",
+            "getStarted": "Commencer",
+            "allFeatures": "Tous les plans incluent l'accès à toutes les fonctionnalités.",
+            "viewDetails": "Voir tous les détails tarifaires →"
+        },
+        "cta": {
+            "title1": "Prêt à transformer",
+            "title2": "votre photographie de produits?",
+            "subtitle": "Rejoignez des milliers de vendeurs qui utilisent déjà Volla pour créer des annonces de produits époustouflantes et optimisées pour le SEO en quelques secondes.",
+            "button": "Commencer gratuitement",
+            "disclaimer": "Aucune carte bancaire requise • 20 crédits gratuits • Annulez à tout moment"
+        },
+        "footer": {
+            "features": "Fonctionnalités",
+            "pricing": "Tarifs",
+            "support": "Support",
+            "privacy": "Confidentialité",
+            "terms": "Conditions",
+            "copyright": "© 2026 Volla. Tous droits réservés. La première plateforme d'optimisation marketplace propulsée par IA au monde."
+        }
+    },
+    "privacy": {
+        "title": "Politique de confidentialité",
+        "lastUpdated": "Dernière mise à jour",
+        "intro": "Votre vie privée est importante pour nous. Cette Politique de confidentialité explique comment Volla collecte, utilise et protège vos informations personnelles.",
+        "sections": {
+            "dataCollection": {
+                "title": "Collecte de données",
+                "content": "Nous collectons les informations que vous fournissez directement, telles que l'adresse e-mail et les informations de paiement lors de la création d'un compte. Nous collectons également des données d'utilisation, y compris les images téléchargées (traitées temporairement, non stockées en permanence), le contenu généré et les préférences de plateforme."
+            },
+            "dataUsage": {
+                "title": "Comment nous utilisons vos données",
+                "content": "Vos données sont utilisées pour fournir et améliorer nos services, traiter les paiements, communiquer avec vous concernant votre compte et assurer la sécurité de la plateforme. Nous ne vendons pas vos informations personnelles à des tiers."
+            },
+            "imageProcessing": {
+                "title": "Traitement des images",
+                "content": "Les images téléchargées sont traitées via des systèmes d'IA (Google Gemini, Vertex AI) pour créer des photos de produits optimisées. Les images téléchargées sont traitées en temps réel et ne sont pas stockées en permanence sur nos serveurs. Les images générées sont stockées dans votre compte pour votre commodité."
+            },
+            "cookies": {
+                "title": "Cookies et suivi",
+                "content": "Nous utilisons des cookies essentiels pour l'authentification et les préférences. Les cookies analytiques nous aident à comprendre comment les utilisateurs interagissent avec notre plateforme. Vous pouvez contrôler les préférences des cookies via les paramètres de votre navigateur."
+            },
+            "gdpr": {
+                "title": "Conformité RGPD (utilisateurs UE)",
+                "content": "Si vous êtes dans l'Union européenne, vous avez les droits suivants en vertu du RGPD : Droit d'accès à vos données personnelles, Droit de rectification, Droit à l'effacement ('droit à l'oubli'), Droit à la portabilité des données, Droit d'opposition au traitement. Contactez-nous à privacy@volla.app pour exercer ces droits."
+            },
+            "kvkk": {
+                "title": "Conformité KVKK (Turquie)",
+                "content": "Les utilisateurs turcs sont protégés par la loi sur la protection des données personnelles (KVKK). Vous avez le droit de savoir si vos données sont traitées, de demander des informations sur le traitement, de demander la correction, de demander la suppression et de vous opposer à la prise de décision automatisée."
+            },
+            "ccpa": {
+                "title": "Conformité CCPA (Californie)",
+                "content": "Les résidents de Californie ont le droit de savoir quelles informations personnelles sont collectées, de demander leur suppression, de refuser la vente d'informations personnelles et de ne pas être discriminés pour avoir exercé leurs droits."
+            },
+            "thirdParties": {
+                "title": "Services tiers",
+                "content": "Nous utilisons des services tiers de confiance, notamment Google Cloud (traitement IA), Stripe (paiements) et Vercel (hébergement). Chaque service a sa propre politique de confidentialité et mesures de protection des données."
+            },
+            "security": {
+                "title": "Sécurité des données",
+                "content": "Nous mettons en œuvre des mesures de sécurité standard de l'industrie, y compris le chiffrement en transit et au repos, l'authentification sécurisée et des audits de sécurité réguliers. Cependant, aucun système n'est sûr à 100%."
+            },
+            "contact": {
+                "title": "Nous contacter",
+                "content": "Pour les demandes liées à la confidentialité, contactez-nous :"
+            }
+        }
+    },
+    "terms": {
+        "title": "Conditions d'utilisation",
+        "lastUpdated": "Dernière mise à jour",
+        "intro": "En utilisant Volla, vous acceptez ces Conditions d'utilisation. Veuillez les lire attentivement.",
+        "sections": {
+            "aiDisclaimer": {
+                "title": "Avertissement technologie IA",
+                "content": "Volla utilise une technologie IA avancée, y compris Google Gemini et Vertex AI, pour la génération d'images et l'optimisation SEO. Important : Le contenu généré par IA peut contenir des erreurs ou inexactitudes, Les résultats peuvent varier et ne sont pas garantis, Les modèles IA apprennent en continu et les sorties peuvent changer avec le temps, Vous êtes responsable de vérifier et valider tout contenu généré avant utilisation, Nous ne garantissons pas de résultats de vente spécifiques ni de performance sur les marketplaces."
+            },
+            "acceptableUse": {
+                "title": "Politique d'utilisation acceptable",
+                "content": "Vous acceptez de NE PAS utiliser Volla pour : Créer de la nudité, du contenu obscène ou pour adultes, Créer du contenu nuisible, illégal ou frauduleux, Violer les droits de propriété intellectuelle, Créer du contenu promouvant la violence ou la haine, Tout objectif violant les lois applicables."
+            },
+            "contentPolicy": {
+                "title": "Politique de contenu et sécurité",
+                "content": "Nos systèmes IA contiennent des filtres de sécurité qui rejettent automatiquement les demandes de : Nudité ou contenu sexuel, Contenu violent ou sanglant, Discours haineux ou discrimination, Activités illégales, Imitation non autorisée de personnes réelles. Tenter de contourner ces filtres peut entraîner la résiliation du compte."
+            },
+            "intellectualProperty": {
+                "title": "Propriété intellectuelle",
+                "content": "Vous conservez la propriété des images téléchargées. Vous accordez à Volla une licence pour traiter vos images pour la prestation du service. Les images générées par IA vous sont concédées sous licence pour un usage commercial. Vous êtes responsable de vous assurer que vous avez le droit de télécharger des images."
+            },
+            "accountResponsibility": {
+                "title": "Responsabilité du compte",
+                "content": "Vous êtes responsable du maintien de la sécurité du compte, de toutes les activités sous votre compte, de vous assurer que le contenu téléchargé ne viole pas les droits de tiers et de respecter les conditions des marketplaces (Etsy, Amazon, Shopify)."
+            },
+            "payments": {
+                "title": "Paiements et remboursements",
+                "content": "Les abonnements sont facturés à l'avance. Les crédits n'expirent pas pendant votre période d'abonnement. Les remboursements sont évalués au cas par cas. Vous pouvez annuler votre abonnement à tout moment."
+            },
+            "limitation": {
+                "title": "Limitation de responsabilité",
+                "content": "Volla est fourni sans garanties 'tel quel'. Nous ne sommes pas responsables des dommages indirects, accessoires ou consécutifs. Notre responsabilité est limitée au montant que vous nous avez payé au cours des 12 derniers mois."
+            },
+            "termination": {
+                "title": "Résiliation",
+                "content": "Nous pouvons suspendre ou résilier votre compte avec ou sans préavis pour violation de ces conditions ou pour toute autre raison. Vous pouvez résilier votre compte à tout moment via les paramètres."
+            },
+            "changes": {
+                "title": "Modifications des conditions",
+                "content": "Nous pouvons mettre à jour ces conditions de temps en temps. Nous vous informerons des modifications importantes. L'utilisation continue après les modifications constitue une acceptation."
+            },
+            "contact": {
+                "title": "Contact",
+                "content": "Pour toute question concernant ces conditions, contactez-nous :"
+            }
+        }
+    }
+}

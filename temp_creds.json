@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "gen-lang-client-0079627208",
+    "private_key_id": "50d2c3c01a5ebf57e6899a2557d88c9ed04c61b7",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCtdHmNCc8N5Hf1\ny0oesYl7/zmDBH4n+dK5EnkxzuQBpEYw+oOvsfrWFJ8G8xIvRKG/ES4d56m5BeMI\nSpUU5EZBRDnYTinUKBTYOKTMnHVH/Sth2hO5yTLzhyuHJnbWc37Vjs6lzy2XsDYr\nnCVRx8v5IQIJEhaEqj0ELpNx9XrrWaMTrHU7P0hx1yssWIfIGYRGhFIZAK2g4twD\n2XxcLJTdkTZ38o2MnKxWIlVro7TjCYgSX6wOj801KV6O6xl8QqzHvO+9sPN3TIgz\nhfp4Zpu++7NE4uGaCqmaJnFGJwZCljMJryZ1yGQ+ZyigU5KQptTVEeDYK3mS/LOv\nLy1omek7AgMBAAECggEAQX7yKOXzx6il/WtyRO2/3tDsPAM1yc2FGroVhk+7e702\nfecSU4TulOi7dcnR64RMWRPZKJSh20oURLy412cs+hcTipBVLhWmbVDSNaq8hF7e\nAzhv617EPP2k24cUJ3z7/xLKCAUXj6gLhGMVGnDJnfwvQxKP6y9HE+2sYkMR04zp\nqPBV4MWnAqNWvsqJVlpCsg6HsFBCjZFMnsfGD63EFRMoYcfj96RKsjzhhIeePE3t\n3Ysv+JRwqEnuRB3bo5MtDTj3WhgtlD+7MJbOWD3YcLIM3B+810OkMpqLadfF1jkb\nMzool1PlVodu1HsOf/tu0PPzWiZ6Ya6NAqbA0h34eQKBgQDUNDi9ARUGdmLR8WoQ\nKZqFOqpHryZFFAt7D10KwvbjeDoPzFllzkolvTewO5cGy4sumgR9zEhHBQFaRjms\n8FQNm2AJfkFp5omyHZeLtOSztZWij1pjmY0gb3wDCzO/IuMBWH3eFVFcrBpxtSA7\nYyYXEr2mgO4rEF5RIc4piY+EWQKBgQDRQPPmZTcNLHhdE8CiA39aSPY9AxJsFwO0\nZWl/qwPdMqM6VirTCK8ZSFGVrn5qDd8AB0fd2wh24rlOGXeigEkiFXbanpfJnd1n\nEOtYbGQfHiFFaM3W7orLDlLJ1zaVxV0exJSPNV5FxApROA3Qiy6K84l0U/uLOQft\nQn1RrTN3swKBgQCFzC+CLG5/VqHUUe1YJ4NAQc8fx7XPlGXwv60gnfFhV2r0jxpG\n8J0b0oSMX+ZH6IrnZUEzuFxSOzuxGdo/yoCU28Tf93VzOmLTpYjqE7KoBPRGPTD2\n39h1/RUqLiQAfhS3wn4KS1Kzpeg+jb+28jsQDUb69ww0putxKGl/EzckcQKBgDpW\ncGj4KNvsXPYeDqNcdEHYe4XQ+G7YD7lYWIw2QlKFzonyAehp0F8tEUm4pxesHFKm\ntPt+GCME3IKQiRDt0PXGpCcY9dpIv7P/PI2fUl52iPIP4Osd/+XSbXRGIrqolmiA\nh6ZRS6IJoJK6HOfaFbS5ZsXesA9FbBdSZRvDPMkPAoGAZNmAaLAI9SODHHj1ATgY\nADsh4ogT8bBCz75UFXaJ4hFDknnX2Jxe9nI1ZnWYbItFvD00ZvHm/qkvjM329yBm\nTlbE8v9ymDa58gYXUlMQCaiar96ulD2rzoM4R1t2W4FB3EXocfviJuo+5dE4tjEn\n/bhJLPz+VtPRzBVOn5RDRcM=\n-----END PRIVATE KEY-----\n",
+    "client_email": "volla-handsfree@gen-lang-client-0079627208.iam.gserviceaccount.com",
+    "client_id": "115313684666312607965",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/volla-handsfree%40gen-lang-client-0079627208.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}

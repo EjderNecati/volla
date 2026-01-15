@@ -1,0 +1,558 @@
+{
+    "_meta": {
+        "language": "Nederlands",
+        "locale": "nl",
+        "version": "1.0.0",
+        "lastUpdated": "2026-01-09"
+    },
+    "common": {
+        "loading": "Laden...",
+        "error": "Fout",
+        "success": "Succes",
+        "cancel": "Annuleren",
+        "confirm": "Bevestigen",
+        "save": "Opslaan",
+        "delete": "Verwijderen",
+        "edit": "Bewerken",
+        "copy": "Kopiëren",
+        "copied": "Gekopieerd!",
+        "download": "Downloaden",
+        "upload": "Uploaden",
+        "generate": "Genereren",
+        "generating": "Genereren...",
+        "analyzing": "Analyseren...",
+        "close": "Sluiten",
+        "back": "Terug",
+        "next": "Volgende",
+        "yes": "Ja",
+        "no": "Nee",
+        "ok": "OK",
+        "done": "Klaar",
+        "new": "Nieuw",
+        "open": "Openen",
+        "resume": "Hervatten",
+        "clear": "Wissen",
+        "clearAll": "Alles Wissen",
+        "reset": "Resetten",
+        "settings": "Instellingen",
+        "search": "Zoeken",
+        "filter": "Filteren",
+        "sort": "Sorteren",
+        "view": "Bekijken",
+        "preview": "Voorbeeld",
+        "share": "Delen",
+        "export": "Exporteren",
+        "import": "Importeren",
+        "optional": "optioneel",
+        "dragOrClick": "Klik of sleep en zet neer",
+        "tryAgain": "Opnieuw Proberen"
+    },
+    "nav": {
+        "home": "Home",
+        "analysis": "Analyse",
+        "aiStudio": "AI Studio",
+        "shots": "Shots",
+        "realLife": "Real Life",
+        "history": "Geschiedenis",
+        "settings": "Instellingen",
+        "openStudio": "Studio Openen"
+    },
+    "app": {
+        "name": "Volla",
+        "tagline": "AI Product Scanner",
+        "version": "v2.0"
+    },
+    "home": {
+        "welcomeBack": "Welkom terug",
+        "quickTools": "Snelle tools en recent werk",
+        "quickStart": "Snel Starten",
+        "selectMarketplace": "Selecteer je marketplace",
+        "selectMarketplaceFirst": "Selecteer eerst een marketplace",
+        "openingStudio": "AI Studio openen...",
+        "uploadProductPhoto": "Productfoto Uploaden",
+        "getAIOptimized": "Krijg AI-geoptimaliseerde foto's voor {{marketplace}}",
+        "recentProjects": "Recente Projecten",
+        "viewAll": "Alles Bekijken →",
+        "noRecentProjects": "Geen recente projecten",
+        "moreTools": "Meer Tools",
+        "untitledProject": "Naamloos Project",
+        "aiStudioDescription": "Complete productfotografie suite",
+        "textAnalysisDescription": "SEO-optimalisatie voor productadvertenties"
+    },
+    "handsfree": {
+        "title": "Prompt Architect",
+        "subtitle": "Professionele camera-hoek en shot-instellingen voor prompt generatie",
+        "sourceImage": "Bronafbeelding",
+        "uploadImage": "Afbeelding Uploaden",
+        "customDirective": "Aangepaste Instructie",
+        "customDirectivePlaceholder": "Bijv.: Achterhoek, close-up voet...",
+        "generatePrompt": "Prompt Genereren",
+        "generatedPrompt": "Gegenereerde Prompt",
+        "copyAll": "Alles Kopiëren",
+        "generateImage": "Afbeelding Genereren",
+        "generateImageGemini": "Afbeelding Genereren (Gemini)",
+        "generatedImage": "Gegenereerde Afbeelding",
+        "imageReady": "Afbeelding Klaar",
+        "imageWillAppear": "Afbeelding verschijnt hier",
+        "promptReady": "Prompt klaar!",
+        "promptFailed": "Prompt generatie mislukt",
+        "imageFailed": "Afbeelding generatie mislukt",
+        "analyzingProduct": "Product analyseren...",
+        "buildingPrompt": "Professionele prompt bouwen...",
+        "generatingImage": "Afbeelding Genereren...",
+        "promptLabel": "Prompt:"
+    },
+    "camera": {
+        "title": "Camera Hoek",
+        "angles": {
+            "eyeLevel": "Ooghoogte",
+            "shoulder": "Schouder",
+            "waist": "Taille",
+            "knee": "Knie",
+            "ground": "Grond",
+            "wormEye": "Kikvorsperspectief",
+            "lowAngle": "Lage Hoek",
+            "highAngle": "Hoge Hoek",
+            "birdEye": "Vogelperspectief",
+            "drone": "Drone",
+            "satellite": "Satelliet",
+            "dutch": "Dutch"
+        }
+    },
+    "shotScale": {
+        "title": "Shot Schaal",
+        "scales": {
+            "extremeClose": "Extreem Close",
+            "closeUp": "Close-Up",
+            "mediumClose": "Medium Close",
+            "medium": "Medium",
+            "mediumFull": "Medium Full",
+            "fullShot": "Full Shot",
+            "wide": "Breed",
+            "extremeWide": "Extreem Breed",
+            "cowboyShot": "Cowboy Shot",
+            "choker": "Choker"
+        }
+    },
+    "lens": {
+        "title": "Lens Voorkeur",
+        "options": {
+            "8mmFisheye": "8mm Visoog",
+            "14mmUltra": "14mm Ultra",
+            "24mmWide": "24mm Groothoek",
+            "35mmClassic": "35mm Klassiek",
+            "50mmNatural": "50mm Natuurlijk",
+            "85mmPortrait": "85mm Portret",
+            "200mmTele": "200mm Tele",
+            "anamorphic": "Anamorfisch",
+            "iphone17Pro": "iPhone 17 Pro",
+            "retro": "Retro",
+            "phaseOneIQ4": "Phase One IQ4",
+            "arriAlexa35": "ARRI Alexa 35"
+        }
+    },
+    "aspectRatio": {
+        "title": "Beeldverhouding",
+        "ratios": {
+            "original": "Origineel",
+            "1:1": "1:1",
+            "4:3": "4:3",
+            "3:2": "3:2",
+            "16:9": "16:9",
+            "3:4": "3:4",
+            "2:3": "2:3",
+            "9:16": "9:16",
+            "21:9": "21:9",
+            "5:4": "5:4",
+            "4:5": "4:5",
+            "2.35:1": "2.35:1"
+        }
+    },
+    "settings": {
+        "title": "Instellingen",
+        "subtitle": "Configureer je API-sleutels en voorkeuren",
+        "apiConfiguration": "API Configuratie",
+        "storageManagement": "Opslag Beheer",
+        "apiKeySettings": "API Sleutel Instellingen",
+        "geminiApiKey": "Gemini API Sleutel",
+        "geminiApiKeyLabel": "Google Gemini API Sleutel",
+        "geminiApiKeyHelp": "Vereist voor SEO analyse",
+        "vertexApiKeyLabel": "Vertex AI API Sleutel (Imagen 3)",
+        "vertexApiKeyHelp": "Vereist voor AI Studio en multi-hoek shots",
+        "projects": "Projecten",
+        "photos": "Foto's",
+        "clearAllProjects": "Alle Projecten Verwijderen",
+        "resetAllData": "Alle Data Resetten",
+        "confirmDeleteProjects": "⚠️ Weet je zeker dat je alle projecten wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt!",
+        "confirmDeleteAll": "🔴 Weet je zeker dat je ALLE data wilt verwijderen?\n\nDit verwijdert ALLES, inclusief je API-sleutels!",
+        "confirmDeleteHistory": "Weet je zeker dat je alle geschiedenis wilt verwijderen?",
+        "saved": "Opgeslagen!",
+        "saveSettings": "Instellingen Opslaan",
+        "cleared": "Gewist!",
+        "enterApiKey": "Voer je API-sleutel in",
+        "saveKey": "Sleutel Opslaan",
+        "getApiKey": "API Sleutel Ophalen",
+        "language": "Taal",
+        "selectLanguage": "Selecteer je voorkeurstaal",
+        "aboutApp": "Over de App",
+        "aboutDescription": "Je API-sleutels worden veilig opgeslagen in je browser. Ze verlaten nooit je apparaat.",
+        "resetWarning": "⚠️ Dit verwijdert alles, inclusief API-sleutels"
+    },
+    "analysis": {
+        "title": "Tekst Analyse",
+        "subtitle": "Genereer SEO-geoptimaliseerde content uit productinformatie",
+        "recentAnalyses": "Recente Analyses",
+        "newAnalysis": "Nieuwe Analyse",
+        "newScan": "Nieuwe Scan",
+        "marketplace": "Marketplace",
+        "productName": "Productnaam",
+        "productDescription": "Productbeschrijving",
+        "referenceLink": "Concurrent / Referentie Link",
+        "inputMode": "Invoermodus",
+        "imageMode": "Afbeelding",
+        "textMode": "Tekst",
+        "analyzingFor": "AI analyseert voor {{marketplace}}...",
+        "analysisCompleteFor": "Analyse voltooid voor {{marketplace}}",
+        "analyzeAnother": "Ander Product Analyseren",
+        "preparingImage": "Afbeelding voorbereiden...",
+        "processingText": "Tekst verwerken voor {{marketplace}}...",
+        "generateSEO": "SEO Content Genereren",
+        "apiKeyNotice": "Voeg je Gemini API-sleutel toe in Instellingen om te beginnen",
+        "noHistory": "Geen analyse geschiedenis",
+        "analysesWillAppear": "Je analyses verschijnen hier"
+    },
+    "studio": {
+        "title": "AI Studio",
+        "normal": "Normaal",
+        "handsfree": "Handsfree",
+        "studioImage": "AI Studio Afbeelding",
+        "original": "Origineel",
+        "uploadPhoto": "Foto Uploaden",
+        "chooseImage": "Afbeelding Kiezen",
+        "uploadDescription": "Upload je productfoto voor een AI-geoptimaliseerde {{marketplace}} listing.",
+        "aiStudioMode": "AI STUDIO MODUS",
+        "contextAware": "Context-bewuste productfotografie",
+        "addApiKey": "API Sleutel Toevoegen om te Starten",
+        "newAnalysis": "Nieuwe Analyse",
+        "generating": "Genereren...",
+        "analyzing": "Analyseren...",
+        "textModeDescription": "AI herschrijft je tekst en genereert geoptimaliseerde content voor {{marketplace}}.",
+        "generatingStudio": "Studio Genereren...",
+        "generatingShots": "Shots Genereren...",
+        "generatingRealLife": "Real Life Genereren...",
+        "assets": "assets",
+        "uploadForAnalysis": "Upload een afbeelding voor SEO-analyse",
+        "addApiKeySettings": "Voeg Gemini API-sleutel toe in Instellingen"
+    },
+    "shots": {
+        "title": "Multi-Hoek Shots",
+        "generateAngles": "Hoeken Genereren",
+        "shot1": "Shot 1",
+        "shot2": "Shot 2",
+        "shot3": "Shot 3"
+    },
+    "realLife": {
+        "title": "Real Life Foto's",
+        "generateRealLife": "Real Life Genereren",
+        "lifestyle1": "Lifestyle 1",
+        "lifestyle2": "Lifestyle 2",
+        "lifestyle3": "Lifestyle 3"
+    },
+    "marketplace": {
+        "etsy": "Etsy",
+        "amazon": "Amazon",
+        "shopify": "Shopify"
+    },
+    "results": {
+        "seoTitle": "SEO Titel",
+        "productTitle": "Product Titel",
+        "productDescription": "Product Beschrijving",
+        "htmlDescription": "HTML Beschrijving",
+        "hiddenKeywords": "Verborgen Trefwoorden",
+        "keywords": "Trefwoorden",
+        "tags": "Tags",
+        "suggestedPrice": "Gesuggereerde Prijs",
+        "estimatedPrice": "Geschatte Prijs",
+        "recommendedPrice": "Aanbevolen Prijs",
+        "liveData": "LIVE DATA",
+        "aiAnalysis": "AI ANALYSE",
+        "noKeywords": "Geen trefwoorden gegenereerd",
+        "copied": "Gekopieerd",
+        "copy": "Kopiëren"
+    },
+    "history": {
+        "title": "Geschiedenis",
+        "storageUsage": "Opslag Gebruik",
+        "resumeProject": "Project Hervatten",
+        "openAIStudio": "AI Studio Openen",
+        "noProjects": "Geen projecten",
+        "startScanning": "Begin met scannen van producten om je geschiedenis op te bouwen"
+    },
+    "paywall": {
+        "limitedTimeOffer": "Beperkte Tijd Aanbieding",
+        "cancelAnytime": "Annuleer wanneer je wilt",
+        "subscribe": "Abonneren",
+        "restore": "Aankoop Herstellen"
+    },
+    "time": {
+        "justNow": "ZOJUIST",
+        "minutesAgo": "{{count}}M GELEDEN",
+        "hoursAgo": "{{count}}U GELEDEN",
+        "daysAgo": "{{count}}D GELEDEN"
+    },
+    "errors": {
+        "promptFailed": "Prompt generatie mislukt",
+        "imageFailed": "Afbeelding generatie mislukt",
+        "apiKeyMissing": "Voer een geldige Gemini API-sleutel in bij Instellingen (tandwiel icoon).",
+        "uploadFailed": "Upload mislukt",
+        "analysisError": "Analyse fout",
+        "invalidApiKey": "Ongeldige API-sleutel – open Instellingen (tandwiel icoon) en voer een geldige Gemini-sleutel in.",
+        "noSourceImage": "Geen bronafbeelding beschikbaar",
+        "generationFailed": "Generatie mislukt",
+        "minChars": "Voer minimaal {{count}} tekens in"
+    },
+    "tooltips": {
+        "copy": "Kopiëren naar klembord",
+        "download": "Afbeelding downloaden",
+        "delete": "Item verwijderen",
+        "settings": "Instellingen openen"
+    },
+    "credits": {
+        "insufficient": "Onvoldoende Tegoed",
+        "feature": "Functie",
+        "required": "Vereist",
+        "available": "Beschikbaar",
+        "needed": "Nodig",
+        "moreCredits": "meer tegoed",
+        "upgrade": "Plan Upgraden",
+        "creditsUnit": "tegoed",
+        "costLabel": "tegoed"
+    },
+    "pricing": {
+        "title": "Kies Je Plan",
+        "subtitle": "Ontgrendel de volledige kracht van AI productfotografie",
+        "currentPlan": "Huidig Plan",
+        "credits": "Tegoed",
+        "monthly": "Maandelijks",
+        "yearly": "Jaarlijks",
+        "month": "maand",
+        "monthlyCredits": "Maandelijks Tegoed",
+        "billedYearly": "jaarlijks gefactureerd",
+        "selectPlan": "Selecteer Plan",
+        "contactUs": "Neem Contact Op",
+        "custom": "Aangepast",
+        "tailored": "Op maat gemaakt voor uw behoeften",
+        "unlimited": "Onbeperkt",
+        "popular": "POPULAIR",
+        "creditCosts": "Tegoed Kosten",
+        "free": "Gratis",
+        "slogan": "Verander je productfoto's in verkoopsmagneten"
+    },
+    "plans": {
+        "feature": {
+            "credits20": "20 Tegoed (eenmalig)",
+            "credits100": "100 Tegoed/maand",
+            "credits400": "400 Tegoed/maand",
+            "credits1200": "1200 Tegoed/maand",
+            "unlimitedCredits": "Onbeperkt Tegoed",
+            "allFeatures": "Alle functies inbegrepen",
+            "standardQueue": "Standaard wachtrij",
+            "priorityQueue": "Prioriteitswachtrij",
+            "highPriorityQueue": "Hoge prioriteit",
+            "topPriorityQueue": "Hoogste prioriteit",
+            "dedicatedManager": "Toegewijde accountmanager",
+            "customOnboarding": "Aangepaste onboarding"
+        }
+    },
+    "landing": {
+        "nav": {
+            "features": "Functies",
+            "howItWorks": "Hoe het werkt",
+            "pricing": "Prijzen",
+            "logIn": "Inloggen",
+            "startFree": "Gratis beginnen"
+        },
+        "hero": {
+            "badge": "'s Werelds eerste en enige platform in zijn soort",
+            "headline1": "Transformeer productfoto's in",
+            "headline2": "verkoopmachines",
+            "subheadline": "AI-aangedreven productfotografie en SEO-optimalisatie voor Etsy, Amazon en Shopify met één klik. Professionele resultaten zonder professionele vaardigheden.",
+            "ctaPrimary": "Gratis beginnen — 20 credits",
+            "ctaSecondary": "Bekijk demo",
+            "sellers": "10.000+ verkopers",
+            "rating": "4,9/5 beoordeling",
+            "noCard": "Geen creditcard vereist"
+        },
+        "logos": {
+            "optimizedFor": "Geoptimaliseerd voor 's werelds grootste marktplaatsen"
+        },
+        "features": {
+            "title": "Alles wat je nodig hebt op één platform",
+            "subtitle": "Van AI-gegenereerde productfoto's tot marktplaats-specifieke SEO — alles aangedreven door geavanceerde AI.",
+            "studio": {
+                "title": "AI Fotostudio",
+                "description": "Transformeer elke productfoto in professionele studiofoto's met perfecte verlichting en achtergronden."
+            },
+            "reallife": {
+                "title": "Real-life opnames",
+                "description": "Genereer lifestyle afbeeldingen die je producten tonen in echte contexten die resoneren met kopers."
+            },
+            "angles": {
+                "title": "Multi-hoek weergaven",
+                "description": "Creëer meerdere producthoeken en perspectieven vanuit één foto voor uitgebreide vermeldingen."
+            },
+            "seo": {
+                "title": "SEO-optimalisatie",
+                "description": "Krijg marktplaats-specifieke titels, zoekwoorden, beschrijvingen en prijsstrategieën aangedreven door AI."
+            },
+            "learnMore": "Meer informatie"
+        },
+        "valueProp": {
+            "line1": "Eén platform.",
+            "line2": "Alle marktplaatsen.",
+            "line3": "Nul inspanning.",
+            "activeSellers": "Actieve verkopers",
+            "imagesGenerated": "Gegenereerde afbeeldingen",
+            "satisfaction": "Klanttevredenheid"
+        },
+        "howItWorks": {
+            "title": "Van foto naar verkoop in 60 seconden",
+            "subtitle": "Drie eenvoudige stappen. Dat is alles.",
+            "step1": {
+                "title": "Upload je foto",
+                "description": "Upload elke productfoto — telefoonopname, basis studiofoto of zelfs een mockup."
+            },
+            "step2": {
+                "title": "Kies je marktplaats",
+                "description": "Selecteer Etsy, Amazon of Shopify. Elk platform krijgt gespecialiseerde optimalisatie."
+            },
+            "step3": {
+                "title": "Krijg alles direct",
+                "description": "Ontvang AI-gegenereerde afbeeldingen, SEO-titels, zoekwoorden, beschrijvingen en prijzen — in seconden."
+            }
+        },
+        "pricing": {
+            "title": "Eenvoudige, transparante prijzen",
+            "subtitle": "Begin gratis. Schaal naarmate je groeit.",
+            "mostPopular": "Meest populair",
+            "monthly": "Maandelijks",
+            "yearly": "Jaarlijks",
+            "billedYearly": "Jaarlijks gefactureerd",
+            "year": "jaar",
+            "perMonth": "/maand",
+            "creditsMonth": "credits/maand",
+            "getStarted": "Beginnen",
+            "allFeatures": "Alle plannen bevatten toegang tot alle functies.",
+            "viewDetails": "Bekijk volledige prijsdetails →"
+        },
+        "cta": {
+            "title1": "Klaar om je",
+            "title2": "productfotografie te transformeren?",
+            "subtitle": "Sluit je aan bij duizenden verkopers die Volla al gebruiken om in seconden verbluffende, SEO-geoptimaliseerde productvermeldingen te maken.",
+            "button": "Gratis beginnen",
+            "disclaimer": "Geen creditcard vereist • 20 gratis credits • Op elk moment annuleren"
+        },
+        "footer": {
+            "features": "Functies",
+            "pricing": "Prijzen",
+            "support": "Ondersteuning",
+            "privacy": "Privacy",
+            "terms": "Voorwaarden",
+            "copyright": "© 2026 Volla. Alle rechten voorbehouden. 's Werelds eerste AI-aangedreven marktplaats optimalisatieplatform."
+        }
+    },
+    "privacy": {
+        "title": "Privacybeleid",
+        "lastUpdated": "Laatst bijgewerkt",
+        "intro": "Jouw privacy is belangrijk voor ons. Dit Privacybeleid legt uit hoe Volla je persoonlijke informatie verzamelt, gebruikt en beschermt.",
+        "sections": {
+            "dataCollection": {
+                "title": "Gegevensverzameling",
+                "content": "We verzamelen informatie die je direct verstrekt, zoals e-mailadres en betalingsinformatie bij het aanmaken van een account. We verzamelen ook gebruiksgegevens, waaronder geüploade afbeeldingen (tijdelijk verwerkt, niet permanent opgeslagen), gegenereerde inhoud en platformvoorkeuren."
+            },
+            "dataUsage": {
+                "title": "Hoe we je gegevens gebruiken",
+                "content": "Je gegevens worden gebruikt om onze diensten te leveren en te verbeteren, betalingen te verwerken, met je te communiceren over je account en platformbeveiliging te waarborgen. We verkopen je persoonlijke informatie niet aan derden."
+            },
+            "imageProcessing": {
+                "title": "Beeldverwerking",
+                "content": "Geüploade afbeeldingen worden verwerkt via AI-systemen (Google Gemini, Vertex AI) om geoptimaliseerde productfoto's te creëren. Geüploade afbeeldingen worden real-time verwerkt en niet permanent op onze servers opgeslagen. Gegenereerde afbeeldingen worden voor je gemak in je account opgeslagen."
+            },
+            "cookies": {
+                "title": "Cookies en tracking",
+                "content": "We gebruiken essentiële cookies voor authenticatie en voorkeuren. Analytische cookies helpen ons begrijpen hoe gebruikers met ons platform omgaan. Je kunt cookievoorkeuren beheren via je browserinstellingen."
+            },
+            "gdpr": {
+                "title": "AVG-naleving (EU-gebruikers)",
+                "content": "Als je in de Europese Unie bent, heb je de volgende rechten onder de AVG: Recht op toegang tot je persoonlijke gegevens, Recht op rectificatie, Recht op verwijdering ('recht om vergeten te worden'), Recht op gegevensoverdraagbaarheid, Recht om bezwaar te maken tegen verwerking. Neem contact met ons op via privacy@volla.app om deze rechten uit te oefenen."
+            },
+            "kvkk": {
+                "title": "KVKK-naleving (Turkije)",
+                "content": "Turkse gebruikers worden beschermd door de Wet bescherming persoonsgegevens (KVKK). Je hebt het recht om te weten of je gegevens worden verwerkt, informatie over de verwerking te vragen, correctie te vragen, verwijdering te vragen en bezwaar te maken tegen geautomatiseerde besluitvorming."
+            },
+            "ccpa": {
+                "title": "CCPA-naleving (Californië)",
+                "content": "Inwoners van Californië hebben het recht om te weten welke persoonlijke informatie wordt verzameld, verwijdering te vragen, zich af te melden voor de verkoop van persoonlijke informatie en niet te worden gediscrimineerd voor het uitoefenen van hun rechten."
+            },
+            "thirdParties": {
+                "title": "Diensten van derden",
+                "content": "We gebruiken vertrouwde diensten van derden, waaronder Google Cloud (AI-verwerking), Stripe (betalingen) en Vercel (hosting). Elke dienst heeft zijn eigen privacybeleid en gegevensbeschermingsmaatregelen."
+            },
+            "security": {
+                "title": "Gegevensbeveiliging",
+                "content": "We implementeren industriestandaard beveiligingsmaatregelen, waaronder versleuteling tijdens verzending en opslag, veilige authenticatie en regelmatige beveiligingsaudits. Geen enkel systeem is echter 100% veilig."
+            },
+            "contact": {
+                "title": "Neem contact op",
+                "content": "Voor privacygerelateerde vragen, neem contact met ons op:"
+            }
+        }
+    },
+    "terms": {
+        "title": "Servicevoorwaarden",
+        "lastUpdated": "Laatst bijgewerkt",
+        "intro": "Door Volla te gebruiken, stem je in met deze Servicevoorwaarden. Lees ze zorgvuldig door.",
+        "sections": {
+            "aiDisclaimer": {
+                "title": "AI-technologie disclaimer",
+                "content": "Volla gebruikt geavanceerde AI-technologie, waaronder Google Gemini en Vertex AI, voor beeldgeneratie en SEO-optimalisatie. Belangrijk: AI-gegenereerde inhoud kan fouten of onnauwkeurigheden bevatten, Resultaten kunnen variëren en zijn niet gegarandeerd, AI-modellen leren continu en uitvoer kan in de loop van de tijd veranderen, Je bent verantwoordelijk voor het beoordelen en valideren van alle gegenereerde inhoud voordat je deze gebruikt, We garanderen geen specifieke verkoopresultaten of marktplaatsprestaties."
+            },
+            "acceptableUse": {
+                "title": "Beleid voor aanvaardbaar gebruik",
+                "content": "Je stemt ermee in Volla NIET te gebruiken voor: Het maken van naaktheid, obscene of volwassen inhoud, Het maken van schadelijke, illegale of frauduleuze inhoud, Het schenden van intellectuele eigendomsrechten, Het maken van inhoud die geweld of haat bevordert, Elk doel dat geldende wetten schendt."
+            },
+            "contentPolicy": {
+                "title": "Inhoudsbeleid en veiligheid",
+                "content": "Onze AI-systemen bevatten veiligheidsfilters die automatisch verzoeken afwijzen voor: Naaktheid of seksuele inhoud, Gewelddadige of bloederige inhoud, Haatzaaiende uitingen of discriminatie, Illegale activiteiten, Ongeautoriseerde imitatie van echte personen. Pogingen om deze filters te omzeilen kunnen leiden tot accountbeëindiging."
+            },
+            "intellectualProperty": {
+                "title": "Intellectueel eigendom",
+                "content": "Je behoudt het eigendom van geüploade afbeeldingen. Je verleent Volla een licentie om je afbeeldingen te verwerken voor dienstverlening. AI-gegenereerde afbeeldingen worden aan jou gelicentieerd voor commercieel gebruik. Je bent verantwoordelijk voor het waarborgen dat je het recht hebt om afbeeldingen te uploaden."
+            },
+            "accountResponsibility": {
+                "title": "Accountverantwoordelijkheid",
+                "content": "Je bent verantwoordelijk voor het onderhouden van accountbeveiliging, alle activiteiten onder je account, ervoor zorgen dat geüploade inhoud geen rechten van derden schendt en het naleven van marktplaatsvoorwaarden (Etsy, Amazon, Shopify)."
+            },
+            "payments": {
+                "title": "Betalingen en terugbetalingen",
+                "content": "Abonnementen worden vooraf gefactureerd. Credits verlopen niet tijdens je abonnementsperiode. Terugbetalingen worden per geval beoordeeld. Je kunt je abonnement op elk moment annuleren."
+            },
+            "limitation": {
+                "title": "Beperking van aansprakelijkheid",
+                "content": "Volla wordt geleverd zonder garanties 'zoals het is'. We zijn niet aansprakelijk voor indirecte, incidentele of gevolgschade. Onze aansprakelijkheid is beperkt tot het bedrag dat je ons in de afgelopen 12 maanden hebt betaald."
+            },
+            "termination": {
+                "title": "Beëindiging",
+                "content": "We kunnen je account met of zonder kennisgeving opschorten of beëindigen wegens schending van deze voorwaarden of om welke andere reden dan ook. Je kunt je account op elk moment beëindigen via de instellingen."
+            },
+            "changes": {
+                "title": "Wijzigingen in de voorwaarden",
+                "content": "We kunnen deze voorwaarden van tijd tot tijd bijwerken. We zullen je op de hoogte stellen van belangrijke wijzigingen. Voortgezet gebruik na wijzigingen vormt acceptatie."
+            },
+            "contact": {
+                "title": "Contact",
+                "content": "Voor vragen over deze voorwaarden, neem contact met ons op:"
+            }
+        }
+    }
+}

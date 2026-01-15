@@ -1,0 +1,570 @@
+{
+    "_meta": {
+        "language": "Türkçe",
+        "locale": "tr",
+        "version": "1.0.0",
+        "lastUpdated": "2026-01-09",
+        "status": "COMPLETE"
+    },
+    "common": {
+        "loading": "Yükleniyor...",
+        "error": "Hata",
+        "success": "Başarılı",
+        "cancel": "İptal",
+        "confirm": "Onayla",
+        "save": "Kaydet",
+        "delete": "Sil",
+        "edit": "Düzenle",
+        "copy": "Kopyala",
+        "copied": "Kopyalandı!",
+        "download": "İndir",
+        "upload": "Yükle",
+        "generate": "Oluştur",
+        "generating": "Oluşturuluyor...",
+        "analyzing": "Analiz ediliyor...",
+        "close": "Kapat",
+        "back": "Geri",
+        "next": "İleri",
+        "yes": "Evet",
+        "no": "Hayır",
+        "ok": "Tamam",
+        "done": "Tamamlandı",
+        "new": "Yeni",
+        "open": "Aç",
+        "resume": "Devam Et",
+        "clear": "Temizle",
+        "clearAll": "Tümünü Temizle",
+        "reset": "Sıfırla",
+        "settings": "Ayarlar",
+        "search": "Ara",
+        "filter": "Filtrele",
+        "sort": "Sırala",
+        "view": "Görüntüle",
+        "preview": "Önizleme",
+        "share": "Paylaş",
+        "export": "Dışa Aktar",
+        "import": "İçe Aktar",
+        "optional": "isteğe bağlı",
+        "dragOrClick": "Tıkla veya sürükle bırak",
+        "tryAgain": "Tekrar Dene"
+    },
+    "nav": {
+        "home": "Ana Sayfa",
+        "analysis": "Analiz",
+        "aiStudio": "AI Stüdyo",
+        "shots": "Çekimler",
+        "realLife": "Gerçek Yaşam",
+        "history": "Geçmiş",
+        "settings": "Ayarlar",
+        "openStudio": "Stüdyo Aç",
+        "signIn": "Giriş Yap",
+        "billing": "Fatura"
+    },
+    "login": {
+        "subtitle": "AI Destekli Ürün Fotoğrafçılığı",
+        "welcome": "Tekrar hoş geldin",
+        "description": "Hesabına devam etmek için giriş yap",
+        "continueWithGoogle": "Google ile Devam Et",
+        "signInWithApple": "Apple ile Giriş Yap",
+        "continueWithEmail": "Email ile Devam Et",
+        "or": "veya",
+        "continueAsGuest": "Misafir Olarak Devam Et (Sınırlı Özellikler)",
+        "termsNotice": "Giriş yaparak kabul etmiş olursun:"
+    },
+    "profile": {
+        "credits": "Kredi",
+        "upgrade": "Yükselt",
+        "managePlan": "Yönet",
+        "logout": "Çıkış Yap",
+        "loggingOut": "Çıkış yapılıyor..."
+    },
+    "app": {
+        "name": "Volla",
+        "tagline": "AI Ürün Tarayıcı",
+        "version": "v2.0"
+    },
+    "home": {
+        "welcomeBack": "Tekrar hoş geldiniz",
+        "quickTools": "Hızlı araçlar ve son çalışmalar",
+        "quickStart": "Hızlı Başlangıç",
+        "selectMarketplace": "Pazar yerinizi seçin",
+        "selectMarketplaceFirst": "Önce bir pazar yeri seçin",
+        "openingStudio": "AI Stüdyo açılıyor...",
+        "uploadProductPhoto": "Ürün Fotoğrafı Yükle",
+        "getAIOptimized": "{{marketplace}} için AI optimize edilmiş fotoğraflar alın",
+        "recentProjects": "Son Projeler",
+        "viewAll": "Tümünü Gör →",
+        "noRecentProjects": "Henüz son proje yok",
+        "moreTools": "Diğer Araçlar",
+        "untitledProject": "İsimsiz Proje",
+        "aiStudioDescription": "Tam kapsamlı ürün fotoğrafçılığı paketi",
+        "textAnalysisDescription": "Ürün listeleri için SEO optimizasyonu"
+    },
+    "handsfree": {
+        "title": "Prompt Mimarı",
+        "subtitle": "Prompt oluşturma için profesyonel kamera açısı ve çekim ayarları",
+        "sourceImage": "Kaynak Görsel",
+        "uploadImage": "Görsel Yükle",
+        "customDirective": "Özel Direktif",
+        "customDirectivePlaceholder": "Örn: Arka açı, ayak detay çekimi...",
+        "generatePrompt": "Prompt Oluştur",
+        "generatedPrompt": "Oluşturulan Prompt",
+        "copyAll": "Tümünü Kopyala",
+        "generateImage": "Görsel Oluştur",
+        "generateImageGemini": "Görsel Oluştur (Gemini)",
+        "generatedImage": "Oluşturulan Görsel",
+        "imageReady": "Görsel Hazır",
+        "imageWillAppear": "Görsel burada görünecek",
+        "promptReady": "Prompt hazır!",
+        "promptFailed": "Prompt oluşturma başarısız",
+        "imageFailed": "Görsel oluşturma başarısız",
+        "analyzingProduct": "Ürün analiz ediliyor...",
+        "buildingPrompt": "Profesyonel prompt oluşturuluyor...",
+        "generatingImage": "Görsel Oluşturuluyor...",
+        "promptLabel": "Prompt:"
+    },
+    "camera": {
+        "title": "Kamera Açısı",
+        "angles": {
+            "eyeLevel": "Göz Seviyesi",
+            "shoulder": "Omuz Hizası",
+            "waist": "Bel Hizası",
+            "knee": "Diz Hizası",
+            "ground": "Zemin",
+            "wormEye": "Solucan Bakışı",
+            "lowAngle": "Alçak Açı",
+            "highAngle": "Yüksek Açı",
+            "birdEye": "Kuş Bakışı",
+            "drone": "Drone",
+            "satellite": "Uydu",
+            "dutch": "Dutch Açı"
+        }
+    },
+    "shotScale": {
+        "title": "Çekim Ölçeği",
+        "scales": {
+            "extremeClose": "Aşırı Yakın",
+            "closeUp": "Yakın Çekim",
+            "mediumClose": "Orta Yakın",
+            "medium": "Orta Çekim",
+            "mediumFull": "Orta Tam",
+            "fullShot": "Tam Çekim",
+            "wide": "Geniş",
+            "extremeWide": "Aşırı Geniş",
+            "cowboyShot": "Kovboy Çekimi",
+            "choker": "Boğaz Çekimi"
+        }
+    },
+    "lens": {
+        "title": "Lens Tercihi",
+        "options": {
+            "8mmFisheye": "8mm Balık Gözü",
+            "14mmUltra": "14mm Ultra",
+            "24mmWide": "24mm Geniş",
+            "35mmClassic": "35mm Klasik",
+            "50mmNatural": "50mm Doğal",
+            "85mmPortrait": "85mm Portre",
+            "200mmTele": "200mm Tele",
+            "anamorphic": "Anamorfik",
+            "iphone17Pro": "iPhone 17 Pro",
+            "retro": "Retro",
+            "phaseOneIQ4": "Phase One IQ4",
+            "arriAlexa35": "ARRI Alexa 35"
+        }
+    },
+    "aspectRatio": {
+        "title": "En Boy Oranı",
+        "ratios": {
+            "original": "Orijinal",
+            "1:1": "1:1",
+            "4:3": "4:3",
+            "3:2": "3:2",
+            "16:9": "16:9",
+            "3:4": "3:4",
+            "2:3": "2:3",
+            "9:16": "9:16",
+            "21:9": "21:9",
+            "5:4": "5:4",
+            "4:5": "4:5",
+            "2.35:1": "2.35:1"
+        }
+    },
+    "settings": {
+        "title": "Ayarlar",
+        "apiConfiguration": "API Yapılandırması",
+        "storageManagement": "Depolama Yönetimi",
+        "apiKeySettings": "API Anahtarı Ayarları",
+        "geminiApiKey": "Gemini API Anahtarı",
+        "projects": "Projeler",
+        "photos": "Fotoğraflar",
+        "clearAllProjects": "Tüm Projeleri Sil",
+        "resetAllData": "Tüm Verileri Sıfırla",
+        "confirmDeleteProjects": "⚠️ Tüm projeleri silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!",
+        "confirmDeleteAll": "🔴 TÜM verileri silmek istediğinizden emin misiniz?\n\nBu, API anahtarlarınız dahil HER ŞEYİ silecek!",
+        "confirmDeleteHistory": "Tüm geçmişi silmek istediğinize emin misiniz?",
+        "saved": "Kaydedildi!",
+        "cleared": "Temizlendi!",
+        "enterApiKey": "API anahtarınızı girin",
+        "saveKey": "Anahtarı Kaydet",
+        "getApiKey": "API Anahtarı Al",
+        "language": "Dil",
+        "selectLanguage": "Dil Seçin",
+        "subtitle": "API anahtarlarınızı ve tercihlerinizi yapılandırın",
+        "geminiApiKeyLabel": "Google Gemini API Anahtarı",
+        "geminiApiKeyHelp": "SEO analizi için gerekli",
+        "vertexApiKeyLabel": "Vertex AI API Anahtarı (Imagen 3)",
+        "vertexApiKeyHelp": "AI Stüdyo ve çoklu açı çekimleri için gerekli",
+        "saveSettings": "Ayarları Kaydet",
+        "resetWarning": "⚠️ Bu, API anahtarları dahil her şeyi silecek"
+    },
+    "analysis": {
+        "title": "Ürün Analizi",
+        "recentAnalyses": "Son Analizler",
+        "newAnalysis": "Yeni Analiz",
+        "newScan": "Yeni Tarama",
+        "marketplace": "Pazar Yeri",
+        "inputMode": "Giriş Modu",
+        "imageMode": "Görsel",
+        "textMode": "Metin",
+        "analyzingFor": "{{marketplace}} için AI analiz ediyor...",
+        "preparingImage": "Görsel hazırlanıyor...",
+        "processingText": "{{marketplace}} için metin işleniyor...",
+        "generateSEO": "SEO İçeriği Oluştur",
+        "noHistory": "Henüz analiz geçmişi yok",
+        "analysesWillAppear": "Analizleriniz burada görünecek"
+    },
+    "studio": {
+        "title": "AI Stüdyo",
+        "normal": "Normal",
+        "handsfree": "Handsfree",
+        "studioImage": "AI Stüdyo Görseli",
+        "original": "Orijinal",
+        "uploadPhoto": "Fotoğraf Yükle",
+        "chooseImage": "Görsel Seç",
+        "uploadDescription": "AI optimize edilmiş {{marketplace}} listesi için ürün fotoğrafınızı yükleyin.",
+        "aiStudioMode": "AI STÜDYO MODU",
+        "contextAware": "Bağlama duyarlı ürün fotoğrafçılığı",
+        "addApiKey": "Başlamak için API Anahtarı Ekle",
+        "newAnalysis": "Yeni Analiz",
+        "generating": "Oluşturuluyor...",
+        "analyzing": "Analiz ediliyor...",
+        "textModeDescription": "AI metninizi yeniden yazacak ve {{marketplace}} için optimize edilmiş içerik oluşturacak.",
+        "generatingStudio": "Stüdyo Oluşturuluyor...",
+        "generatingShots": "Çekimler Oluşturuluyor...",
+        "generatingRealLife": "Gerçek Yaşam Oluşturuluyor...",
+        "assets": "varlık",
+        "uploadForAnalysis": "SEO analizi için görsel yükleyin",
+        "addApiKeySettings": "Ayarlar'da Gemini API anahtarı ekleyin"
+    },
+    "shots": {
+        "title": "Çoklu Açı Çekimleri",
+        "generateAngles": "Açıları Oluştur",
+        "shot1": "Çekim 1",
+        "shot2": "Çekim 2",
+        "shot3": "Çekim 3"
+    },
+    "realLife": {
+        "title": "Gerçek Yaşam Fotoğrafları",
+        "generateRealLife": "Gerçek Yaşam Oluştur",
+        "lifestyle1": "Yaşam Tarzı 1",
+        "lifestyle2": "Yaşam Tarzı 2",
+        "lifestyle3": "Yaşam Tarzı 3"
+    },
+    "marketplace": {
+        "etsy": "Etsy",
+        "amazon": "Amazon",
+        "shopify": "Shopify"
+    },
+    "results": {
+        "seoTitle": "SEO Başlığı",
+        "productTitle": "Ürün Başlığı",
+        "productDescription": "Ürün Açıklaması",
+        "htmlDescription": "HTML Açıklaması",
+        "hiddenKeywords": "Gizli Anahtar Kelimeler",
+        "keywords": "Anahtar Kelimeler",
+        "tags": "Etiketler",
+        "suggestedPrice": "Önerilen Fiyat",
+        "estimatedPrice": "Tahmini Fiyat",
+        "recommendedPrice": "Önerilen Fiyat",
+        "liveData": "CANLI VERİ",
+        "aiAnalysis": "AI ANALİZİ",
+        "noKeywords": "Anahtar kelime oluşturulmadı",
+        "copied": "Kopyalandı",
+        "copy": "Kopyala"
+    },
+    "history": {
+        "title": "Geçmiş",
+        "storageUsage": "Depolama Kullanımı",
+        "resumeProject": "Projeye Devam Et",
+        "openAIStudio": "AI Stüdyo Aç",
+        "noProjects": "Henüz proje yok",
+        "startScanning": "Geçmişinizi oluşturmak için ürün taramaya başlayın"
+    },
+    "paywall": {
+        "limitedTimeOffer": "Sınırlı Süreli Teklif",
+        "cancelAnytime": "İstediğiniz zaman iptal edin",
+        "subscribe": "Abone Ol",
+        "restore": "Satın Almayı Geri Yükle"
+    },
+    "time": {
+        "justNow": "AZ ÖNCE",
+        "minutesAgo": "{{count}} DK ÖNCE",
+        "hoursAgo": "{{count}} SAAT ÖNCE",
+        "daysAgo": "{{count}} GÜN ÖNCE"
+    },
+    "errors": {
+        "promptFailed": "Prompt oluşturma başarısız",
+        "imageFailed": "Görsel oluşturma başarısız",
+        "apiKeyMissing": "Lütfen Ayarlar'da (dişli simgesi) geçerli bir Gemini API anahtarı girin.",
+        "uploadFailed": "Yükleme başarısız",
+        "analysisError": "Analiz hatası",
+        "invalidApiKey": "Geçersiz API anahtarı – Ayarlar'ı (dişli simgesi) açın ve geçerli bir Gemini anahtarı girin.",
+        "noSourceImage": "Kaynak görsel mevcut değil",
+        "generationFailed": "Oluşturma başarısız",
+        "minChars": "Lütfen en az {{count}} karakter girin"
+    },
+    "tooltips": {
+        "copy": "Panoya kopyala",
+        "download": "Görseli indir",
+        "delete": "Öğeyi sil",
+        "settings": "Ayarları aç"
+    },
+    "credits": {
+        "insufficient": "Yetersiz Kredi",
+        "feature": "Özellik",
+        "required": "Gerekli",
+        "available": "Mevcut",
+        "needed": "İhtiyaç",
+        "moreCredits": "daha fazla kredi",
+        "upgrade": "Planı Yükselt",
+        "creditsUnit": "kredi",
+        "costLabel": "kredi"
+    },
+    "pricing": {
+        "title": "Planınızı Seçin",
+        "subtitle": "AI ürün fotoğrafçılığının tüm gücünü açın",
+        "currentPlan": "Mevcut Plan",
+        "credits": "Krediler",
+        "monthly": "Aylık",
+        "yearly": "Yıllık",
+        "month": "ay",
+        "monthlyCredits": "Aylık Krediler",
+        "billedYearly": "yıllık faturalandırılır",
+        "selectPlan": "Plan Seç",
+        "contactUs": "Bize Ulaşın",
+        "custom": "Özel",
+        "tailored": "İhtiyaçlarınıza göre özelleştirilmiş",
+        "unlimited": "Sınırsız",
+        "popular": "POPÜLER",
+        "creditCosts": "Kredi Maliyetleri",
+        "free": "Ücretsiz",
+        "slogan": "Ürün fotoğraflarınızı satış mıknatıslarına dönüştürün"
+    },
+    "plans": {
+        "feature": {
+            "credits20": "20 Kredi (tek seferlik)",
+            "credits100": "100 Kredi/ay",
+            "credits400": "400 Kredi/ay",
+            "credits1200": "1200 Kredi/ay",
+            "unlimitedCredits": "Sınırsız Kredi",
+            "allFeatures": "Tüm özellikler dahil",
+            "standardQueue": "Standart sıra",
+            "priorityQueue": "Öncelikli sıra",
+            "highPriorityQueue": "Yüksek öncelikli sıra",
+            "topPriorityQueue": "En yüksek öncelikli sıra",
+            "dedicatedManager": "Özel hesap yöneticisi",
+            "customOnboarding": "Özel başlangıç eğitimi"
+        }
+    },
+    "landing": {
+        "nav": {
+            "features": "Özellikler",
+            "howItWorks": "Nasıl Çalışır",
+            "pricing": "Fiyatlandırma",
+            "logIn": "Giriş Yap",
+            "startFree": "Ücretsiz Başla"
+        },
+        "hero": {
+            "badge": "Dünyadaki İlk ve Tek Platform",
+            "headline1": "Ürün Fotoğraflarını",
+            "headline2": "Satış Makinasına Dönüştür",
+            "subheadline": "Etsy, Amazon ve Shopify için tek tıkla yapay zeka destekli ürün fotoğrafçılığı ve SEO optimizasyonu. Profesyonel beceri gerektirmeden profesyonel sonuçlar.",
+            "ctaPrimary": "Ücretsiz Başla — 20 Kredi",
+            "ctaSecondary": "Demo İzle",
+            "sellers": "10.000+ Satıcı",
+            "rating": "4.9/5 Puan",
+            "noCard": "Kredi kartı gerekmez"
+        },
+        "logos": {
+            "optimizedFor": "Dünyanın en büyük pazar yerleri için optimize edildi"
+        },
+        "features": {
+            "title": "İhtiyacınız Olan Her Şey Tek Platformda",
+            "subtitle": "Yapay zeka ile üretilen ürün fotoğraflarından pazar yerine özel SEO'ya — tümü son teknoloji yapay zeka ile.",
+            "studio": {
+                "title": "AI Fotoğraf Stüdyosu",
+                "description": "Herhangi bir ürün fotoğrafını mükemmel aydınlatma ve arka planlarla profesyonel stüdyo kalitesinde çekimlere dönüştürün."
+            },
+            "reallife": {
+                "title": "Gerçek Hayat Çekimleri",
+                "description": "Ürünlerinizi alıcılarla bağlantı kuran gerçek dünya bağlamlarında gösteren yaşam tarzı görselleri oluşturun."
+            },
+            "angles": {
+                "title": "Çoklu Açı Görünümleri",
+                "description": "Kapsamlı listeler için tek bir fotoğraftan birden fazla ürün açısı ve perspektifi oluşturun."
+            },
+            "seo": {
+                "title": "SEO Optimizasyonu",
+                "description": "Yapay zeka destekli pazar yerine özel başlıklar, anahtar kelimeler, açıklamalar ve fiyatlandırma stratejileri alın."
+            },
+            "learnMore": "Daha fazla bilgi"
+        },
+        "valueProp": {
+            "line1": "Tek Platform.",
+            "line2": "Tüm Pazar Yerleri.",
+            "line3": "Sıfır Çaba.",
+            "activeSellers": "Aktif Satıcı",
+            "imagesGenerated": "Oluşturulan Görsel",
+            "satisfaction": "Müşteri Memnuniyeti"
+        },
+        "howItWorks": {
+            "title": "Fotoğraftan Satışa 60 Saniyede",
+            "subtitle": "Üç basit adım. Hepsi bu kadar.",
+            "step1": {
+                "title": "Fotoğrafını Yükle",
+                "description": "Herhangi bir ürün fotoğrafı yükleyin — telefon çekimi, basit stüdyo çekimi veya maket bile olabilir."
+            },
+            "step2": {
+                "title": "Pazar Yerini Seç",
+                "description": "Etsy, Amazon veya Shopify'ı seçin. Her platform özel optimizasyon alır."
+            },
+            "step3": {
+                "title": "Her Şeyi Anında Al",
+                "description": "Yapay zeka ile oluşturulmuş görseller, SEO başlıkları, anahtar kelimeler, açıklamalar ve fiyatlandırma — saniyeler içinde."
+            }
+        },
+        "pricing": {
+            "title": "Basit, Şeffaf Fiyatlandırma",
+            "subtitle": "Ücretsiz başlayın. Büyüdükçe ölçeklendirin.",
+            "mostPopular": "En Popüler",
+            "monthly": "Aylık",
+            "yearly": "Yıllık",
+            "billedYearly": "Yıllık faturalandırılır",
+            "year": "yıl",
+            "perMonth": "/ay",
+            "creditsMonth": "kredi/ay",
+            "getStarted": "Başla",
+            "allFeatures": "Tüm planlar tüm özelliklere erişim içerir.",
+            "viewDetails": "Tam fiyatlandırma detaylarını gör →"
+        },
+        "cta": {
+            "title1": "Ürün Fotoğrafçılığınızı",
+            "title2": "Dönüştürmeye Hazır mısınız?",
+            "subtitle": "Saniyeler içinde çarpıcı, SEO optimize ürün listeleri oluşturmak için Volla kullanan binlerce satıcıya katılın.",
+            "button": "Ücretsiz Başla",
+            "disclaimer": "Kredi kartı gerekmez • 20 ücretsiz kredi • İstediğiniz zaman iptal"
+        },
+        "footer": {
+            "features": "Özellikler",
+            "pricing": "Fiyatlandırma",
+            "support": "Destek",
+            "privacy": "Gizlilik",
+            "terms": "Kullanım Koşulları",
+            "copyright": "© 2026 Volla. Tüm hakları saklıdır. Dünyanın ilk yapay zeka destekli pazar yeri optimizasyon platformu."
+        }
+    },
+    "privacy": {
+        "title": "Gizlilik Politikası",
+        "lastUpdated": "Son Güncelleme",
+        "intro": "Gizliliğiniz bizim için önemlidir. Bu Gizlilik Politikası, Volla'nın kişisel bilgilerinizi nasıl topladığını, kullandığını ve koruduğunu açıklar.",
+        "sections": {
+            "dataCollection": {
+                "title": "Veri Toplama",
+                "content": "Hesap oluştururken e-posta adresi ve ödeme bilgileri gibi doğrudan sağladığınız bilgileri topluyoruz. Ayrıca yüklenen görseller (geçici olarak işlenir ve kalıcı olarak saklanmaz), oluşturulan içerik ve platform tercihleri dahil kullanım verilerini de topluyoruz."
+            },
+            "dataUsage": {
+                "title": "Verilerinizi Nasıl Kullanıyoruz",
+                "content": "Verileriniz hizmetlerimizi sağlamak ve iyileştirmek, ödemeleri işlemek, hesabınız hakkında sizinle iletişim kurmak ve platform güvenliğini sağlamak için kullanılır. Kişisel bilgilerinizi üçüncü taraflara satmıyoruz."
+            },
+            "imageProcessing": {
+                "title": "Görsel İşleme",
+                "content": "Yüklediğiniz görseller optimize edilmiş ürün fotoğrafları oluşturmak için yapay zeka sistemleri (Google Gemini, Vertex AI) üzerinden işlenir. Yüklenen görseller gerçek zamanlı olarak işlenir ve sunucularımızda kalıcı olarak saklanmaz. Oluşturulan görseller rahatlığınız için hesabınızda saklanır."
+            },
+            "cookies": {
+                "title": "Çerezler ve İzleme",
+                "content": "Kimlik doğrulama ve tercihler için gerekli çerezler kullanıyoruz. Analitik çerezler, kullanıcıların platformumuzla nasıl etkileşime girdiğini anlamamıza yardımcı olur. Tarayıcı ayarlarınız aracılığıyla çerez tercihlerini kontrol edebilirsiniz."
+            },
+            "gdpr": {
+                "title": "GDPR Uyumluluğu (AB Kullanıcıları)",
+                "content": "Avrupa Birliği'ndeyseniz, GDPR kapsamında şu haklara sahipsiniz: Kişisel verilerinize erişim hakkı, Düzeltme hakkı, Silme hakkı ('unutulma hakkı'), Veri taşınabilirliği hakkı, İşlemeye itiraz hakkı. Bu hakları kullanmak için privacy@volla.app adresinden bizimle iletişime geçin."
+            },
+            "kvkk": {
+                "title": "KVKK Uyumluluğu (Türkiye)",
+                "content": "Türk kullanıcıları Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında korunmaktadır. Verilerinizin işlenip işlenmediğini öğrenme, işleme hakkında bilgi talep etme, düzeltme talep etme, silme talep etme ve otomatik karar vermeye itiraz etme hakkına sahipsiniz."
+            },
+            "ccpa": {
+                "title": "CCPA Uyumluluğu (Kaliforniya)",
+                "content": "Kaliforniya sakinleri hangi kişisel bilgilerin toplandığını bilme, silme talep etme, kişisel bilgilerin satışından vazgeçme ve hakları kullanma nedeniyle ayrımcılığa uğramama hakkına sahiptir."
+            },
+            "thirdParties": {
+                "title": "Üçüncü Taraf Hizmetler",
+                "content": "Google Cloud (yapay zeka işleme), Stripe (ödemeler) ve Vercel (barındırma) dahil güvenilir üçüncü taraf hizmetler kullanıyoruz. Her hizmetin kendi gizlilik politikası ve veri koruma önlemleri vardır."
+            },
+            "security": {
+                "title": "Veri Güvenliği",
+                "content": "Aktarımda ve beklemede şifreleme, güvenli kimlik doğrulama ve düzenli güvenlik denetimleri dahil endüstri standardı güvenlik önlemleri uyguluyoruz. Ancak, hiçbir sistem %100 güvenli değildir."
+            },
+            "contact": {
+                "title": "Bize Ulaşın",
+                "content": "Gizlilikle ilgili sorularınız için bizimle iletişime geçin:"
+            }
+        }
+    },
+    "terms": {
+        "title": "Kullanım Koşulları",
+        "lastUpdated": "Son Güncelleme",
+        "intro": "Volla'yı kullanarak bu Kullanım Koşullarını kabul etmiş olursunuz. Lütfen dikkatlice okuyun.",
+        "sections": {
+            "aiDisclaimer": {
+                "title": "Yapay Zeka Teknolojisi Sorumluluk Reddi",
+                "content": "Volla, görsel oluşturma ve SEO optimizasyonu için Google Gemini ve Vertex AI dahil gelişmiş yapay zeka teknolojisi kullanmaktadır. Önemli bilgiler: Yapay zeka tarafından oluşturulan içerik hatalar veya yanlışlıklar içerebilir, Sonuçlar değişebilir ve garanti edilmez, Yapay zeka modelleri sürekli öğrenmektedir ve çıktılar zaman içinde değişebilir, Kullanmadan önce oluşturulan tüm içerikleri incelemek ve doğrulamaktan siz sorumlusunuz, Belirli satış sonuçlarını veya pazar yeri performansını garanti etmiyoruz."
+            },
+            "acceptableUse": {
+                "title": "Kabul Edilebilir Kullanım Politikası",
+                "content": "Volla'yı şu amaçlarla KULLANMAYACAĞINIZI kabul ediyorsunuz: Çıplaklık, müstehcen veya yetişkin içeriği oluşturma, Zararlı, yasadışı veya dolandırıcılık içeren içerik oluşturma, Fikri mülkiyet haklarını ihlal etme, Şiddet veya nefret teşvik eden içerik oluşturma, Geçerli yasaları ihlal eden herhangi bir amaç."
+            },
+            "contentPolicy": {
+                "title": "İçerik Politikası ve Güvenlik",
+                "content": "Yapay zeka sistemlerimiz şunlar için talepleri otomatik olarak reddeden güvenlik filtreleri içerir: Çıplaklık veya cinsel içerik, Şiddet veya kanlı içerik, Nefret söylemi veya ayrımcılık, Yasadışı faaliyetler, İzinsiz gerçek bireylerin taklidi. Bu filtreleri atlamaya çalışmak hesabın sonlandırılmasıyla sonuçlanabilir."
+            },
+            "intellectualProperty": {
+                "title": "Fikri Mülkiyet",
+                "content": "Yüklediğiniz görsellerin mülkiyetini korursunuz. Hizmet sunumu için görsellerinizi işlememiz için Volla'ya lisans veriyorsunuz. Yapay zeka tarafından oluşturulan görseller ticari kullanım için size lisanslanmaktadır. Görselleri yükleme haklarına sahip olduğunuzdan emin olmaktan siz sorumlusunuz."
+            },
+            "accountResponsibility": {
+                "title": "Hesap Sorumluluğu",
+                "content": "Hesap güvenliğini korumaktan, hesabınız altındaki tüm faaliyetlerden, yüklenen içeriğin üçüncü taraf haklarını ihlal etmediğinden emin olmaktan ve pazar yeri koşullarına (Etsy, Amazon, Shopify) uymaktan siz sorumlusunuz."
+            },
+            "payments": {
+                "title": "Ödemeler ve İadeler",
+                "content": "Abonelikler peşin faturalandırılır. Krediler abonelik süreniz içinde sona ermez. İadeler duruma göre değerlendirilir. Aboneliğinizi istediğiniz zaman iptal edebilirsiniz."
+            },
+            "limitation": {
+                "title": "Sorumluluk Sınırlaması",
+                "content": "Volla garantiler olmaksızın 'olduğu gibi' sağlanmaktadır. Dolaylı, arızi veya sonuç olarak ortaya çıkan zararlardan sorumlu değiliz. Sorumluluğumuz son 12 ayda bize ödediğiniz miktarla sınırlıdır."
+            },
+            "termination": {
+                "title": "Fesih",
+                "content": "Bu koşulların ihlali veya başka herhangi bir nedenle bildirimsiz veya bildirimli olarak hesabınızı feshedebilir veya askıya alabiliriz. Hesabınızı istediğiniz zaman ayarlardan feshedebilirsiniz."
+            },
+            "changes": {
+                "title": "Koşullarda Değişiklikler",
+                "content": "Bu koşulları zaman zaman güncelleyebiliriz. Önemli değişiklikleri size bildireceğiz. Değişikliklerden sonra kullanıma devam etmek kabulü teşkil eder."
+            },
+            "contact": {
+                "title": "İletişim",
+                "content": "Bu koşullarla ilgili sorularınız için bizimle iletişime geçin:"
+            }
+        }
+    }
+}

@@ -1,0 +1,550 @@
+{
+    "_meta": {
+        "language": "Deutsch",
+        "locale": "de",
+        "version": "1.0.0",
+        "lastUpdated": "2026-01-09",
+        "status": "TEMPLATE - Needs Translation"
+    },
+    "common": {
+        "loading": "Wird geladen...",
+        "error": "Fehler",
+        "success": "Erfolg",
+        "cancel": "Abbrechen",
+        "confirm": "Bestätigen",
+        "save": "Speichern",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "copy": "Kopieren",
+        "copied": "Kopiert!",
+        "download": "Herunterladen",
+        "upload": "Hochladen",
+        "generate": "Generieren",
+        "generating": "Wird generiert...",
+        "analyzing": "Wird analysiert...",
+        "close": "Schließen",
+        "back": "Zurück",
+        "next": "Weiter",
+        "yes": "Ja",
+        "no": "Nein",
+        "ok": "OK",
+        "done": "Fertig",
+        "new": "Neu",
+        "open": "Öffnen",
+        "resume": "Fortsetzen",
+        "clear": "Löschen",
+        "clearAll": "Alle löschen",
+        "reset": "Zurücksetzen",
+        "settings": "Einstellungen",
+        "search": "Suchen",
+        "filter": "Filtern",
+        "sort": "Sortieren",
+        "view": "Ansicht",
+        "preview": "Vorschau",
+        "share": "Teilen",
+        "export": "Exportieren",
+        "import": "Importieren",
+        "optional": "optional",
+        "dragOrClick": "Klicken oder per Drag & Drop",
+        "tryAgain": "Erneut versuchen"
+    },
+    "nav": {
+        "home": "Startseite",
+        "analysis": "Analyse",
+        "aiStudio": "KI Studio",
+        "shots": "Aufnahmen",
+        "realLife": "Reales Leben",
+        "history": "Verlauf",
+        "settings": "Einstellungen",
+        "openStudio": "Studio öffnen"
+    },
+    "app": {
+        "name": "Volla",
+        "tagline": "KI Produkt-Scanner",
+        "version": "v2.0"
+    },
+    "home": {
+        "welcomeBack": "Willkommen zurück",
+        "quickTools": "Schnellzugriff und aktuelle Arbeiten",
+        "quickStart": "Schnellstart",
+        "selectMarketplace": "Wählen Sie Ihren Marktplatz",
+        "selectMarketplaceFirst": "Wählen Sie zuerst einen Marktplatz",
+        "openingStudio": "KI Studio wird geöffnet...",
+        "uploadProductPhoto": "Produktfoto hochladen",
+        "getAIOptimized": "KI-optimierte Fotos für {{marketplace}} erhalten",
+        "recentProjects": "Aktuelle Projekte",
+        "viewAll": "Alle anzeigen →",
+        "noRecentProjects": "Noch keine aktuellen Projekte",
+        "moreTools": "Weitere Tools",
+        "untitledProject": "Unbenanntes Projekt",
+        "aiStudioDescription": "Komplettes Produktfotografie-Paket",
+        "textAnalysisDescription": "SEO-Optimierung für Produktlistings"
+    },
+    "handsfree": {
+        "title": "Prompt Architekt",
+        "subtitle": "Professionelle Kamerawinkel- und Aufnahmeeinstellungen für die Prompt-Generierung",
+        "sourceImage": "Quellbild",
+        "uploadImage": "Bild hochladen",
+        "customDirective": "Benutzerdefinierte Direktive",
+        "customDirectivePlaceholder": "Z.B.: Rückansicht, Fuß-Nahaufnahme...",
+        "generatePrompt": "Prompt generieren",
+        "generatedPrompt": "Generierter Prompt",
+        "copyAll": "Alle kopieren",
+        "generateImage": "Bild generieren",
+        "generateImageGemini": "Bild generieren (Gemini)",
+        "generatedImage": "Generiertes Bild",
+        "imageReady": "Bild fertig",
+        "imageWillAppear": "Bild wird hier erscheinen",
+        "promptReady": "Prompt fertig!",
+        "promptFailed": "Prompt-Generierung fehlgeschlagen",
+        "imageFailed": "Bildgenerierung fehlgeschlagen",
+        "analyzingProduct": "Produkt wird analysiert...",
+        "buildingPrompt": "Professioneller Prompt wird erstellt...",
+        "generatingImage": "Bild wird generiert...",
+        "promptLabel": "Prompt:"
+    },
+    "camera": {
+        "title": "Kamerawinkel",
+        "angles": {
+            "eyeLevel": "Augenhöhe",
+            "shoulder": "Schulterhöhe",
+            "waist": "Hüfthöhe",
+            "knee": "Kniehöhe",
+            "ground": "Bodenhöhe",
+            "wormEye": "Froschperspektive",
+            "lowAngle": "Untersicht",
+            "highAngle": "Aufsicht",
+            "birdEye": "Vogelperspektive",
+            "drone": "Drohne",
+            "satellite": "Satellit",
+            "dutch": "Holländischer Winkel"
+        }
+    },
+    "shotScale": {
+        "title": "Einstellungsgröße",
+        "scales": {
+            "extremeClose": "Extreme Nahaufnahme",
+            "closeUp": "Nahaufnahme",
+            "mediumClose": "Nahe Halbtotale",
+            "medium": "Halbtotale",
+            "mediumFull": "Amerikanische Einstellung",
+            "fullShot": "Totale",
+            "wide": "Weitwinkel",
+            "extremeWide": "Extreme Weitwinkel",
+            "cowboyShot": "Cowboy-Einstellung",
+            "choker": "Enge Großaufnahme"
+        }
+    },
+    "lens": {
+        "title": "Objektivwahl",
+        "options": {
+            "8mmFisheye": "8mm Fischauge",
+            "14mmUltra": "14mm Ultra",
+            "24mmWide": "24mm Weitwinkel",
+            "35mmClassic": "35mm Klassisch",
+            "50mmNatural": "50mm Natürlich",
+            "85mmPortrait": "85mm Portrait",
+            "200mmTele": "200mm Tele",
+            "anamorphic": "Anamorphotisch",
+            "iphone17Pro": "iPhone 17 Pro",
+            "retro": "Retro",
+            "phaseOneIQ4": "Phase One IQ4",
+            "arriAlexa35": "ARRI Alexa 35"
+        }
+    },
+    "aspectRatio": {
+        "title": "Seitenverhältnis",
+        "ratios": {
+            "original": "Original",
+            "1:1": "1:1",
+            "4:3": "4:3",
+            "3:2": "3:2",
+            "16:9": "16:9",
+            "3:4": "3:4",
+            "2:3": "2:3",
+            "9:16": "9:16",
+            "21:9": "21:9",
+            "5:4": "5:4",
+            "4:5": "4:5",
+            "2.35:1": "2.35:1"
+        }
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "apiConfiguration": "API-Konfiguration",
+        "storageManagement": "Speicherverwaltung",
+        "apiKeySettings": "API-Schlüssel-Einstellungen",
+        "geminiApiKey": "Gemini API-Schlüssel",
+        "projects": "Projekte",
+        "photos": "Fotos",
+        "clearAllProjects": "Alle Projekte löschen",
+        "resetAllData": "Alle Daten zurücksetzen",
+        "confirmDeleteProjects": "⚠️ Sind Sie sicher, dass Sie alle Projekte löschen möchten?\n\nDiese Aktion kann nicht rückgängig gemacht werden!",
+        "confirmDeleteAll": "🔴 Sind Sie sicher, dass Sie ALLE Daten löschen möchten?\n\nDies wird ALLES löschen, einschließlich Ihrer API-Schlüssel!",
+        "confirmDeleteHistory": "Sind Sie sicher, dass Sie den gesamten Verlauf löschen möchten?",
+        "saved": "Gespeichert!",
+        "cleared": "Gelöscht!",
+        "enterApiKey": "Geben Sie Ihren API-Schlüssel ein",
+        "saveKey": "Schlüssel speichern",
+        "getApiKey": "API-Schlüssel erhalten",
+        "language": "Sprache",
+        "selectLanguage": "Sprache auswählen",
+        "subtitle": "Konfigurieren Sie Ihre API-Schlüssel und Einstellungen",
+        "geminiApiKeyLabel": "Google Gemini API-Schlüssel",
+        "geminiApiKeyHelp": "Erforderlich für SEO-Analyse",
+        "vertexApiKeyLabel": "Vertex AI API-Schlüssel (Imagen 3)",
+        "vertexApiKeyHelp": "Erforderlich für KI Studio & Multi-Winkel-Aufnahmen",
+        "saveSettings": "Einstellungen speichern",
+        "resetWarning": "⚠️ Dies löscht alles, einschließlich API-Schlüssel"
+    },
+    "analysis": {
+        "title": "Produktanalyse",
+        "recentAnalyses": "Letzte Analysen",
+        "newAnalysis": "Neue Analyse",
+        "newScan": "Neuer Scan",
+        "marketplace": "Marktplatz",
+        "inputMode": "Eingabemodus",
+        "imageMode": "Bild",
+        "textMode": "Text",
+        "analyzingFor": "KI analysiert für {{marketplace}}...",
+        "preparingImage": "Bild wird vorbereitet...",
+        "processingText": "Text wird für {{marketplace}} verarbeitet...",
+        "generateSEO": "SEO-Inhalte generieren",
+        "noHistory": "Noch kein Analyseverlauf",
+        "analysesWillAppear": "Ihre Analysen werden hier erscheinen"
+    },
+    "studio": {
+        "title": "KI Studio",
+        "normal": "Normal",
+        "handsfree": "Freihändig",
+        "studioImage": "KI-Studio-Bild",
+        "original": "Original",
+        "uploadPhoto": "Foto hochladen",
+        "chooseImage": "Bild auswählen",
+        "uploadDescription": "Laden Sie Ihr Produktfoto für eine KI-optimierte {{marketplace}}-Auflistung hoch.",
+        "aiStudioMode": "KI-STUDIO-MODUS",
+        "contextAware": "Kontextbewusste Produktfotografie",
+        "addApiKey": "API-Schlüssel hinzufügen zum Starten",
+        "newAnalysis": "Neue Analyse",
+        "generating": "Wird generiert...",
+        "analyzing": "Wird analysiert...",
+        "textModeDescription": "KI schreibt Ihren Text um und generiert optimierte {{marketplace}}-Inhalte.",
+        "generatingStudio": "Studio wird generiert...",
+        "generatingShots": "Aufnahmen werden generiert...",
+        "generatingRealLife": "Real Life wird generiert...",
+        "assets": "Assets",
+        "uploadForAnalysis": "Bild hochladen für SEO-Analyse",
+        "addApiKeySettings": "Gemini API-Schlüssel in Einstellungen hinzufügen"
+    },
+    "shots": {
+        "title": "Multi-Winkel-Aufnahmen",
+        "generateAngles": "Winkel generieren",
+        "shot1": "Aufnahme 1",
+        "shot2": "Aufnahme 2",
+        "shot3": "Aufnahme 3"
+    },
+    "realLife": {
+        "title": "Lebensechte Fotos",
+        "generateRealLife": "Real Life generieren",
+        "lifestyle1": "Lifestyle 1",
+        "lifestyle2": "Lifestyle 2",
+        "lifestyle3": "Lifestyle 3"
+    },
+    "marketplace": {
+        "etsy": "Etsy",
+        "amazon": "Amazon",
+        "shopify": "Shopify"
+    },
+    "results": {
+        "seoTitle": "SEO-Titel",
+        "productTitle": "Produkttitel",
+        "productDescription": "Produktbeschreibung",
+        "htmlDescription": "HTML-Beschreibung",
+        "hiddenKeywords": "Versteckte Schlüsselwörter",
+        "keywords": "Schlüsselwörter",
+        "tags": "Tags",
+        "suggestedPrice": "Vorgeschlagener Preis",
+        "estimatedPrice": "Geschätzter Preis",
+        "recommendedPrice": "Empfohlener Preis",
+        "liveData": "LIVE-DATEN",
+        "aiAnalysis": "KI-ANALYSE",
+        "noKeywords": "Keine Schlüsselwörter generiert",
+        "copied": "Kopiert",
+        "copy": "Kopieren"
+    },
+    "history": {
+        "title": "Verlauf",
+        "storageUsage": "Speichernutzung",
+        "resumeProject": "Projekt fortsetzen",
+        "openAIStudio": "KI Studio öffnen",
+        "noProjects": "Noch keine Projekte",
+        "startScanning": "Beginnen Sie mit dem Scannen von Produkten, um Ihren Verlauf aufzubauen"
+    },
+    "paywall": {
+        "limitedTimeOffer": "Zeitlich begrenztes Angebot",
+        "cancelAnytime": "Jederzeit kündbar",
+        "subscribe": "Abonnieren",
+        "restore": "Kauf wiederherstellen"
+    },
+    "time": {
+        "justNow": "GERADE EBEN",
+        "minutesAgo": "VOR {{count}} MIN",
+        "hoursAgo": "VOR {{count}} STD",
+        "daysAgo": "VOR {{count}} T"
+    },
+    "errors": {
+        "promptFailed": "Prompt-Generierung fehlgeschlagen",
+        "imageFailed": "Bildgenerierung fehlgeschlagen",
+        "apiKeyMissing": "Bitte geben Sie einen gültigen Gemini API-Schlüssel in den Einstellungen (Zahnradsymbol) ein.",
+        "uploadFailed": "Hochladen fehlgeschlagen",
+        "analysisError": "Analysefehler",
+        "invalidApiKey": "Ungültiger API-Schlüssel – öffnen Sie die Einstellungen (Zahnradsymbol) und geben Sie einen gültigen Gemini-Schlüssel ein.",
+        "noSourceImage": "Kein Quellbild verfügbar",
+        "generationFailed": "Generierung fehlgeschlagen",
+        "minChars": "Bitte geben Sie mindestens {{count}} Zeichen ein"
+    },
+    "tooltips": {
+        "copy": "In Zwischenablage kopieren",
+        "download": "Bild herunterladen",
+        "delete": "Element löschen",
+        "settings": "Einstellungen öffnen"
+    },
+    "credits": {
+        "insufficient": "Unzureichende Guthaben",
+        "feature": "Funktion",
+        "required": "Erforderlich",
+        "available": "Verfügbar",
+        "needed": "Benötigt",
+        "moreCredits": "mehr Guthaben",
+        "upgrade": "Plan upgraden",
+        "creditsUnit": "Guthaben",
+        "costLabel": "Guthaben"
+    },
+    "pricing": {
+        "title": "Wählen Sie Ihren Plan",
+        "subtitle": "Nutzen Sie die volle Kraft der KI-Produktfotografie",
+        "currentPlan": "Aktueller Plan",
+        "credits": "Guthaben",
+        "monthly": "Monatlich",
+        "yearly": "Jährlich",
+        "month": "Mo",
+        "monthlyCredits": "Monatliche Guthaben",
+        "billedYearly": "jährlich abgerechnet",
+        "selectPlan": "Plan wählen",
+        "contactUs": "Kontaktieren Sie uns",
+        "custom": "Individuell",
+        "tailored": "Auf Ihre Bedürfnisse zugeschnitten",
+        "unlimited": "Unbegrenzt",
+        "popular": "BELIEBT",
+        "creditCosts": "Guthaben-Kosten",
+        "free": "Kostenlos",
+        "slogan": "Verwandeln Sie Ihre Produktfotos in Verkaufsmagneten"
+    },
+    "plans": {
+        "feature": {
+            "credits20": "20 Guthaben (einmalig)",
+            "credits100": "100 Guthaben/Monat",
+            "credits400": "400 Guthaben/Monat",
+            "credits1200": "1200 Guthaben/Monat",
+            "unlimitedCredits": "Unbegrenzte Guthaben",
+            "allFeatures": "Alle Funktionen inklusive",
+            "standardQueue": "Standard-Warteschlange",
+            "priorityQueue": "Prioritäts-Warteschlange",
+            "highPriorityQueue": "Hohe Priorität",
+            "topPriorityQueue": "Höchste Priorität",
+            "dedicatedManager": "Dedizierter Account Manager",
+            "customOnboarding": "Individuelles Onboarding"
+        }
+    },
+    "landing": {
+        "nav": {
+            "features": "Funktionen",
+            "howItWorks": "So funktioniert's",
+            "pricing": "Preise",
+            "logIn": "Anmelden",
+            "startFree": "Kostenlos starten"
+        },
+        "hero": {
+            "badge": "Die weltweit erste und einzige Plattform ihrer Art",
+            "headline1": "Produktfotos in",
+            "headline2": "Verkaufsmaschinen verwandeln",
+            "subheadline": "KI-gestützte Produktfotografie und SEO-Optimierung für Etsy, Amazon und Shopify mit nur einem Klick. Professionelle Ergebnisse ohne professionelle Fähigkeiten.",
+            "ctaPrimary": "Kostenlos starten — 20 Credits",
+            "ctaSecondary": "Demo ansehen",
+            "sellers": "10.000+ Verkäufer",
+            "rating": "4,9/5 Bewertung",
+            "noCard": "Keine Kreditkarte erforderlich"
+        },
+        "logos": {
+            "optimizedFor": "Optimiert für die größten Marktplätze der Welt"
+        },
+        "features": {
+            "title": "Alles, was Sie brauchen, auf einer Plattform",
+            "subtitle": "Von KI-generierten Produktfotos bis hin zu marktplatzspezifischer SEO — alles mit modernster KI.",
+            "studio": {
+                "title": "KI-Fotostudio",
+                "description": "Verwandeln Sie jedes Produktfoto in professionelle Studioaufnahmen mit perfekter Beleuchtung und Hintergründen."
+            },
+            "reallife": {
+                "title": "Real-Life-Aufnahmen",
+                "description": "Erstellen Sie Lifestyle-Bilder, die Ihre Produkte in realen Kontexten zeigen, die bei Käufern Anklang finden."
+            },
+            "angles": {
+                "title": "Multi-Winkel-Ansichten",
+                "description": "Erstellen Sie mehrere Produktwinkel und Perspektiven aus einem einzigen Foto für umfassende Angebote."
+            },
+            "seo": {
+                "title": "SEO-Optimierung",
+                "description": "Erhalten Sie marktplatzspezifische Titel, Keywords, Beschreibungen und Preisstrategien, die von KI gestützt werden."
+            },
+            "learnMore": "Mehr erfahren"
+        },
+        "valueProp": {
+            "line1": "Eine Plattform.",
+            "line2": "Alle Marktplätze.",
+            "line3": "Null Aufwand.",
+            "activeSellers": "Aktive Verkäufer",
+            "imagesGenerated": "Generierte Bilder",
+            "satisfaction": "Kundenzufriedenheit"
+        },
+        "howItWorks": {
+            "title": "Vom Foto zum Verkauf in 60 Sekunden",
+            "subtitle": "Drei einfache Schritte. Mehr nicht.",
+            "step1": {
+                "title": "Foto hochladen",
+                "description": "Laden Sie ein beliebiges Produktfoto hoch — Handy-Schnappschuss, einfache Studioaufnahme oder sogar ein Mockup."
+            },
+            "step2": {
+                "title": "Marktplatz wählen",
+                "description": "Wählen Sie Etsy, Amazon oder Shopify. Jede Plattform erhält spezialisierte Optimierung."
+            },
+            "step3": {
+                "title": "Alles sofort erhalten",
+                "description": "Erhalten Sie KI-generierte Bilder, SEO-Titel, Keywords, Beschreibungen und Preise — in Sekunden."
+            }
+        },
+        "pricing": {
+            "title": "Einfache, transparente Preise",
+            "subtitle": "Kostenlos starten. Mit Ihrem Wachstum skalieren.",
+            "mostPopular": "Am beliebtesten",
+            "monthly": "Monatlich",
+            "yearly": "Jährlich",
+            "billedYearly": "Jährlich abgerechnet",
+            "year": "Jahr",
+            "perMonth": "/Monat",
+            "creditsMonth": "Credits/Monat",
+            "getStarted": "Loslegen",
+            "allFeatures": "Alle Pläne beinhalten Zugang zu allen Funktionen.",
+            "viewDetails": "Vollständige Preisdetails ansehen →"
+        },
+        "cta": {
+            "title1": "Bereit, Ihre",
+            "title2": "Produktfotografie zu transformieren?",
+            "subtitle": "Schließen Sie sich Tausenden von Verkäufern an, die bereits Volla nutzen, um in Sekunden atemberaubende, SEO-optimierte Produktangebote zu erstellen.",
+            "button": "Kostenlos starten",
+            "disclaimer": "Keine Kreditkarte erforderlich • 20 kostenlose Credits • Jederzeit kündbar"
+        },
+        "footer": {
+            "features": "Funktionen",
+            "pricing": "Preise",
+            "support": "Support",
+            "privacy": "Datenschutz",
+            "terms": "Nutzungsbedingungen",
+            "copyright": "© 2026 Volla. Alle Rechte vorbehalten. Die weltweit erste KI-gestützte Plattform zur Marktplatz-Optimierung."
+        }
+    },
+    "privacy": {
+        "title": "Datenschutzrichtlinie",
+        "lastUpdated": "Zuletzt aktualisiert",
+        "intro": "Ihre Privatsphäre ist uns wichtig. Diese Datenschutzrichtlinie erklärt, wie Volla Ihre persönlichen Daten sammelt, verwendet und schützt.",
+        "sections": {
+            "dataCollection": {
+                "title": "Datenerfassung",
+                "content": "Wir sammeln Informationen, die Sie direkt bereitstellen, wie E-Mail-Adresse und Zahlungsinformationen beim Erstellen eines Kontos. Wir sammeln auch Nutzungsdaten, einschließlich hochgeladener Bilder (vorübergehend verarbeitet, nicht dauerhaft gespeichert), generierter Inhalte und Plattformpräferenzen."
+            },
+            "dataUsage": {
+                "title": "Wie wir Ihre Daten verwenden",
+                "content": "Ihre Daten werden verwendet, um unsere Dienste bereitzustellen und zu verbessern, Zahlungen zu verarbeiten, mit Ihnen über Ihr Konto zu kommunizieren und die Plattformsicherheit zu gewährleisten. Wir verkaufen Ihre persönlichen Daten nicht an Dritte."
+            },
+            "imageProcessing": {
+                "title": "Bildverarbeitung",
+                "content": "Hochgeladene Bilder werden über KI-Systeme (Google Gemini, Vertex AI) verarbeitet, um optimierte Produktfotos zu erstellen. Hochgeladene Bilder werden in Echtzeit verarbeitet und nicht dauerhaft auf unseren Servern gespeichert. Generierte Bilder werden für Ihre Bequemlichkeit in Ihrem Konto gespeichert."
+            },
+            "cookies": {
+                "title": "Cookies und Tracking",
+                "content": "Wir verwenden wesentliche Cookies für Authentifizierung und Präferenzen. Analytische Cookies helfen uns zu verstehen, wie Benutzer mit unserer Plattform interagieren. Sie können Cookie-Präferenzen über Ihre Browsereinstellungen steuern."
+            },
+            "gdpr": {
+                "title": "DSGVO-Konformität (EU-Nutzer)",
+                "content": "Wenn Sie in der Europäischen Union sind, haben Sie gemäß DSGVO folgende Rechte: Recht auf Zugang zu Ihren persönlichen Daten, Recht auf Berichtigung, Recht auf Löschung ('Recht auf Vergessenwerden'), Recht auf Datenübertragbarkeit, Recht auf Widerspruch gegen Verarbeitung. Kontaktieren Sie uns unter privacy@volla.app, um diese Rechte auszuüben."
+            },
+            "kvkk": {
+                "title": "KVKK-Konformität (Türkei)",
+                "content": "Türkische Nutzer sind unter dem Persönlichen Datenschutzgesetz (KVKK) geschützt. Sie haben das Recht zu erfahren, ob Ihre Daten verarbeitet werden, Informationen über die Verarbeitung anzufordern, Berichtigung anzufordern, Löschung anzufordern und gegen automatisierte Entscheidungsfindung zu widersprechen."
+            },
+            "ccpa": {
+                "title": "CCPA-Konformität (Kalifornien)",
+                "content": "Einwohner Kaliforniens haben das Recht zu wissen, welche persönlichen Informationen gesammelt werden, Löschung anzufordern, den Verkauf persönlicher Informationen abzulehnen und nicht diskriminiert zu werden, weil sie ihre Rechte ausüben."
+            },
+            "thirdParties": {
+                "title": "Drittanbieterdienste",
+                "content": "Wir nutzen vertrauenswürdige Drittanbieterdienste, einschließlich Google Cloud (KI-Verarbeitung), Stripe (Zahlungen) und Vercel (Hosting). Jeder Dienst hat seine eigene Datenschutzrichtlinie und Datenschutzmaßnahmen."
+            },
+            "security": {
+                "title": "Datensicherheit",
+                "content": "Wir implementieren branchenübliche Sicherheitsmaßnahmen, einschließlich Verschlüsselung während der Übertragung und im Ruhezustand, sicherer Authentifizierung und regelmäßiger Sicherheitsaudits. Allerdings ist kein System zu 100% sicher."
+            },
+            "contact": {
+                "title": "Kontaktieren Sie uns",
+                "content": "Für datenschutzbezogene Anfragen kontaktieren Sie uns:"
+            }
+        }
+    },
+    "terms": {
+        "title": "Nutzungsbedingungen",
+        "lastUpdated": "Zuletzt aktualisiert",
+        "intro": "Durch die Nutzung von Volla stimmen Sie diesen Nutzungsbedingungen zu. Bitte lesen Sie diese sorgfältig durch.",
+        "sections": {
+            "aiDisclaimer": {
+                "title": "KI-Technologie Haftungsausschluss",
+                "content": "Volla nutzt fortschrittliche KI-Technologie, einschließlich Google Gemini und Vertex AI, für Bildgenerierung und SEO-Optimierung. Wichtig: KI-generierte Inhalte können Fehler oder Ungenauigkeiten enthalten, Ergebnisse können variieren und sind nicht garantiert, KI-Modelle lernen kontinuierlich und Ausgaben können sich im Laufe der Zeit ändern, Sie sind dafür verantwortlich, alle generierten Inhalte vor der Verwendung zu überprüfen und zu validieren, Wir garantieren keine spezifischen Verkaufsergebnisse oder Marktplatz-Performance."
+            },
+            "acceptableUse": {
+                "title": "Richtlinie zur akzeptablen Nutzung",
+                "content": "Sie stimmen zu, Volla NICHT zu verwenden für: Erstellen von Nacktheit, obszönen oder Erwachseneninhalten, Erstellen schädlicher, illegaler oder betrügerischer Inhalte, Verletzung geistiger Eigentumsrechte, Erstellen von Inhalten, die Gewalt oder Hass fördern, Jeden Zweck, der geltende Gesetze verletzt."
+            },
+            "contentPolicy": {
+                "title": "Inhaltsrichtlinie und Sicherheit",
+                "content": "Unsere KI-Systeme enthalten Sicherheitsfilter, die Anfragen automatisch ablehnen für: Nacktheit oder sexuelle Inhalte, Gewalt oder blutige Inhalte, Hassrede oder Diskriminierung, Illegale Aktivitäten, Unbefugte Imitation realer Personen. Der Versuch, diese Filter zu umgehen, kann zur Kontokündigung führen."
+            },
+            "intellectualProperty": {
+                "title": "Geistiges Eigentum",
+                "content": "Sie behalten das Eigentum an hochgeladenen Bildern. Sie gewähren Volla eine Lizenz zur Verarbeitung Ihrer Bilder zur Dienstbereitstellung. KI-generierte Bilder sind an Sie für kommerzielle Nutzung lizenziert. Sie sind dafür verantwortlich sicherzustellen, dass Sie das Recht haben, Bilder hochzuladen."
+            },
+            "accountResponsibility": {
+                "title": "Kontoverantwortung",
+                "content": "Sie sind verantwortlich für die Aufrechterhaltung der Kontosicherheit, alle Aktivitäten unter Ihrem Konto, sicherzustellen, dass hochgeladene Inhalte keine Rechte Dritter verletzen, und die Einhaltung der Marktplatzbedingungen (Etsy, Amazon, Shopify)."
+            },
+            "payments": {
+                "title": "Zahlungen und Rückerstattungen",
+                "content": "Abonnements werden im Voraus abgerechnet. Credits verfallen nicht während Ihrer Abonnementlaufzeit. Rückerstattungen werden von Fall zu Fall bewertet. Sie können Ihr Abonnement jederzeit kündigen."
+            },
+            "limitation": {
+                "title": "Haftungsbeschränkung",
+                "content": "Volla wird ohne Gewährleistungen 'wie besehen' bereitgestellt. Wir haften nicht für indirekte, zufällige oder Folgeschäden. Unsere Haftung ist auf den Betrag beschränkt, den Sie uns in den letzten 12 Monaten gezahlt haben."
+            },
+            "termination": {
+                "title": "Kündigung",
+                "content": "Wir können Ihr Konto mit oder ohne Ankündigung wegen Verstoßes gegen diese Bedingungen oder aus irgendeinem anderen Grund aussetzen oder kündigen. Sie können Ihr Konto jederzeit über die Einstellungen kündigen."
+            },
+            "changes": {
+                "title": "Änderungen der Bedingungen",
+                "content": "Wir können diese Bedingungen von Zeit zu Zeit aktualisieren. Wir werden Sie über wesentliche Änderungen benachrichtigen. Die fortgesetzte Nutzung nach Änderungen stellt Akzeptanz dar."
+            },
+            "contact": {
+                "title": "Kontakt",
+                "content": "Für Fragen zu diesen Bedingungen kontaktieren Sie uns:"
+            }
+        }
+    }
+}

@@ -1,0 +1,558 @@
+{
+    "_meta": {
+        "language": "日本語",
+        "locale": "ja",
+        "version": "1.0.0",
+        "lastUpdated": "2026-01-09"
+    },
+    "common": {
+        "loading": "読み込み中...",
+        "error": "エラー",
+        "success": "成功",
+        "cancel": "キャンセル",
+        "confirm": "確認",
+        "save": "保存",
+        "delete": "削除",
+        "edit": "編集",
+        "copy": "コピー",
+        "copied": "コピーしました！",
+        "download": "ダウンロード",
+        "upload": "アップロード",
+        "generate": "生成",
+        "generating": "生成中...",
+        "analyzing": "分析中...",
+        "close": "閉じる",
+        "back": "戻る",
+        "next": "次へ",
+        "yes": "はい",
+        "no": "いいえ",
+        "ok": "OK",
+        "done": "完了",
+        "new": "新規",
+        "open": "開く",
+        "resume": "再開",
+        "clear": "クリア",
+        "clearAll": "すべてクリア",
+        "reset": "リセット",
+        "settings": "設定",
+        "search": "検索",
+        "filter": "フィルター",
+        "sort": "並べ替え",
+        "view": "表示",
+        "preview": "プレビュー",
+        "share": "共有",
+        "export": "エクスポート",
+        "import": "インポート",
+        "optional": "任意",
+        "dragOrClick": "クリックまたはドラッグ＆ドロップ",
+        "tryAgain": "再試行"
+    },
+    "nav": {
+        "home": "ホーム",
+        "analysis": "分析",
+        "aiStudio": "AIスタジオ",
+        "shots": "ショット",
+        "realLife": "リアルライフ",
+        "history": "履歴",
+        "settings": "設定",
+        "openStudio": "スタジオを開く"
+    },
+    "app": {
+        "name": "Volla",
+        "tagline": "AI製品スキャナー",
+        "version": "v2.0"
+    },
+    "home": {
+        "welcomeBack": "おかえりなさい",
+        "quickTools": "クイックツールと最近の作業",
+        "quickStart": "クイックスタート",
+        "selectMarketplace": "マーケットプレイスを選択",
+        "selectMarketplaceFirst": "まずマーケットプレイスを選択してください",
+        "openingStudio": "AIスタジオを開いています...",
+        "uploadProductPhoto": "製品写真をアップロード",
+        "getAIOptimized": "{{marketplace}}用のAI最適化写真を取得",
+        "recentProjects": "最近のプロジェクト",
+        "viewAll": "すべて表示 →",
+        "noRecentProjects": "最近のプロジェクトはありません",
+        "moreTools": "その他のツール",
+        "untitledProject": "無題のプロジェクト",
+        "aiStudioDescription": "完全な製品撮影スイート",
+        "textAnalysisDescription": "製品リスティングのSEO最適化"
+    },
+    "handsfree": {
+        "title": "プロンプトアーキテクト",
+        "subtitle": "プロンプト生成のためのプロフェッショナルなカメラアングルとショット設定",
+        "sourceImage": "ソース画像",
+        "uploadImage": "画像をアップロード",
+        "customDirective": "カスタム指示",
+        "customDirectivePlaceholder": "例：背面アングル、足のクローズアップ...",
+        "generatePrompt": "プロンプトを生成",
+        "generatedPrompt": "生成されたプロンプト",
+        "copyAll": "すべてコピー",
+        "generateImage": "画像を生成",
+        "generateImageGemini": "画像を生成 (Gemini)",
+        "generatedImage": "生成された画像",
+        "imageReady": "画像準備完了",
+        "imageWillAppear": "画像がここに表示されます",
+        "promptReady": "プロンプト準備完了！",
+        "promptFailed": "プロンプト生成に失敗しました",
+        "imageFailed": "画像生成に失敗しました",
+        "analyzingProduct": "製品を分析中...",
+        "buildingPrompt": "プロフェッショナルなプロンプトを構築中...",
+        "generatingImage": "画像を生成中...",
+        "promptLabel": "プロンプト："
+    },
+    "camera": {
+        "title": "カメラアングル",
+        "angles": {
+            "eyeLevel": "アイレベル",
+            "shoulder": "肩の高さ",
+            "waist": "腰の高さ",
+            "knee": "膝の高さ",
+            "ground": "地面",
+            "wormEye": "ワームズアイ",
+            "lowAngle": "ローアングル",
+            "highAngle": "ハイアングル",
+            "birdEye": "バードアイ",
+            "drone": "ドローン",
+            "satellite": "サテライト",
+            "dutch": "ダッチ"
+        }
+    },
+    "shotScale": {
+        "title": "ショットスケール",
+        "scales": {
+            "extremeClose": "エクストリームクローズ",
+            "closeUp": "クローズアップ",
+            "mediumClose": "ミディアムクローズ",
+            "medium": "ミディアム",
+            "mediumFull": "ミディアムフル",
+            "fullShot": "フルショット",
+            "wide": "ワイド",
+            "extremeWide": "エクストリームワイド",
+            "cowboyShot": "カウボーイショット",
+            "choker": "チョーカー"
+        }
+    },
+    "lens": {
+        "title": "レンズ設定",
+        "options": {
+            "8mmFisheye": "8mm フィッシュアイ",
+            "14mmUltra": "14mm ウルトラワイド",
+            "24mmWide": "24mm ワイド",
+            "35mmClassic": "35mm クラシック",
+            "50mmNatural": "50mm ナチュラル",
+            "85mmPortrait": "85mm ポートレート",
+            "200mmTele": "200mm 望遠",
+            "anamorphic": "アナモルフィック",
+            "iphone17Pro": "iPhone 17 Pro",
+            "retro": "レトロ",
+            "phaseOneIQ4": "Phase One IQ4",
+            "arriAlexa35": "ARRI Alexa 35"
+        }
+    },
+    "aspectRatio": {
+        "title": "アスペクト比",
+        "ratios": {
+            "original": "オリジナル",
+            "1:1": "1:1",
+            "4:3": "4:3",
+            "3:2": "3:2",
+            "16:9": "16:9",
+            "3:4": "3:4",
+            "2:3": "2:3",
+            "9:16": "9:16",
+            "21:9": "21:9",
+            "5:4": "5:4",
+            "4:5": "4:5",
+            "2.35:1": "2.35:1"
+        }
+    },
+    "settings": {
+        "title": "設定",
+        "subtitle": "APIキーと設定を構成",
+        "apiConfiguration": "API設定",
+        "storageManagement": "ストレージ管理",
+        "apiKeySettings": "APIキー設定",
+        "geminiApiKey": "Gemini APIキー",
+        "geminiApiKeyLabel": "Google Gemini APIキー",
+        "geminiApiKeyHelp": "SEO分析に必要",
+        "vertexApiKeyLabel": "Vertex AI APIキー (Imagen 3)",
+        "vertexApiKeyHelp": "AIスタジオとマルチアングルショットに必要",
+        "projects": "プロジェクト",
+        "photos": "写真",
+        "clearAllProjects": "すべてのプロジェクトを削除",
+        "resetAllData": "すべてのデータをリセット",
+        "confirmDeleteProjects": "⚠️ すべてのプロジェクトを削除してもよろしいですか？\n\nこの操作は元に戻せません！",
+        "confirmDeleteAll": "🔴 すべてのデータを削除してもよろしいですか？\n\nAPIキーを含むすべてが削除されます！",
+        "confirmDeleteHistory": "すべての履歴を削除してもよろしいですか？",
+        "saved": "保存しました！",
+        "saveSettings": "設定を保存",
+        "cleared": "クリアしました！",
+        "enterApiKey": "APIキーを入力",
+        "saveKey": "キーを保存",
+        "getApiKey": "APIキーを取得",
+        "language": "言語",
+        "selectLanguage": "希望の言語を選択",
+        "aboutApp": "このアプリについて",
+        "aboutDescription": "APIキーはブラウザのローカルストレージに安全に保存されます。デバイスから外部に送信されることはありません。",
+        "resetWarning": "⚠️ APIキーを含むすべてが削除されます"
+    },
+    "analysis": {
+        "title": "テキスト分析",
+        "subtitle": "製品情報からSEO最適化コンテンツを生成",
+        "recentAnalyses": "最近の分析",
+        "newAnalysis": "新規分析",
+        "newScan": "新規スキャン",
+        "marketplace": "マーケットプレイス",
+        "productName": "製品名",
+        "productDescription": "製品説明",
+        "referenceLink": "競合/参照リンク",
+        "inputMode": "入力モード",
+        "imageMode": "画像",
+        "textMode": "テキスト",
+        "analyzingFor": "{{marketplace}}用にAI分析中...",
+        "analysisCompleteFor": "{{marketplace}}の分析完了",
+        "analyzeAnother": "別の製品を分析",
+        "preparingImage": "画像を準備中...",
+        "processingText": "{{marketplace}}用にテキストを処理中...",
+        "generateSEO": "SEOコンテンツを生成",
+        "apiKeyNotice": "設定でGemini APIキーを追加して開始",
+        "noHistory": "分析履歴がありません",
+        "analysesWillAppear": "分析結果がここに表示されます"
+    },
+    "studio": {
+        "title": "AIスタジオ",
+        "normal": "通常",
+        "handsfree": "ハンズフリー",
+        "studioImage": "AIスタジオ画像",
+        "original": "オリジナル",
+        "uploadPhoto": "写真をアップロード",
+        "chooseImage": "画像を選択",
+        "uploadDescription": "{{marketplace}}用のAI最適化リスティングのために製品写真をアップロード。",
+        "aiStudioMode": "AIスタジオモード",
+        "contextAware": "コンテキスト対応製品撮影",
+        "addApiKey": "APIキーを追加して開始",
+        "newAnalysis": "新規分析",
+        "generating": "生成中...",
+        "analyzing": "分析中...",
+        "textModeDescription": "AIがテキストを書き換え、{{marketplace}}用に最適化されたコンテンツを生成します。",
+        "generatingStudio": "スタジオを生成中...",
+        "generatingShots": "ショットを生成中...",
+        "generatingRealLife": "リアルライフを生成中...",
+        "assets": "アセット",
+        "uploadForAnalysis": "SEO分析のために画像をアップロード",
+        "addApiKeySettings": "設定でGemini APIキーを追加"
+    },
+    "shots": {
+        "title": "マルチアングルショット",
+        "generateAngles": "アングルを生成",
+        "shot1": "ショット 1",
+        "shot2": "ショット 2",
+        "shot3": "ショット 3"
+    },
+    "realLife": {
+        "title": "リアルライフフォト",
+        "generateRealLife": "リアルライフを生成",
+        "lifestyle1": "ライフスタイル 1",
+        "lifestyle2": "ライフスタイル 2",
+        "lifestyle3": "ライフスタイル 3"
+    },
+    "marketplace": {
+        "etsy": "Etsy",
+        "amazon": "Amazon",
+        "shopify": "Shopify"
+    },
+    "results": {
+        "seoTitle": "SEOタイトル",
+        "productTitle": "製品タイトル",
+        "productDescription": "製品説明",
+        "htmlDescription": "HTML説明",
+        "hiddenKeywords": "隠しキーワード",
+        "keywords": "キーワード",
+        "tags": "タグ",
+        "suggestedPrice": "推奨価格",
+        "estimatedPrice": "見積価格",
+        "recommendedPrice": "おすすめ価格",
+        "liveData": "ライブデータ",
+        "aiAnalysis": "AI分析",
+        "noKeywords": "キーワードが生成されませんでした",
+        "copied": "コピー済み",
+        "copy": "コピー"
+    },
+    "history": {
+        "title": "履歴",
+        "storageUsage": "ストレージ使用量",
+        "resumeProject": "プロジェクトを再開",
+        "openAIStudio": "AIスタジオを開く",
+        "noProjects": "プロジェクトがありません",
+        "startScanning": "製品のスキャンを開始して履歴を作成"
+    },
+    "paywall": {
+        "limitedTimeOffer": "期間限定オファー",
+        "cancelAnytime": "いつでもキャンセル可能",
+        "subscribe": "登録",
+        "restore": "購入を復元"
+    },
+    "time": {
+        "justNow": "たった今",
+        "minutesAgo": "{{count}}分前",
+        "hoursAgo": "{{count}}時間前",
+        "daysAgo": "{{count}}日前"
+    },
+    "errors": {
+        "promptFailed": "プロンプト生成に失敗しました",
+        "imageFailed": "画像生成に失敗しました",
+        "apiKeyMissing": "設定（歯車アイコン）で有効なGemini APIキーを入力してください。",
+        "uploadFailed": "アップロードに失敗しました",
+        "analysisError": "分析エラー",
+        "invalidApiKey": "無効なAPIキー – 設定（歯車アイコン）を開いて有効なGeminiキーを入力してください。",
+        "noSourceImage": "ソース画像がありません",
+        "generationFailed": "生成に失敗しました",
+        "minChars": "{{count}}文字以上入力してください"
+    },
+    "tooltips": {
+        "copy": "クリップボードにコピー",
+        "download": "画像をダウンロード",
+        "delete": "アイテムを削除",
+        "settings": "設定を開く"
+    },
+    "credits": {
+        "insufficient": "クレジット不足",
+        "feature": "機能",
+        "required": "必要",
+        "available": "利用可能",
+        "needed": "必要",
+        "moreCredits": "追加クレジット",
+        "upgrade": "プランをアップグレード",
+        "creditsUnit": "クレジット",
+        "costLabel": "クレジット"
+    },
+    "pricing": {
+        "title": "プランを選択",
+        "subtitle": "AI商品写真の可能性を最大限に",
+        "currentPlan": "現在のプラン",
+        "credits": "クレジット",
+        "monthly": "月額",
+        "yearly": "年額",
+        "month": "月",
+        "monthlyCredits": "月間クレジット",
+        "billedYearly": "年払い",
+        "selectPlan": "プランを選択",
+        "contactUs": "お問い合わせ",
+        "custom": "カスタム",
+        "tailored": "ニーズに合わせてカスタマイズ",
+        "unlimited": "無制限",
+        "popular": "人気",
+        "creditCosts": "クレジットコスト",
+        "free": "無料",
+        "slogan": "商品写真を売上のマグネットに変える"
+    },
+    "plans": {
+        "feature": {
+            "credits20": "20クレジット（1回限り）",
+            "credits100": "100クレジット/月",
+            "credits400": "400クレジット/月",
+            "credits1200": "1200クレジット/月",
+            "unlimitedCredits": "無制限クレジット",
+            "allFeatures": "すべての機能が含まれています",
+            "standardQueue": "標準キュー",
+            "priorityQueue": "優先キュー",
+            "highPriorityQueue": "高優先度キュー",
+            "topPriorityQueue": "最優先キュー",
+            "dedicatedManager": "専任アカウントマネージャー",
+            "customOnboarding": "カスタムオンボーディング"
+        }
+    },
+    "landing": {
+        "nav": {
+            "features": "機能",
+            "howItWorks": "使い方",
+            "pricing": "料金",
+            "logIn": "ログイン",
+            "startFree": "無料で始める"
+        },
+        "hero": {
+            "badge": "世界初かつ唯一のプラットフォーム",
+            "headline1": "商品写真を",
+            "headline2": "売上マシンに変換",
+            "subheadline": "Etsy、Amazon、ShopifyのためのワンクリックAI搭載商品写真とSEO最適化。プロのスキルなしでプロの結果。",
+            "ctaPrimary": "無料で始める — 20クレジット",
+            "ctaSecondary": "デモを見る",
+            "sellers": "10,000人以上の販売者",
+            "rating": "評価4.9/5",
+            "noCard": "クレジットカード不要"
+        },
+        "logos": {
+            "optimizedFor": "世界最大のマーケットプレイス向けに最適化"
+        },
+        "features": {
+            "title": "必要なすべてが一つのプラットフォームに",
+            "subtitle": "AI生成の商品写真からマーケットプレイス固有のSEOまで — すべて最先端AIで実現。",
+            "studio": {
+                "title": "AIフォトスタジオ",
+                "description": "あらゆる商品写真を完璧な照明と背景を持つプロのスタジオショットに変換します。"
+            },
+            "reallife": {
+                "title": "リアルライフショット",
+                "description": "購入者の共感を呼ぶ実際の文脈で商品を示すライフスタイル画像を生成します。"
+            },
+            "angles": {
+                "title": "マルチアングルビュー",
+                "description": "一枚の写真から複数の商品角度と視点を作成し、包括的なリスティングを実現します。"
+            },
+            "seo": {
+                "title": "SEO最適化",
+                "description": "AIを活用したマーケットプレイス固有のタイトル、キーワード、説明、価格戦略を取得します。"
+            },
+            "learnMore": "詳細を見る"
+        },
+        "valueProp": {
+            "line1": "一つのプラットフォーム。",
+            "line2": "すべてのマーケットプレイス。",
+            "line3": "ゼロの労力。",
+            "activeSellers": "アクティブな販売者",
+            "imagesGenerated": "生成された画像",
+            "satisfaction": "顧客満足度"
+        },
+        "howItWorks": {
+            "title": "60秒で写真から売上へ",
+            "subtitle": "3つの簡単なステップ。それだけです。",
+            "step1": {
+                "title": "写真をアップロード",
+                "description": "スマホのスナップショット、基本的なスタジオショット、またはモックアップなど、任意の商品写真をアップロードします。"
+            },
+            "step2": {
+                "title": "マーケットプレイスを選択",
+                "description": "Etsy、Amazon、またはShopifyを選択します。各プラットフォームには専門的な最適化が適用されます。"
+            },
+            "step3": {
+                "title": "すべてを即座に取得",
+                "description": "AI生成画像、SEOタイトル、キーワード、説明、価格を数秒で受け取ります。"
+            }
+        },
+        "pricing": {
+            "title": "シンプルで透明な料金",
+            "subtitle": "無料で始めて、成長に合わせてスケール。",
+            "mostPopular": "最も人気",
+            "monthly": "月額",
+            "yearly": "年額",
+            "billedYearly": "年間請求",
+            "year": "年",
+            "perMonth": "/月",
+            "creditsMonth": "クレジット/月",
+            "getStarted": "始める",
+            "allFeatures": "すべてのプランにすべての機能へのアクセスが含まれます。",
+            "viewDetails": "完全な料金詳細を見る →"
+        },
+        "cta": {
+            "title1": "商品写真を",
+            "title2": "変革する準備はできましたか？",
+            "subtitle": "数秒で見事なSEO最適化された商品リスティングを作成するためにVollaをすでに使用している何千もの販売者に参加してください。",
+            "button": "無料で始める",
+            "disclaimer": "クレジットカード不要 • 20無料クレジット • いつでもキャンセル可能"
+        },
+        "footer": {
+            "features": "機能",
+            "pricing": "料金",
+            "support": "サポート",
+            "privacy": "プライバシー",
+            "terms": "利用規約",
+            "copyright": "© 2026 Volla。無断複写・転載を禁じます。世界初のAI搭載マーケットプレイス最適化プラットフォーム。"
+        }
+    },
+    "privacy": {
+        "title": "プライバシーポリシー",
+        "lastUpdated": "最終更新",
+        "intro": "あなたのプライバシーは私たちにとって重要です。このプライバシーポリシーは、Vollaが個人情報をどのように収集、使用、保護するかを説明します。",
+        "sections": {
+            "dataCollection": {
+                "title": "データ収集",
+                "content": "アカウント作成時に直接提供される情報（メールアドレスや支払い情報など）を収集します。また、アップロードされた画像（一時的に処理され、永続的に保存されません）、生成されたコンテンツ、プラットフォームの設定を含む使用データも収集します。"
+            },
+            "dataUsage": {
+                "title": "データの使用方法",
+                "content": "あなたのデータは、サービスの提供と改善、支払いの処理、アカウントに関するコミュニケーション、プラットフォームのセキュリティ確保に使用されます。個人情報を第三者に販売することはありません。"
+            },
+            "imageProcessing": {
+                "title": "画像処理",
+                "content": "アップロードされた画像は、AIシステム（Google Gemini、Vertex AI）を通じて処理され、最適化された商品写真が作成されます。アップロードされた画像はリアルタイムで処理され、サーバーに永続的に保存されません。生成された画像は、利便性のためにアカウントに保存されます。"
+            },
+            "cookies": {
+                "title": "Cookieとトラッキング",
+                "content": "認証と設定のために必須Cookieを使用します。分析Cookieは、ユーザーがプラットフォームとどのように相互作用するかを理解するのに役立ちます。ブラウザ設定でCookie設定を制御できます。"
+            },
+            "gdpr": {
+                "title": "GDPR準拠（EUユーザー）",
+                "content": "欧州連合にお住まいの場合、GDPRに基づいて次の権利があります：個人データへのアクセス権、訂正権、削除権（「忘れられる権利」）、データポータビリティ権、処理への異議申し立て権。これらの権利を行使するには、privacy@volla.appまでご連絡ください。"
+            },
+            "kvkk": {
+                "title": "KVKK準拠（トルコ）",
+                "content": "トルコのユーザーは個人データ保護法（KVKK）によって保護されています。データが処理されているかどうかを知る権利、処理に関する情報を要求する権利、訂正を要求する権利、削除を要求する権利、自動意思決定に異議を唱える権利があります。"
+            },
+            "ccpa": {
+                "title": "CCPA準拠（カリフォルニア）",
+                "content": "カリフォルニア州の居住者は、どのような個人情報が収集されているかを知る権利、削除を要求する権利、個人情報の販売をオプトアウトする権利、権利を行使したために差別されない権利があります。"
+            },
+            "thirdParties": {
+                "title": "サードパーティサービス",
+                "content": "Google Cloud（AI処理）、Stripe（支払い）、Vercel（ホスティング）を含む信頼できるサードパーティサービスを使用しています。各サービスには独自のプライバシーポリシーとデータ保護対策があります。"
+            },
+            "security": {
+                "title": "データセキュリティ",
+                "content": "転送中および保存時の暗号化、安全な認証、定期的なセキュリティ監査を含む業界標準のセキュリティ対策を実装しています。ただし、100%安全なシステムはありません。"
+            },
+            "contact": {
+                "title": "お問い合わせ",
+                "content": "プライバシーに関するお問い合わせは、こちらまでご連絡ください："
+            }
+        }
+    },
+    "terms": {
+        "title": "利用規約",
+        "lastUpdated": "最終更新",
+        "intro": "Vollaを使用することにより、これらの利用規約に同意したものとみなされます。注意深くお読みください。",
+        "sections": {
+            "aiDisclaimer": {
+                "title": "AI技術免責事項",
+                "content": "Vollaは、画像生成とSEO最適化のためにGoogle GeminiとVertex AIを含む高度なAI技術を使用しています。重要：AI生成コンテンツにはエラーや不正確さが含まれる場合があります、結果は変動し保証されません、AIモデルは継続的に学習しており、出力は時間とともに変化する可能性があります、使用前にすべての生成コンテンツを確認および検証する責任があります、特定の販売結果やマーケットプレイスのパフォーマンスを保証しません。"
+            },
+            "acceptableUse": {
+                "title": "利用規定",
+                "content": "Vollaを次の目的で使用しないことに同意します：ヌード、わいせつ、またはアダルトコンテンツの作成、有害、違法、または詐欺的なコンテンツの作成、知的財産権の侵害、暴力や憎悪を助長するコンテンツの作成、適用法に違反する目的。"
+            },
+            "contentPolicy": {
+                "title": "コンテンツポリシーと安全性",
+                "content": "当社のAIシステムには、次のリクエストを自動的に拒否する安全フィルターが含まれています：ヌードまたは性的コンテンツ、暴力的または血なまぐさいコンテンツ、ヘイトスピーチまたは差別、違法活動、実在の人物の無断模倣。これらのフィルターを回避しようとすると、アカウントが終了される可能性があります。"
+            },
+            "intellectualProperty": {
+                "title": "知的財産",
+                "content": "アップロードした画像の所有権はあなたに帰属します。サービス提供のために画像を処理するライセンスをVollaに付与します。AI生成画像は商用利用のためにあなたにライセンスされます。画像をアップロードする権利があることを確認する責任があります。"
+            },
+            "accountResponsibility": {
+                "title": "アカウントの責任",
+                "content": "アカウントのセキュリティ維持、アカウント下のすべての活動、アップロードされたコンテンツが第三者の権利を侵害しないことの確認、マーケットプレイス規約（Etsy、Amazon、Shopify）の遵守に責任があります。"
+            },
+            "payments": {
+                "title": "支払いと返金",
+                "content": "サブスクリプションは前払いで請求されます。クレジットはサブスクリプション期間中は失効しません。返金はケースバイケースで評価されます。いつでもサブスクリプションをキャンセルできます。"
+            },
+            "limitation": {
+                "title": "責任の制限",
+                "content": "Vollaは保証なしで「現状のまま」提供されます。間接的、付随的、または結果的な損害については責任を負いません。当社の責任は、過去12か月間にお支払いいただいた金額に限定されます。"
+            },
+            "termination": {
+                "title": "終了",
+                "content": "これらの規約の違反またはその他の理由により、通知の有無にかかわらずアカウントを一時停止または終了する場合があります。設定からいつでもアカウントを終了できます。"
+            },
+            "changes": {
+                "title": "規約の変更",
+                "content": "これらの規約を随時更新する場合があります。重要な変更についてはお知らせします。変更後の継続使用は同意を構成します。"
+            },
+            "contact": {
+                "title": "連絡先",
+                "content": "これらの規約に関する質問は、こちらまでお問い合わせください："
+            }
+        }
+    }
+}

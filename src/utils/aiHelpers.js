@@ -1218,3 +1218,74 @@ export const analyzeText = async (inputText, marketplace, apiKey) => {
     throw error;
   }
 };
+
+// =====================================================
+// HANDSFREE MODE - AI-Powered Product Analysis & Generation
+// =====================================================
+
+/**
+ * Analyze product image for Handsfree mode
+ * Detects product type, camera angle, and generates context
+ */
+export const analyzeProductForHandsfree = async (imageBase64, apiKey) => {
+  log('🤖 Handsfree: Analyzing product...');
+
+  try {
+    // Call backend API for analysis
+    const response = await fetch('/api/generate-handsfree', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'analyze',
+        image: imageBase64
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Analysis failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('✅ Handsfree analysis complete:', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Handsfree analysis failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Generate image using Handsfree mode
+ * Uses AI to automatically select best background and settings
+ */
+export const generateHandsfreeImage = async (imageBase64, analysisContext = {}, mode = 'studio') => {
+  log('🎨 Handsfree: Generating image...', { mode });
+
+  try {
+    // Call backend API for generation
+    const response = await fetch('/api/generate-handsfree', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'generate',
+        image: imageBase64,
+        context: analysisContext,
+        mode: mode
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Generation failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('✅ Handsfree generation complete');
+    return data;
+
+  } catch (error) {
+    console.error('❌ Handsfree generation failed:', error);
+    throw error;
+  }
+};
