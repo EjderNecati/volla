@@ -3,7 +3,7 @@ MULTI-ANGLE SHOT GENERATOR - Imagen 3 Integration
 Advanced Multi-Angle Generator with Reference Image Consistency
 
 Features:
-- Imagen 3 with reference images for 95%+ consistency
+- Imagen 3 with reference images for 95%+ consistency (OAuth2)
 - Physics Classification (7 categories)
 - Staging Logic Mapping per category
 - Product preservation across all angles
@@ -14,29 +14,46 @@ import base64
 import json
 import time
 import traceback
+import requests
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
-print("🎬 MULTI-ANGLE GENERATOR - Imagen 3 Mode")
+print("🎬 MULTI-ANGLE GENERATOR - Imagen 3 Mode (OAuth2)")
 print("=" * 60)
 
 # Environment
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 VERTEX_API_KEY = os.environ.get("VERTEX_API_KEY")
-API_KEY = VERTEX_API_KEY or GOOGLE_API_KEY
+GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 
-# Try to import google-genai (new SDK for Imagen 3)
-genai_client = None
+# OAuth2 Setup for Imagen 3
+oauth2_token = None
+project_id = None
+
 try:
-    from google import genai
-    from google.genai import types
-    if API_KEY:
-        genai_client = genai.Client(api_key=API_KEY)
-        print("✅ google-genai Client initialized")
-except ImportError as e:
-    print(f"⚠️ google-genai not available: {e}")
+    if GOOGLE_CREDENTIALS_JSON:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        project_id = creds_dict.get("project_id", "")
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        
+        print(f"✅ OAuth2 token obtained for project: {project_id}")
+    else:
+        print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
+except Exception as e:
+    print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Fallback to old SDK
+# Fallback to old SDK for Gemini
 genai_old = None
 try:
     import google.generativeai as genai_module
@@ -46,6 +63,32 @@ try:
         print("✅ google-generativeai (fallback) configured")
 except ImportError as e:
     print(f"⚠️ google-generativeai not available: {e}")
+
+
+def get_fresh_token():
+    """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
+    global oauth2_token
+    
+    if not GOOGLE_CREDENTIALS_JSON:
+        return None
+    
+    try:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        return oauth2_token
+    except Exception as e:
+        print(f"⚠️ Token refresh failed: {e}")
+        return None
 
 # ===============================================
 # PHYSICS CLASSIFICATION PROMPT
@@ -427,48 +470,55 @@ STAGING: {staging}
 
 Product: {product_desc}"""
 
-    # Try Imagen 3 first if we have an API key
-    if api_key:
+    # Try Imagen 3 with OAuth2 REST API
+    token = get_fresh_token()
+    if token and project_id:
         try:
-            from google import genai
-            from google.genai import types
+            print(f"      🎨 Trying Imagen 3 via OAuth2...")
             
-            client = genai.Client(api_key=api_key)
+            # Encode image to base64
+            image_b64 = base64.b64encode(image_bytes).decode('utf-8')
             
-            reference_image = types.RawReferenceImage(
-                reference_id=1,
-                reference_image=types.Image(image_bytes=image_bytes)
-            )
+            # Imagen 3 edit endpoint
+            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
             
-            # Try different models
-            for model_name in ['imagen-3.0-capability-001', 'imagen-3.0-generate-002']:
-                try:
-                    response = client.models.edit_image(
-                        model=model_name,
-                        prompt=prompt,
-                        reference_images=[reference_image],
-                        config=types.EditImageConfig(
-                            edit_mode='EDIT_MODE_DEFAULT',
-                            number_of_images=1
-                        )
-                    )
-                    
-                    if response.generated_images:
-                        img_bytes = response.generated_images[0].image.image_bytes
-                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                        return f"data:image/png;base64,{img_b64}"
-                        
-                except Exception as e:
-                    print(f"      ⚠️ {model_name}: {str(e)[:60]}")
-                    continue
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "instances": [{
+                    "prompt": prompt,
+                    "image": {
+                        "bytesBase64Encoded": image_b64
+                    }
+                }],
+                "parameters": {
+                    "sampleCount": 1,
+                    "editMode": "EDIT_MODE_DEFAULT"
+                }
+            }
+            
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            
+            if response.status_code == 200:
+                result = response.json()
+                predictions = result.get("predictions", [])
+                if predictions and predictions[0].get("bytesBase64Encoded"):
+                    img_b64 = predictions[0]["bytesBase64Encoded"]
+                    print(f"      ✅ Imagen 3 angle shot success!")
+                    return f"data:image/png;base64,{img_b64}"
+            
+            print(f"      ⚠️ Imagen 3 response: {response.status_code}")
                     
         except Exception as e:
-            print(f"      ⚠️ Imagen 3 failed: {str(e)[:60]}")
+            print(f"      ⚠️ Imagen 3 OAuth2 failed: {str(e)[:60]}")
     
     # Fallback to Gemini
     if genai_old:
         try:
-            models = ['gemini-2.5-flash-preview-05-20', 'gemini-2.0-flash-exp', 'gemini-2.0-flash']
+            models = ['gemini-2.0-flash-exp', 'gemini-2.0-flash']
             
             for model_name in models:
                 for attempt in range(2):
@@ -498,4 +548,4 @@ Product: {product_desc}"""
     return None
 
 
-print("✅ Multi-Angle Generator - Imagen 3 Mode ready")
+print("✅ Multi-Angle Generator - Imagen 3 Mode (OAuth2) ready")

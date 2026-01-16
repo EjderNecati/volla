@@ -92,7 +92,7 @@ function AppContent() {
         return <TermsPage onNavigate={handleNavigate} />;
     }
     if (currentRoute === 'pricing') {
-        return <PricingView embedded={false} onNavigate={handleNavigate} />;
+        return <PricingView embedded={false} onBack={() => handleNavigate('home')} />;
     }
 
     // Redirect to landing if not logged in
@@ -122,8 +122,8 @@ function AppContent() {
             case 'studio':
                 return (
                     <AIStudioView
-                        loadedAsset={loadedAsset}
-                        loadedProject={loadedProject}
+                        initialAsset={loadedAsset}
+                        initialProject={loadedProject}
                         onClearLoaded={() => { setLoadedAsset(null); setLoadedProject(null); }}
                         onNavigate={handleNavigate}
                         marketplace={marketplace}
@@ -131,7 +131,7 @@ function AppContent() {
                     />
                 );
             case 'analysis':
-                return <AnalysisView marketplace={marketplace} />;
+                return <AnalysisView marketplace={marketplace} onMarketplaceSelect={setMarketplace} />;
             case 'history':
                 return (
                     <HistoryView

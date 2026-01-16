@@ -30,6 +30,51 @@ export const fileToBase64 = (file) => {
   });
 };
 
+// Helper: Compress image to reduce payload size (for 413 errors)
+export const compressImage = async (base64Image, maxSizeKB = 1500, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Scale down if image is too large
+        const maxDimension = 2000;
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to JPEG with quality
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+
+        // Check size and reduce quality if needed
+        const sizeKB = (compressed.length * 3) / 4 / 1024;
+        if (sizeKB > maxSizeKB && quality > 0.3) {
+          // Recursively compress with lower quality
+          compressImage(base64Image, maxSizeKB, quality - 0.1).then(resolve).catch(reject);
+        } else {
+          console.log(`📸 Image compressed: ${Math.round(sizeKB)}KB (quality: ${quality})`);
+          resolve(compressed);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = base64Image;
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 // ROBUST JSON PARSER
 const safeParseJSON = (text) => {
   if (!text || typeof text !== 'string') throw new Error('Empty response from API');
@@ -1231,13 +1276,16 @@ export const analyzeProductForHandsfree = async (imageBase64, apiKey) => {
   log('🤖 Handsfree: Analyzing product...');
 
   try {
+    // Compress image to avoid 413 Payload Too Large
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
     // Call backend API for analysis
     const response = await fetch('/api/generate-handsfree', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'analyze',
-        image: imageBase64
+        image: compressedImage
       })
     });
 
@@ -1263,14 +1311,18 @@ export const generateHandsfreeImage = async (imageBase64, analysisContext = {}, 
   log('🎨 Handsfree: Generating image...', { mode });
 
   try {
+    // Compress image to avoid 413 Payload Too Large
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
     // Call backend API for generation
     const response = await fetch('/api/generate-handsfree', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'generate',
-        image: imageBase64,
-        context: analysisContext,
+        image: compressedImage,
+        prompt: analysisContext?.final_technical_prompt || analysisContext?.prompt || '',
+        aspectRatio: analysisContext?.aspect_ratio_value || 'original',
         mode: mode
       })
     });

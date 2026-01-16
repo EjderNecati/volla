@@ -4,29 +4,46 @@
 import os
 import json
 import base64
+import requests
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
-print("🌟 REAL LIFE PHOTOS GENERATOR - Imagen 3 Mode")
+print("🌟 REAL LIFE PHOTOS GENERATOR - Imagen 3 Mode (OAuth2)")
 print("=" * 60)
 
 # Environment
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 VERTEX_API_KEY = os.environ.get("VERTEX_API_KEY")
-API_KEY = VERTEX_API_KEY or GOOGLE_API_KEY
+GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 
-# Try to import google-genai (new SDK for Imagen 3)
-genai_client = None
+# OAuth2 Setup for Imagen 3
+oauth2_token = None
+project_id = None
+
 try:
-    from google import genai
-    from google.genai import types
-    if API_KEY:
-        genai_client = genai.Client(api_key=API_KEY)
-        print("✅ google-genai Client initialized")
-except ImportError as e:
-    print(f"⚠️ google-genai not available: {e}")
+    if GOOGLE_CREDENTIALS_JSON:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        project_id = creds_dict.get("project_id", "")
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        
+        print(f"✅ OAuth2 token obtained for project: {project_id}")
+    else:
+        print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
+except Exception as e:
+    print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Fallback to old SDK
+# Fallback to old SDK for Gemini analysis
 genai_old = None
 try:
     import google.generativeai as genai_module
@@ -36,6 +53,32 @@ try:
         print("✅ google-generativeai (fallback) configured")
 except ImportError as e:
     print(f"⚠️ google-generativeai not available: {e}")
+
+
+def get_fresh_token():
+    """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
+    global oauth2_token
+    
+    if not GOOGLE_CREDENTIALS_JSON:
+        return None
+    
+    try:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        return oauth2_token
+    except Exception as e:
+        print(f"⚠️ Token refresh failed: {e}")
+        return None
 
 # ===============================================
 # DEEP PRODUCT ANALYSIS PROMPT
@@ -380,87 +423,98 @@ def analyze_product_for_lifestyle(image_bytes, existing_info=None):
     }
 
 
-def generate_reallife_shot(image_bytes, prompt, api_key):
-    """Generate a single real life shot using Imagen 3 - matching generate-angles.py approach"""
+def generate_reallife_shot(image_bytes, prompt, api_key_unused=None):
+    """Generate a single real life shot using Imagen 3 via OAuth2 REST API"""
     
-    if not api_key:
-        print("   ⚠️ No API key available")
+    # Get fresh OAuth2 token
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available")
+        # Fall back to Gemini
+        return _gemini_fallback(image_bytes, prompt)
+    
+    print(f"   🎨 Using OAuth2 for project: {project_id[:20]}...")
+    
+    # Encode image to base64
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    # Imagen 3 edit endpoint
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Request body for edit_image with reference
+    payload = {
+        "instances": [{
+            "prompt": prompt,
+            "image": {
+                "bytesBase64Encoded": image_b64
+            }
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "editMode": "EDIT_MODE_DEFAULT"
+        }
+    }
+    
+    try:
+        print(f"   🌟 Calling Imagen 3 Real Life via REST API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 Real Life success!")
+                return f"data:image/png;base64,{img_b64}"
+        
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
+    
+    # Fallback to Gemini
+    return _gemini_fallback(image_bytes, prompt)
+
+
+def _gemini_fallback(image_bytes, prompt):
+    """Fallback to Gemini for image generation"""
+    if not genai_old:
         return None
     
-    print(f"   🔑 API Key: {api_key[:10]}...")
-    
-    # Try Imagen 3 first if we have an API key
-    if api_key:
-        try:
-            from google import genai
-            from google.genai import types
-            
-            client = genai.Client(api_key=api_key)
-            
-            reference_image = types.RawReferenceImage(
-                reference_id=1,
-                reference_image=types.Image(image_bytes=image_bytes)
-            )
-            
-            # Try different models - same as generate-angles.py
-            for model_name in ['imagen-3.0-capability-001', 'imagen-3.0-generate-002']:
+    try:
+        print("      Trying Gemini fallback...")
+        models = ['gemini-2.0-flash-exp', 'gemini-2.0-flash']
+        
+        for model_name in models:
+            for attempt in range(2):
                 try:
-                    print(f"      Trying {model_name}...")
+                    model = genai_old.GenerativeModel(model_name)
                     
-                    response = client.models.edit_image(
-                        model=model_name,
-                        prompt=prompt,
-                        reference_images=[reference_image],
-                        config=types.EditImageConfig(
-                            edit_mode='EDIT_MODE_DEFAULT',
-                            number_of_images=1
-                        )
+                    response = model.generate_content(
+                        [prompt, {"mime_type": "image/jpeg", "data": image_bytes}],
+                        generation_config={"response_modalities": ["IMAGE", "TEXT"]}
                     )
                     
-                    if response.generated_images:
-                        img_bytes = response.generated_images[0].image.image_bytes
-                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                        print(f"      ✅ Got image with {model_name}")
-                        return f"data:image/png;base64,{img_b64}"
-                        
-                except Exception as e:
-                    print(f"      ⚠️ {model_name}: {str(e)[:80]}")
+                    if response.candidates:
+                        for candidate in response.candidates:
+                            if hasattr(candidate, 'content') and candidate.content.parts:
+                                for part in candidate.content.parts:
+                                    if hasattr(part, 'inline_data') and part.inline_data:
+                                        img_data = base64.b64encode(part.inline_data.data).decode('utf-8')
+                                        img_mime = part.inline_data.mime_type or 'image/png'
+                                        print(f"      ✅ Got image from Gemini {model_name}")
+                                        return f"data:{img_mime};base64,{img_data}"
+                except:
+                    if attempt == 0:
+                        import time
+                        time.sleep(1)
                     continue
-                    
-        except Exception as e:
-            print(f"      ⚠️ Imagen 3 failed: {str(e)[:80]}")
-    
-    # Fallback to Gemini - EXACT COPY from generate-angles.py
-    if genai_old:
-        try:
-            print("      Trying Gemini fallback...")
-            models = ['gemini-2.5-flash-preview-05-20', 'gemini-2.0-flash-exp', 'gemini-2.0-flash']
-            
-            for model_name in models:
-                for attempt in range(2):
-                    try:
-                        model = genai_old.GenerativeModel(model_name)
-                        
-                        response = model.generate_content(
-                            [prompt, {"mime_type": "image/jpeg", "data": image_bytes}],
-                            generation_config={"response_modalities": ["IMAGE", "TEXT"]}
-                        )
-                        
-                        if response.candidates:
-                            for candidate in response.candidates:
-                                if hasattr(candidate, 'content') and candidate.content.parts:
-                                    for part in candidate.content.parts:
-                                        if hasattr(part, 'inline_data') and part.inline_data:
-                                            img_data = base64.b64encode(part.inline_data.data).decode('utf-8')
-                                            img_mime = part.inline_data.mime_type or 'image/png'
-                                            print(f"      ✅ Got image from Gemini {model_name}")
-                                            return f"data:{img_mime};base64,{img_data}"
-                    except:
-                        if attempt == 0:
-                            import time
-                            time.sleep(1)
-                        continue
-        except Exception as e:
-            print(f"      ⚠️ Gemini fallback failed: {str(e)[:60]}")
+    except Exception as e:
+        print(f"      ⚠️ Gemini fallback failed: {str(e)[:60]}")
     
     return None

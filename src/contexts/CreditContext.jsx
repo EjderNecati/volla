@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PLANS, getCreditCost, canAfford, deductCredits, getSubscription, saveSubscription, initializeFreeTrial } from '../utils/creditManager';
+import { useAuth } from './AuthContext';
+
+// Admin emails with unlimited credits
+const ADMIN_EMAILS = [
+    'dogukangokce00@gmail.com'
+];
 
 const CreditContext = createContext();
 
@@ -14,6 +20,35 @@ export const useCredits = () => {
 export const CreditProvider = ({ children }) => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    // Try to get user email from auth (won't cause circular dependency since AuthProvider is parent)
+    useEffect(() => {
+        // Check localStorage for user email
+        const checkAdmin = () => {
+            try {
+                const savedUser = localStorage.getItem('volla_user');
+                if (savedUser) {
+                    const user = JSON.parse(savedUser);
+                    if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+                        setIsAdmin(true);
+                        console.log('👑 Admin user detected - unlimited credits enabled');
+                    } else {
+                        setIsAdmin(false); // Ensure isAdmin is false if user is not an admin
+                    }
+                } else {
+                    setIsAdmin(false); // Ensure isAdmin is false if no user is saved
+                }
+            } catch (e) {
+                console.error('Admin check failed:', e);
+                setIsAdmin(false); // Default to false on error
+            }
+        };
+        checkAdmin();
+        // Re-check when storage changes
+        window.addEventListener('storage', checkAdmin);
+        return () => window.removeEventListener('storage', checkAdmin);
+    }, []);
 
     // Load subscription on mount
     useEffect(() => {
@@ -37,12 +72,15 @@ export const CreditProvider = ({ children }) => {
 
     // Check if user can afford a feature
     const checkCredits = (feature) => {
+        if (isAdmin) return true; // Admin always has credits
         if (!subscription) return false;
         return canAfford(subscription.credits, feature);
     };
 
     // Use credits for a feature
     const useCredits = (feature) => {
+        if (isAdmin) return { success: true, creditsUsed: 0, remaining: Infinity }; // Admin uses no credits
+
         if (!subscription) return { success: false, message: 'No subscription' };
 
         const cost = getCreditCost(feature);
@@ -97,8 +135,9 @@ export const CreditProvider = ({ children }) => {
     const value = {
         subscription,
         loading,
-        credits: subscription?.credits || 0,
-        plan: subscription?.plan || 'free',
+        credits: isAdmin ? Infinity : (subscription?.credits || 0),
+        plan: isAdmin ? 'admin' : (subscription?.plan || 'free'),
+        isAdmin,
         checkCredits,
         useCredits,
         upgradePlan,

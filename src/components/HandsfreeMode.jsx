@@ -315,7 +315,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                 aspect_ratio_value: aspectRatio
             };
 
-            const result = await generateHandsfreeImage(promptSchema, sourceImage);
+            const result = await generateHandsfreeImage(sourceImage, promptSchema);
 
             if (result.success && result.imageUrl) {
                 setGeneratedImage(result.imageUrl);

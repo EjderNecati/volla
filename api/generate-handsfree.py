@@ -108,25 +108,44 @@ class handler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
             
+            action = data.get('action', 'generate')
             image_data = data.get('image', '')
             custom_prompt = data.get('prompt', '')
             aspect_ratio = data.get('aspectRatio', 'original')
             
             print(f"\n{'='*60}")
             print("🎯 HANDSFREE MODE - Gemini 3 Pro (OAuth2 REST)")
-            print(f"   Prompt: {custom_prompt[:100]}...")
+            print(f"   Action: {action}")
+            print(f"   Prompt: {custom_prompt[:100] if custom_prompt else '(none)'}...")
             print(f"   OAuth2: {'Available' if oauth2_token else 'Not available'}")
             print(f"{'='*60}")
             
             if not image_data:
                 raise ValueError("No image provided")
-            if not custom_prompt:
+            
+            # Only require prompt for 'generate' action, not 'analyze'
+            if action == 'generate' and not custom_prompt:
                 raise ValueError("No prompt provided")
+            
+            # Handle 'analyze' action - just return basic analysis
+            if action == 'analyze':
+                # Return dummy analysis for now (frontend handles the logic)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'shape_description': 'product',
+                    'primary_colors': ['various'],
+                    'patterns': 'none'
+                }).encode())
+                return
             
             result = None
             method_used = 'none'
             
-            # Method 1: Try REST API with gemini-3-pro-image-preview
+            # Method 1: Try REST API with gemini-2.0-flash-exp
             token = get_fresh_token()
             if token and project_id:
                 print("🔄 Trying Gemini 3 Pro via REST API...")
@@ -218,9 +237,9 @@ IMPERFECTION REMOVAL:
 
 NO NEW TEXT: Do NOT add any NEW text, labels, watermarks, or captions to the image. Only preserve existing text."""
 
-    # Models to try
+    # Models to try via Vertex AI OAuth2
+    # gemini-2.0-flash-exp supports native image generation
     models_to_try = [
-        'gemini-3-pro-image-preview',
         'gemini-2.0-flash-exp',
     ]
     
@@ -256,7 +275,10 @@ NO NEW TEXT: Do NOT add any NEW text, labels, watermarks, or captions to the ima
                 }
             }
             
+            print(f"   Making request to Vertex AI...")
             response = requests.post(url, headers=headers, json=payload, timeout=120)
+            
+            print(f"   Response status: {response.status_code}")
             
             if response.status_code == 200:
                 result = response.json()

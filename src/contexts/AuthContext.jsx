@@ -11,7 +11,8 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     updateProfile,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    signInAnonymously
 } from 'firebase/auth';
 import { auth, googleProvider, appleProvider } from '../config/firebase';
 
@@ -35,16 +36,20 @@ export function AuthProvider({ children }) {
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             if (firebaseUser) {
                 // User is signed in
-                setUser({
+                const userData = {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email,
                     displayName: firebaseUser.displayName,
                     photoURL: firebaseUser.photoURL,
                     provider: firebaseUser.providerData[0]?.providerId || 'unknown'
-                });
+                };
+                setUser(userData);
+                // Save to localStorage for credit context admin check
+                localStorage.setItem('volla_user', JSON.stringify(userData));
             } else {
                 // User is signed out
                 setUser(null);
+                localStorage.removeItem('volla_user');
             }
             setIsLoading(false);
         });
@@ -137,6 +142,20 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Sign in as Guest (anonymous)
+    const signInAsGuest = async () => {
+        setError(null);
+        try {
+            const result = await signInAnonymously(auth);
+            console.log('✅ Guest sign-in successful');
+            return result.user;
+        } catch (err) {
+            console.error('❌ Guest sign-in error:', err);
+            setError(getErrorMessage(err.code));
+            throw err;
+        }
+    };
+
     // Error message helper
     const getErrorMessage = (code) => {
         switch (code) {
@@ -166,10 +185,12 @@ export function AuthProvider({ children }) {
         isLoading,
         error,
         isAuthenticated: !!user,
+        isGuest: user?.isAnonymous || false,
         signInWithGoogle,
         signInWithApple,
         signInWithEmail,
         signUpWithEmail,
+        signInAsGuest,
         resetPassword,
         signOut,
         clearError: () => setError(null)

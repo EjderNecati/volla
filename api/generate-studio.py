@@ -2,7 +2,7 @@
 AI Studio Mode - Vertex AI Imagen 3 Integration
 Professional product photography with background swap
 
-Uses Imagen 3's edit_image API with EDIT_MODE_BGSWAP for:
+Uses Imagen 3's edit_image API with OAuth2 Service Account for:
 - 100% product preservation (color, text, components)
 - Professional studio background
 - Realistic shadows
@@ -12,33 +12,46 @@ import os
 import base64
 import json
 import traceback
+import requests
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
-print("🚀 AI Studio - Imagen 3 Mode")
+print("🚀 AI Studio - Imagen 3 Mode (OAuth2)")
 print("=" * 60)
 
 # Environment
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 VERTEX_API_KEY = os.environ.get("VERTEX_API_KEY")
+GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 
-# Use whichever key is available
-API_KEY = VERTEX_API_KEY or GOOGLE_API_KEY
+# OAuth2 Setup for Imagen 3
+oauth2_token = None
+project_id = None
 
-# Try to import google-genai (new SDK for Imagen 3)
-genai_client = None
 try:
-    from google import genai
-    from google.genai import types
-    if API_KEY:
-        genai_client = genai.Client(api_key=API_KEY)
-        print("✅ google-genai Client initialized")
+    if GOOGLE_CREDENTIALS_JSON:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        project_id = creds_dict.get("project_id", "")
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        
+        print(f"✅ OAuth2 token obtained for project: {project_id}")
     else:
-        print("⚠️ No API key found")
-except ImportError as e:
-    print(f"⚠️ google-genai not available: {e}")
+        print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
+except Exception as e:
+    print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Fallback to old SDK
+# Fallback to old SDK for Gemini
 genai_old = None
 try:
     import google.generativeai as genai_module
@@ -48,6 +61,32 @@ try:
         print("✅ google-generativeai (fallback) configured")
 except ImportError as e:
     print(f"⚠️ google-generativeai not available: {e}")
+
+
+def get_fresh_token():
+    """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
+    global oauth2_token
+    
+    if not GOOGLE_CREDENTIALS_JSON:
+        return None
+    
+    try:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+        
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        return oauth2_token
+    except Exception as e:
+        print(f"⚠️ Token refresh failed: {e}")
+        return None
 
 # ===============================================
 # DYNAMIC PROMPT GENERATOR (Camera Angle Aware)
@@ -516,20 +555,17 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
 
 
-def generate_with_imagen3(image_data, api_key, custom_prompt=None):
-    """Generate studio image using Imagen 3 edit_image with BGSWAP"""
+def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
+    """Generate studio image using Imagen 3 via OAuth2 REST API"""
     
-    # Use custom prompt if provided, otherwise fall back to default
-    prompt_to_use = custom_prompt or BGSWAP_PROMPT
-    
-    # Create client with the provided API key
-    try:
-        from google import genai
-        from google.genai import types
-        client = genai.Client(api_key=api_key)
-    except Exception as e:
-        print(f"   ⚠️ Failed to create genai client: {e}")
+    # Get fresh OAuth2 token
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available")
         return None
+    
+    # Use custom prompt if provided
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
     
     # Clean base64
     if 'base64,' in image_data:
@@ -543,68 +579,61 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None):
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
     
-    image_bytes = base64.b64decode(base64_clean)
+    # Imagen 3 edit endpoint
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
     
-    # Try different Imagen 3 models
-    models_to_try = [
-        'imagen-3.0-capability-001',
-        'imagen-3.0-generate-002',
-    ]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
     
-    for model_name in models_to_try:
-        try:
-            print(f"   Trying {model_name}...")
-            
-            # Create reference image for edit
-            reference_image = types.RawReferenceImage(
-                reference_id=1,
-                reference_image=types.Image(image_bytes=image_bytes)
-            )
-            
-            # Try INPAINT with auto background mask FIRST
-            # This automatically masks background and preserves the product
-            try:
-                print(f"   Trying INPAINT with MASK_MODE_BACKGROUND...")
-                response = client.models.edit_image(
-                    model=model_name,
-                    prompt=prompt_to_use,
-                    reference_images=[reference_image],
-                    config=types.EditImageConfig(
-                        edit_mode='EDIT_MODE_INPAINT_INSERTION',
-                        mask_mode='MASK_MODE_BACKGROUND',
-                        number_of_images=1
-                    )
-                )
-                
-                if response.generated_images:
-                    img_bytes = response.generated_images[0].image.image_bytes
-                    img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                    print(f"   ✅ Success with INPAINT + MASK_MODE_BACKGROUND")
-                    return f"data:image/png;base64,{img_b64}"
-            except Exception as inpaint_error:
-                print(f"   ⚠️ INPAINT failed: {str(inpaint_error)[:50]}, trying BGSWAP...")
-            
-            # Fallback to BGSWAP mode
-            response = client.models.edit_image(
-                model=model_name,
-                prompt=prompt_to_use,
-                reference_images=[reference_image],
-                config=types.EditImageConfig(
-                    edit_mode='EDIT_MODE_BGSWAP',
-                    number_of_images=1
-                )
-            )
-            
-            # Extract generated image
-            if response.generated_images:
-                img_bytes = response.generated_images[0].image.image_bytes
-                img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                print(f"   ✅ Success with {model_name} BGSWAP")
+    # Request body for edit_image with BGSWAP
+    payload = {
+        "instances": [{
+            "prompt": prompt_to_use,
+            "image": {
+                "bytesBase64Encoded": base64_clean
+            }
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "editMode": "EDIT_MODE_BGSWAP"
+        }
+    }
+    
+    try:
+        print(f"   🎨 Calling Imagen 3 BGSWAP via REST API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 BGSWAP success!")
                 return f"data:image/png;base64,{img_b64}"
-                
-        except Exception as e:
-            print(f"   ⚠️ {model_name} failed: {str(e)[:80]}")
-            continue
+        
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        
+        # Try INPAINT mode as fallback
+        print(f"   🔄 Trying INPAINT mode...")
+        payload["parameters"]["editMode"] = "EDIT_MODE_INPAINT_INSERTION"
+        payload["parameters"]["maskMode"] = "MASK_MODE_BACKGROUND"
+        
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 INPAINT success!")
+                return f"data:image/png;base64,{img_b64}"
+        
+        print(f"   ⚠️ INPAINT also failed: {response.status_code}")
+        
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
     
     return None
 

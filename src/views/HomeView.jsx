@@ -57,7 +57,7 @@ export default function HomeView({ onNavigate, onLoadAsset, onLoadProject, marke
 
             // Send directly to AI Studio with marketplace info
             if (onLoadAsset) {
-                onLoadAsset({ imageUrl: base64, marketplace });
+                onLoadAsset({ url: base64, marketplace });
             }
             if (onNavigate) {
                 onNavigate('studio');

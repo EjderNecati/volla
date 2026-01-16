@@ -1003,14 +1003,14 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             <header className="px-6 py-4 border-b border-[#E8E7E4] bg-white">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="p-2 hover:bg-[#F5F4F1] rounded-lg transition-colors"
-                            >
-                                <ArrowLeft size={20} className="text-[#5C5C5C]" />
-                            </button>
-                        )}
+                        {/* Back Button - Always visible */}
+                        <button
+                            onClick={() => onNavigate?.('home')}
+                            className="p-2 hover:bg-[#F5F4F1] rounded-lg transition-colors"
+                            title={t('common.back') || 'Back'}
+                        >
+                            <ArrowLeft size={20} className="text-[#5C5C5C]" />
+                        </button>
                         <h1 className="text-xl font-bold text-[#1A1A1A]">{t('studio.title')}</h1>
 
                         {/* Mode Switch */}

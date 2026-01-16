@@ -6,6 +6,7 @@ import {
     MousePointer, Wand2, BarChart3, Layers, Rocket, ChevronDown
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * LandingPage - Anthropic.com-quality Professional Landing Page for Volla
@@ -76,9 +77,24 @@ const AnimatedSection = ({ children, className = '', delay = 0 }) => {
 
 export default function LandingPage({ onNavigate }) {
     const { t, currentLanguage, setLanguage } = useTranslation();
+    const { signInAsGuest } = useAuth();
     const [hoveredFeature, setHoveredFeature] = useState(null);
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [billingCycle, setBillingCycle] = useState('yearly'); // 'monthly' or 'yearly'
+    const [guestLoading, setGuestLoading] = useState(false);
+
+    // Handle guest continue
+    const handleGuestContinue = async () => {
+        setGuestLoading(true);
+        try {
+            await signInAsGuest();
+            onNavigate?.('home');
+        } catch (err) {
+            console.error('Guest login failed:', err);
+        } finally {
+            setGuestLoading(false);
+        }
+    };
 
     // Features data - uses i18n
     const features = [
@@ -224,9 +240,17 @@ export default function LandingPage({ onNavigate }) {
                                 {t('landing.hero.ctaPrimary')}
                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </button>
-                            <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#1A1A1A] font-semibold rounded-2xl border-2 border-gray-200 hover:border-gray-300 transition-all flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg hover:bg-gray-50">
-                                <Play size={20} />
-                                {t('landing.hero.ctaSecondary')}
+                            <button
+                                onClick={handleGuestContinue}
+                                disabled={guestLoading}
+                                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#1A1A1A] font-semibold rounded-2xl border-2 border-gray-200 hover:border-gray-300 transition-all flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                {guestLoading ? (
+                                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <ArrowRight size={20} />
+                                )}
+                                {t('landing.hero.guestContinue') || 'Continue as Guest'}
                             </button>
                         </div>
                     </AnimatedSection>
