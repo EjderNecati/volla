@@ -487,16 +487,21 @@ Product: {product_desc}"""
                 "Content-Type": "application/json"
             }
             
+            # The prompt must include [1] to reference the subject image
+            prompt_with_ref = f"Product photography of [1] from the following angle: {prompt}"
+            
             payload = {
                 "instances": [{
-                    "prompt": prompt,
-                    "image": {
-                        "bytesBase64Encoded": image_b64
-                    }
+                    "prompt": prompt_with_ref,
+                    "subjectReferenceImages": [{
+                        "subjectDescription": "[1]",
+                        "subjectImage": {
+                            "bytesBase64Encoded": image_b64
+                        }
+                    }]
                 }],
                 "parameters": {
-                    "sampleCount": 1,
-                    "editMode": "EDIT_MODE_DEFAULT"
+                    "sampleCount": 1
                 }
             }
             

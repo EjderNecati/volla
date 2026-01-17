@@ -229,9 +229,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             setSessionAssets([asset]);
             setActiveAssetId(asset.id);
 
-            // Auto-analyze if API key exists
-            if (savedApiKey && marketplace) {
-                autoAnalyze(initialAsset.url, marketplace, savedApiKey);
+            // Auto-analyze when image loaded - callGeminiAPI uses DEFAULT_API_KEY if not set
+            if (marketplace) {
+                autoAnalyze(initialAsset.url, marketplace, savedApiKey || '');
             }
         }
     }, [initialAsset, initialProject, marketplace]);
@@ -313,9 +313,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             const base64 = await fileToBase64(file);
             addAssetToSession(base64, 'ORIGINAL', null, 'Upload');
 
-            // Auto-analyze if API key exists
-            if (apiKey && marketplace) {
-                await autoAnalyze(base64, marketplace, apiKey);
+            // Auto-analyze when marketplace is set - callGeminiAPI uses DEFAULT_API_KEY if not set
+            if (marketplace) {
+                await autoAnalyze(base64, marketplace, apiKey || '');
             }
         } catch (err) {
             setError('Failed to upload image');
@@ -914,41 +914,41 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         )}
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-4 flex items-center justify-center gap-4 flex-wrap">
+                    {/* Action Buttons - Mobile responsive */}
+                    <div className="mt-4 flex items-center justify-center gap-2 sm:gap-4">
                         <button
                             onClick={handleGenerateStudio}
                             disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-1 px-8 py-4 rounded-2xl font-medium transition-colors disabled:opacity-50 min-w-[120px]"
+                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-medium transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
                             style={{ backgroundColor: color.primary, color: color.text }}
                         >
-                            <div className="flex items-center gap-2">
-                                <Sparkles size={18} />
-                                <span className="text-base">{t('studio.title')}</span>
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                <Sparkles size={14} className="sm:w-[18px] sm:h-[18px]" />
+                                <span className="text-xs sm:text-base">{t('studio.title')}</span>
                             </div>
-                            <span className="text-[10px] opacity-60">5 {t('credits.creditsUnit')}</span>
+                            <span className="text-[8px] sm:text-[10px] opacity-60">5 {t('credits.creditsUnit')}</span>
                         </button>
                         <button
                             onClick={handleGenerateShots}
                             disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-1 px-8 py-4 bg-[#1A1A1A] text-white rounded-2xl font-medium hover:bg-[#333] transition-colors disabled:opacity-50 min-w-[120px]"
+                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 bg-[#1A1A1A] text-white rounded-xl sm:rounded-2xl font-medium hover:bg-[#333] transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
                         >
-                            <div className="flex items-center gap-2">
-                                <RotateCcw size={18} />
-                                <span className="text-base">{t('nav.shots')}</span>
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                <RotateCcw size={14} className="sm:w-[18px] sm:h-[18px]" />
+                                <span className="text-xs sm:text-base">{t('nav.shots')}</span>
                             </div>
-                            <span className="text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
+                            <span className="text-[8px] sm:text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
                         </button>
                         <button
                             onClick={handleGenerateRealLife}
                             disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-1 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 min-w-[120px]"
+                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 bg-emerald-600 text-white rounded-xl sm:rounded-2xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
                         >
-                            <div className="flex items-center gap-2">
-                                <Users size={18} />
-                                <span className="text-base">{t('nav.realLife')}</span>
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                <Users size={14} className="sm:w-[18px] sm:h-[18px]" />
+                                <span className="text-xs sm:text-base">{t('nav.realLife')}</span>
                             </div>
-                            <span className="text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
+                            <span className="text-[8px] sm:text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
                         </button>
                     </div>
 

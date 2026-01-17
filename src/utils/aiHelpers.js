@@ -9,6 +9,9 @@ const log = (...args) => { if (DEBUG_MODE) log(...args); };
 const warn = (...args) => { if (DEBUG_MODE) warn(...args); };
 const error = (...args) => console.error(...args); // Always show errors
 
+// Default API Key fallback (used when user hasn't set their own key)
+const DEFAULT_API_KEY = 'AIzaSyDb5lhi3wQQONuynWyxaxBU0mSNUt8uMEY';
+
 // Platform rules
 export const PLATFORM_RULES = {
   etsy: { titleMaxChars: 140, keywordsCount: 13 },
@@ -587,10 +590,8 @@ Return JSON:
 // MAIN API CALL - 3 MARKETPLACE SUPPORT
 // =====================================================
 export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => {
-  const cleanKey = apiKey ? apiKey.trim() : '';
-  if (!cleanKey) {
-    throw new Error('API key required');
-  }
+  // Use provided key or fall back to default
+  const cleanKey = (apiKey ? apiKey.trim() : '') || DEFAULT_API_KEY;
 
   // 🛡️ API KEY VALIDATION
   // Gemini API keys typically start with "AIza"
@@ -618,11 +619,11 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
   try {
     // STEP 1: Identify product
     lastApiStatus = `🔍 Step 1/4: Identifying product...`;
-    const productInfo = await identifyProductType(cleanBase64, mimeType, apiKey, marketplace);
+    const productInfo = await identifyProductType(cleanBase64, mimeType, cleanKey, marketplace);
 
     // STEP 2: Search market
     lastApiStatus = `🔎 Step 2/4: Searching ${marketplace}...`;
-    const marketData = await searchMarket(productInfo.search_query, apiKey, marketplace);
+    const marketData = await searchMarket(productInfo.search_query, cleanKey, marketplace);
 
     // STEP 3: Generate SEO (marketplace-specific)
     lastApiStatus = `📝 Step 3/4: Generating ${marketplace} SEO...`;
@@ -635,7 +636,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
         marketData,
         cleanBase64,
         mimeType,
-        apiKey
+        cleanKey
       );
     } else if (marketplace === 'shopify') {
       seoData = await generateShopifySEO(
@@ -644,7 +645,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
         marketData,
         cleanBase64,
         mimeType,
-        apiKey
+        cleanKey
       );
     } else {
       seoData = await generateEtsySEO(
@@ -652,7 +653,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
         marketData,
         cleanBase64,
         mimeType,
-        apiKey
+        cleanKey
       );
     }
 
@@ -661,7 +662,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
     const marketInsights = await analyzeMarketInsights(
       seoData.title,
       productInfo.product_type,
-      apiKey,
+      cleanKey,
       marketplace
     );
 
@@ -1210,9 +1211,8 @@ Return JSON with competitor data:
 
 // Main TEXT MODE function
 export const analyzeText = async (inputText, marketplace, apiKey) => {
-  if (!apiKey || apiKey.trim() === '') {
-    throw new Error('No API key');
-  }
+  // Use provided key or fall back to default
+  const cleanKey = (apiKey?.trim() || '') || DEFAULT_API_KEY;
 
   if (!inputText || inputText.trim().length < 10) {
     throw new Error('Please enter at least 10 characters of product description');
@@ -1224,18 +1224,18 @@ export const analyzeText = async (inputText, marketplace, apiKey) => {
   try {
     // STEP 1: Search market for context (optional grounding)
     lastApiStatus = `🔎 Step 1/3: Researching ${marketplace} market...`;
-    const marketData = await searchMarketForText(inputText, apiKey, marketplace);
+    const marketData = await searchMarketForText(inputText, cleanKey, marketplace);
 
     // STEP 2: Generate SEO from text
     lastApiStatus = `📝 Step 2/3: Generating ${marketplace} SEO...`;
-    const seoData = await generateSEOFromText(inputText, marketplace, apiKey);
+    const seoData = await generateSEOFromText(inputText, marketplace, cleanKey);
 
     // STEP 3: Market Insights
     lastApiStatus = '📊 Step 3/3: Analyzing market trends...';
     const marketInsights = await analyzeMarketInsights(
       seoData.title,
       inputText.substring(0, 50),
-      apiKey,
+      cleanKey,
       marketplace
     );
 

@@ -587,17 +587,22 @@ def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
         "Content-Type": "application/json"
     }
     
-    # Request body for edit_image with BGSWAP
+    # Request body with subjectReferenceImages for subject reference
+    # The prompt must include [1] to reference the subject image
+    prompt_with_ref = f"Professional product photography of [1] in the following setting: {prompt_to_use}"
+    
     payload = {
         "instances": [{
-            "prompt": prompt_to_use,
-            "image": {
-                "bytesBase64Encoded": base64_clean
-            }
+            "prompt": prompt_with_ref,
+            "subjectReferenceImages": [{
+                "subjectDescription": "[1]",
+                "subjectImage": {
+                    "bytesBase64Encoded": base64_clean
+                }
+            }]
         }],
         "parameters": {
-            "sampleCount": 1,
-            "editMode": "EDIT_MODE_BGSWAP"
+            "sampleCount": 1
         }
     }
     

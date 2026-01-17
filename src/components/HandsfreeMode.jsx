@@ -316,9 +316,10 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
             };
 
             const result = await generateHandsfreeImage(sourceImage, promptSchema);
-
-            if (result.success && result.imageUrl) {
-                setGeneratedImage(result.imageUrl);
+            // Backend returns generated_image or image_url (snake_case)
+            const imageUrl = result.imageUrl || result.image_url || result.generated_image;
+            if (result.success && imageUrl) {
+                setGeneratedImage(imageUrl);
 
                 // Save to history/recent projects
                 try {
@@ -333,7 +334,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                         [{
                             id: `handsfree_${Date.now()}`,
                             type: 'HANDSFREE',
-                            url: result.imageUrl,
+                            url: imageUrl,
                             createdAt: Date.now()
                         }],
                         null, // no SEO results

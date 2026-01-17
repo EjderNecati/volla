@@ -423,7 +423,7 @@ def analyze_product_for_lifestyle(image_bytes, existing_info=None):
     }
 
 
-def generate_reallife_shot(image_bytes, prompt, api_key_unused=None):
+def generate_reallife_shot(image_bytes, prompt, api_key=None):
     """Generate a single real life shot using Imagen 3 via OAuth2 REST API"""
     
     # Get fresh OAuth2 token
@@ -438,7 +438,7 @@ def generate_reallife_shot(image_bytes, prompt, api_key_unused=None):
     # Encode image to base64
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
     
-    # Imagen 3 edit endpoint
+    # Imagen 3 edit endpoint - using capability model for image editing
     url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
     
     headers = {
@@ -446,17 +446,22 @@ def generate_reallife_shot(image_bytes, prompt, api_key_unused=None):
         "Content-Type": "application/json"
     }
     
-    # Request body for edit_image with reference
+    # Request body with subjectReferenceImages format for subject reference
+    # The prompt must include [1] to reference the subject image
+    prompt_with_ref = f"Generate a photo of the product [1] in the following scene: {prompt}"
+    
     payload = {
         "instances": [{
-            "prompt": prompt,
-            "image": {
-                "bytesBase64Encoded": image_b64
-            }
+            "prompt": prompt_with_ref,
+            "subjectReferenceImages": [{
+                "subjectDescription": "[1]",
+                "subjectImage": {
+                    "bytesBase64Encoded": image_b64
+                }
+            }]
         }],
         "parameters": {
-            "sampleCount": 1,
-            "editMode": "EDIT_MODE_DEFAULT"
+            "sampleCount": 1
         }
     }
     
