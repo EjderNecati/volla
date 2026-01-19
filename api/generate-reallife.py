@@ -95,32 +95,45 @@ RETURN JSON ONLY:
     "material": "Primary materials (gold, wood, ceramic, fabric, plastic, metal, etc.)",
     "colors": ["list of main colors"],
     "key_details_to_preserve": ["list of critical details that must not change - text, logos, patterns, engravings, etc."],
-    
+
+    "has_text": true/false,
+    "text_details": {
+        "has_visible_text": true/false,
+        "text_content": "exact text visible on product (or null if none)",
+        "text_size": "large/medium/small/tiny",
+        "text_location": "PRECISE location - e.g., 'collar/neckline', 'chest/front body', 'sleeve', 'back', 'bottom hem', 'pocket', etc.",
+        "text_type": "logo/brand name/label/engraving/printed/embossed/none",
+        "areas_WITHOUT_text": ["list areas of product that have NO text/logo - e.g., 'chest', 'sleeves', 'back' for a shirt with only collar logo"]
+    },
+
     "usage_type": "How is this product used? (worn, held, placed, mounted, hung, etc.)",
     "typical_users": ["who typically uses this - women, men, children, professionals, homeowners, etc."],
     "body_part_if_worn": "If worn/held, which body part? (finger, wrist, neck, hand, arm, foot, etc.) or null",
-    
+
     "lifestyle_contexts": [
         {
             "scene": "Detailed description of realistic lifestyle scene 1",
             "environment": "Indoor/outdoor, specific location type",
             "lighting": "Natural/artificial, time of day",
-            "human_element": "How human interacts with product (holding, wearing, using)"
+            "human_element": "How human interacts with product (holding, wearing, using)",
+            "product_angle": "front-facing/slight-angle/side - MUST keep text visible if product has text"
         },
         {
             "scene": "Detailed description of realistic lifestyle scene 2 - DIFFERENT from scene 1",
             "environment": "Different location type",
             "lighting": "Different lighting condition",
-            "human_element": "Different interaction"
+            "human_element": "Different interaction",
+            "product_angle": "angle that keeps text/logo visible"
         },
         {
             "scene": "Detailed description of realistic lifestyle scene 3 - DIFFERENT from scenes 1 and 2",
             "environment": "Another different location",
             "lighting": "Another lighting condition",
-            "human_element": "Another interaction type"
+            "human_element": "Another interaction type",
+            "product_angle": "angle that keeps text/logo visible"
         }
     ],
-    
+
     "photography_style": "Best photo style for this product (macro, portrait, environmental, flat lay, etc.)",
     "risk_areas": ["areas where AI might make mistakes - hands, text, reflections, etc."]
 }
@@ -132,136 +145,96 @@ IMPORTANT RULES FOR CONTEXT GENERATION:
 4. If product is worn: vary the person, pose, and environment
 5. If product is placed: vary the room, style, and surrounding objects
 6. Think like a professional product photographer planning a lifestyle shoot
-7. Scenes should feel authentic, not staged or AI-typical"""
+7. Scenes should feel authentic, not staged or AI-typical
+8. CRITICAL FOR TEXT: If product has ANY text/logo, ALL scenes MUST position product so text faces camera directly (max 20° angle)
+9. For small text: prefer closer framing to keep text legible"""
 
 # ===============================================
 # HYPER-REALISM PROMPT BUILDER
 # ===============================================
 
 def build_reallife_prompt(product_analysis, context_index):
-    """Build a hyper-realistic prompt for lifestyle photography with STRICT rules"""
-    
+    """Build an optimized prompt for Imagen 3 lifestyle photography - V3 (Text-Aware)"""
+
     contexts = product_analysis.get('lifestyle_contexts', [])
     if context_index >= len(contexts):
         return None
-        
+
     context = contexts[context_index]
     product_type = product_analysis.get('product_type', 'product')
     key_details = product_analysis.get('key_details_to_preserve', [])
     usage_type = product_analysis.get('usage_type', 'placed')
     body_part = product_analysis.get('body_part_if_worn')
-    risk_areas = product_analysis.get('risk_areas', [])
-    
-    # Build preservation rules
-    preservation_rules = "\n".join([f"- {detail}" for detail in key_details]) if key_details else "- All visible details, colors, and patterns"
-    
-    # Build risk warnings
-    risk_warnings = "\n".join([f"- CHECK: {risk}" for risk in risk_areas]) if risk_areas else ""
-    
-    # Human element specifics
-    human_instructions = ""
-    if body_part:
-        human_instructions = f"""
-HUMAN ELEMENT - CRITICAL:
-- Product is {usage_type} on {body_part}
-- Photorealistic human skin with natural texture (pores, subtle lines)
-- CORRECT NUMBER OF FINGERS - count them: 5 per hand!
-- Natural, relaxed pose - not stiff or artificial
-- Appropriate skin tone with realistic lighting
-- If hands visible: natural nail appearance, realistic proportions
-- No extra limbs, no merged fingers, no distorted anatomy
+    materials = product_analysis.get('material', '')
+    colors = product_analysis.get('colors', [])
+
+    # Text detection
+    text_details = product_analysis.get('text_details', {})
+    has_text = text_details.get('has_visible_text', False) or product_analysis.get('has_text', False)
+    text_content = text_details.get('text_content', '')
+    text_size = text_details.get('text_size', 'medium')
+    text_location = text_details.get('text_location', '')
+
+    # Kritik detayları tek satırda özetle
+    details_summary = ", ".join(key_details[:5]) if key_details else "all visible details"
+    colors_summary = ", ".join(colors[:3]) if colors else ""
+
+    # TEXT-AWARE: Özel yazı koruma kuralları
+    text_rules = ""
+    areas_without_text = text_details.get('areas_WITHOUT_text', [])
+    blank_areas = ", ".join(areas_without_text) if areas_without_text else ""
+
+    if has_text:
+        text_rules = f"""
+⚠️ TEXT/LOGO RULES (ULTRA-CRITICAL):
+- Product has text/logo ONLY at: {text_location}
+- Text content: "{text_content}"
+- Keep text SHARP and LEGIBLE at its original location
+- {"Use closer framing for small text" if text_size in ['small', 'tiny'] else "Maintain clear visibility"}
+
+🚫 DO NOT INVENT OR ADD:
+- DO NOT add any logo, text, or branding to areas that are BLANK in the original
+{f"- These areas must stay BLANK/PLAIN: {blank_areas}" if blank_areas else "- Any area without text in original must remain without text"}
+- DO NOT move logo/text to different location
+- DO NOT duplicate or repeat the logo anywhere
+- The product in [1] shows EXACTLY where text exists - copy ONLY that, nothing more
 """
-    
-    prompt = f"""HYPER-REALISTIC LIFESTYLE PRODUCT PHOTOGRAPHY
+    else:
+        text_rules = """
+🚫 NO TEXT/LOGO ON THIS PRODUCT:
+- The original product has NO visible text, logo, or branding
+- DO NOT add ANY text, logo, brand name, or labels
+- Keep all surfaces CLEAN and PLAIN as in the original
+- DO NOT invent or hallucinate any branding
+"""
 
-═══════════════════════════════════════════════════════════
-REFERENCE PRODUCT - PIXEL-PERFECT PRESERVATION REQUIRED
-═══════════════════════════════════════════════════════════
+    # İnsan elementi - kısa ve net
+    human_part = ""
+    if body_part:
+        human_part = f"""
+HUMAN: Realistic {body_part}, natural skin texture, exactly 5 fingers per hand, relaxed pose."""
 
-Use the provided reference image as THE EXACT product to show.
-This is the MOST CRITICAL requirement - the product must be IDENTICAL:
+    # Sahne bilgisi
+    scene = context.get('scene', 'Professional lifestyle setting')
+    lighting = context.get('lighting', 'Natural soft light')
+    product_angle = context.get('product_angle', 'front-facing')
 
-MUST PRESERVE:
-{preservation_rules}
+    prompt = f"""Professional lifestyle product photo of [1].
+{text_rules}
+PRODUCT PRESERVATION (HIGHEST PRIORITY):
+1. EXACT SHAPE: Preserve exact curves, edges, proportions - zero modifications
+2. EXACT COLORS: Maintain precise colors ({colors_summary}) - no shifting
+3. FINE DETAILS: Keep {details_summary} perfectly intact
+4. MATERIAL: Authentic {materials} texture and finish
+5. ANGLE: Product {product_angle}, text/logo area facing camera
 
-The product ({product_type}) must look EXACTLY the same as in the reference:
-- Same colors (exact RGB values, not approximations)
-- Same textures and materials
-- Same shape and proportions
-- Same details, text, logos, patterns
-- Same shine/matte finish
-- NO modifications, NO artistic interpretation
+SCENE: {scene}
+LIGHTING: {lighting}
+{human_part}
 
-═══════════════════════════════════════════════════════════
-SCENE DESCRIPTION
-═══════════════════════════════════════════════════════════
+PHOTO STYLE: 85mm lens, shallow DOF with product in sharp focus zone, natural lighting, magazine quality.
 
-{context.get('scene', 'Professional lifestyle setting')}
-
-Environment: {context.get('environment', 'Indoor')}
-Lighting: {context.get('lighting', 'Natural soft light')}
-Human Interaction: {context.get('human_element', 'Product in use')}
-
-═══════════════════════════════════════════════════════════
-PHOTOGRAPHY SPECIFICATIONS
-═══════════════════════════════════════════════════════════
-
-CAMERA SETTINGS (simulate these):
-- Camera: Canon EOS R5 or Sony A7R IV
-- Lens: 85mm f/1.4 for portraits, 35mm f/2 for environmental
-- Natural shallow depth of field
-- Sharp focus on product, gentle background blur
-
-LIGHTING:
-- Natural ambient light preferred
-- Window light or golden hour outdoor
-- Soft shadows, no harsh contrast
-- Realistic light falloff
-
-STYLE:
-- Editorial/magazine quality
-- Authentic, not over-processed
-- No HDR look, no excessive saturation
-- Colors true to life
-{human_instructions}
-
-═══════════════════════════════════════════════════════════
-ENVIRONMENT REQUIREMENTS
-═══════════════════════════════════════════════════════════
-
-- Real, lived-in environment (not sterile/AI-typical)
-- Authentic interior design with realistic details
-- Proper perspective and depth
-- Consistent shadow direction with lighting
-- Background elements should be real objects, not generic shapes
-- Subtle imperfections that real environments have
-
-═══════════════════════════════════════════════════════════
-🚫 ABSOLUTELY FORBIDDEN - WILL CAUSE REJECTION
-═══════════════════════════════════════════════════════════
-
-- Extra fingers, missing fingers, merged fingers
-- Distorted hands or limbs
-- Text/logo distortion or blur on product
-- Product color shift or modification
-- Floating product without support
-- Uncanny valley faces or skin
-- AI-typical smooth textures
-- Unrealistic reflections
-- Inconsistent lighting direction
-- Generic/sterile environments
-
-{f"SPECIAL RISK AREAS TO CHECK:{chr(10)}{risk_warnings}" if risk_warnings else ""}
-
-═══════════════════════════════════════════════════════════
-OUTPUT GOAL
-═══════════════════════════════════════════════════════════
-
-Create a photograph SO REALISTIC that:
-1. Viewers cannot tell it was AI-generated
-2. It could be published in a lifestyle magazine
-3. The product looks like it was actually photographed in this scene
-4. A customer would believe this is a real product photo"""
+FORBIDDEN: Adding new logos/text, moving existing logos, distorted text, altered shape, wrong finger count, plastic skin."""
 
     return prompt
 
