@@ -588,102 +588,75 @@ Return JSON:
 
 // =====================================================
 // MAIN API CALL - 3 MARKETPLACE SUPPORT
+// Now uses backend /api/analyze-seo to avoid browser CORS/referrer issues
 // =====================================================
 export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => {
-  // Use provided key or fall back to default
-  const cleanKey = (apiKey ? apiKey.trim() : '') || DEFAULT_API_KEY;
-
-  // 🛡️ API KEY VALIDATION
-  // Gemini API keys typically start with "AIza"
-  // Vertex AI keys typically start with "AQ" (or similar service account tokens)
-  if (cleanKey.startsWith('AQ') || cleanKey.includes('.')) {
-    // Heuristic: Vertex keys often have dots or start with AQ. Gemini keys are cleaner Base64-like strings starting with AIza.
-    // However, simpler check is AQ start vs AIza start.
-    // Let's stick to the specific case observed (AQ...)
-  }
-
-  if (cleanKey.startsWith('AQ')) {
-    throw new Error('⚠️ Wrong API Key: You provided a Vertex AI Key in the "Google Gemini API Key" field. Please enter a valid Gemini Key (starts with AIza...) in the blue field.');
-  }
-
-  log(`🚀 Starting ${marketplace.toUpperCase()} Analysis...`);
-
-  const cleanBase64 = base64ImageDataUrl.replace(/^data:image\/\w+;base64,/, "");
-  const mimeTypeMatch = base64ImageDataUrl.match(/data:([^;]+);/);
-  const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
-
-  // Export internal functions if they need to be accessed directly
-  // Note: analyzeText is not defined in the provided original code.
-  // export { identifyProductType, searchMarket, generateEtsySEO, analyzeImage, analyzeText };
+  log(`🚀 Starting ${marketplace.toUpperCase()} Analysis via backend...`);
+  lastApiStatus = `🔍 Analyzing product for ${marketplace}...`;
 
   try {
-    // STEP 1: Identify product
-    lastApiStatus = `🔍 Step 1/4: Identifying product...`;
-    const productInfo = await identifyProductType(cleanBase64, mimeType, cleanKey, marketplace);
+    // Call backend API instead of direct Gemini API
+    const response = await fetch('/api/analyze-seo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: base64ImageDataUrl,
+        marketplace: marketplace
+      })
+    });
 
-    // STEP 2: Search market
-    lastApiStatus = `🔎 Step 2/4: Searching ${marketplace}...`;
-    const marketData = await searchMarket(productInfo.search_query, cleanKey, marketplace);
-
-    // STEP 3: Generate SEO (marketplace-specific)
-    lastApiStatus = `📝 Step 3/4: Generating ${marketplace} SEO...`;
-
-    let seoData;
-    if (marketplace === 'amazon') {
-      seoData = await generateAmazonSEO(
-        productInfo.product_type,
-        productInfo.brand_suggestion,
-        marketData,
-        cleanBase64,
-        mimeType,
-        cleanKey
-      );
-    } else if (marketplace === 'shopify') {
-      seoData = await generateShopifySEO(
-        productInfo.product_type,
-        productInfo.brand_suggestion,
-        marketData,
-        cleanBase64,
-        mimeType,
-        cleanKey
-      );
-    } else {
-      seoData = await generateEtsySEO(
-        productInfo.product_type,
-        marketData,
-        cleanBase64,
-        mimeType,
-        cleanKey
-      );
+    if (!response.ok) {
+      throw new Error(`Backend API Error: ${response.status}`);
     }
 
-    // STEP 4: Market Insights
-    lastApiStatus = '📊 Step 4/4: Analyzing market trends...';
-    const marketInsights = await analyzeMarketInsights(
-      seoData.title,
-      productInfo.product_type,
-      cleanKey,
-      marketplace
-    );
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Analysis failed');
+    }
+
+    // Transform backend response to expected format
+    const data = result.data;
 
     // Build response based on marketplace
-    const result = {
+    let seoData = {
       marketplace: marketplace,
-      category: productInfo.category, // IMPORTANT: Expose category for AI Studio Mode
-      ...seoData,
-      marketInsights: marketInsights,
-      _productInfo: productInfo,
-      _marketData: marketData,
-      _grounded: marketData?._isGrounded || false,
-      _urls: marketData?._urls || []
+      category: data.category || data.productType || 'General',
+      title: data.title || '',
+      description: data.description || '',
+      _productInfo: { product_type: data.productType || 'product' },
+      _grounded: false,
+      _urls: []
     };
 
-    lastApiStatus = result._grounded
-      ? `✅ Complete with REAL ${marketplace} data!`
-      : '✅ Complete (AI-based)';
+    // Add marketplace-specific fields
+    if (marketplace === 'etsy') {
+      seoData.tags = data.keywords || data.tags || [];
+      seoData.keywords = data.keywords || data.tags || [];
+      seoData.materials = data.materials || [];
+      seoData.colors = data.colors || [];
+      seoData.occasion = data.occasion || '';
+      seoData.style = data.style || '';
+      seoData.price = data.price || data.suggestedPrice || data.priceRange || '$0.00';
+    } else if (marketplace === 'amazon') {
+      seoData.bulletPoints = data.bulletPoints || data.bullets || [];
+      seoData.bullets = data.bulletPoints || data.bullets || [];
+      seoData.searchTerms = data.searchTerms || data.search_terms || '';
+      seoData.search_terms = data.searchTerms || data.search_terms || '';
+      seoData.price = data.price || data.suggestedPrice || '$0.00';
+    } else if (marketplace === 'shopify') {
+      seoData.metaTitle = data.metaTitle || data.meta_title || data.title || '';
+      seoData.metaDescription = data.metaDescription || data.meta_description || '';
+      seoData.meta_title = data.metaTitle || data.meta_title || data.title || '';
+      seoData.meta_description = data.metaDescription || data.meta_description || '';
+      seoData.tags = data.tags || [];
+      seoData.vendor = data.vendor || '';
+      seoData.price = data.price || data.suggestedPrice || '$0.00';
+    }
 
-    log('🎉 FINAL RESULT:', result);
-    return result;
+    lastApiStatus = `✅ ${marketplace} analysis complete!`;
+    log('🎉 FINAL RESULT:', seoData);
+    return seoData;
 
   } catch (error) {
     console.error('❌ Analysis failed:', error);
@@ -1209,53 +1182,63 @@ Return JSON with competitor data:
   }
 };
 
-// Main TEXT MODE function
+// Main TEXT MODE function - Now uses backend to avoid 403
 export const analyzeText = async (inputText, marketplace, apiKey) => {
-  // Use provided key or fall back to default
-  const cleanKey = (apiKey?.trim() || '') || DEFAULT_API_KEY;
-
   if (!inputText || inputText.trim().length < 10) {
     throw new Error('Please enter at least 10 characters of product description');
   }
 
-  log(`📝 Starting ${marketplace.toUpperCase()} TEXT analysis...`);
+  log(`📝 Starting ${marketplace.toUpperCase()} TEXT analysis via backend...`);
   lastApiStatus = `⏳ Processing text for ${marketplace}...`;
 
   try {
-    // STEP 1: Search market for context (optional grounding)
-    lastApiStatus = `🔎 Step 1/3: Researching ${marketplace} market...`;
-    const marketData = await searchMarketForText(inputText, cleanKey, marketplace);
+    // Call backend API
+    const response = await fetch('/api/text-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: inputText,
+        marketplace: marketplace
+      })
+    });
 
-    // STEP 2: Generate SEO from text
-    lastApiStatus = `📝 Step 2/3: Generating ${marketplace} SEO...`;
-    const seoData = await generateSEOFromText(inputText, marketplace, cleanKey);
+    if (!response.ok) {
+      throw new Error(`Backend API Error: ${response.status}`);
+    }
 
-    // STEP 3: Market Insights
-    lastApiStatus = '📊 Step 3/3: Analyzing market trends...';
-    const marketInsights = await analyzeMarketInsights(
-      seoData.title,
-      inputText.substring(0, 50),
-      cleanKey,
-      marketplace
-    );
+    const result = await response.json();
 
-    // Build response
-    const result = {
+    if (!result.success) {
+      throw new Error(result.error || 'Text analysis failed');
+    }
+
+    // Transform backend response
+    const data = result.data;
+
+    const seoResult = {
       marketplace: marketplace,
       inputMode: 'text',
-      ...seoData,
-      marketInsights: marketInsights,
-      _marketData: marketData,
-      _grounded: marketData?._isGrounded || false,
+      title: data.title || '',
+      description: data.description || '',
+      keywords: data.tags || data.keywords || [],
+      price: data.suggestedPrice || data.price || '$0.00',
+      _grounded: false,
       _originalText: inputText
     };
 
-    lastApiStatus = result._grounded
-      ? `✅ Complete with REAL ${marketplace} data!`
-      : '✅ Complete (AI-based)';
+    // Add marketplace-specific fields
+    if (marketplace === 'amazon') {
+      seoResult.bullets = data.bulletPoints || data.bullets || [];
+      seoResult.search_terms = data.searchTerms || data.search_terms || '';
+    } else if (marketplace === 'shopify') {
+      seoResult.meta_title = data.metaTitle || data.meta_title || '';
+      seoResult.meta_description = data.metaDescription || data.meta_description || '';
+      seoResult.html_description = data.html_description || data.description || '';
+    }
 
-    log('🎉 TEXT MODE RESULT:', result);
-    return result;
+    lastApiStatus = `✅ ${marketplace} text analysis complete!`;
+    log('🎉 TEXT MODE RESULT:', seoResult);
+    return seoResult;
 
   } catch (error) {
     console.error('❌ Text analysis failed:', error);
