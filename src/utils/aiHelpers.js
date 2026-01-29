@@ -78,6 +78,46 @@ export const compressImage = async (base64Image, maxSizeKB = 1500, quality = 0.8
   });
 };
 
+// RETRY HELPER FOR 429 RATE LIMIT ERRORS
+const fetchWithRetry = async (url, options, maxRetries = 3) => {
+  let lastError;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // If 429 Rate Limit, wait and retry
+      if (response.status === 429) {
+        const waitTime = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+        console.warn(`⚠️ Rate limited (429). Waiting ${waitTime / 1000}s before retry ${attempt + 1}/${maxRetries}...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+
+      // If 503 Service Unavailable, also retry
+      if (response.status === 503) {
+        const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+        console.warn(`⚠️ Service unavailable (503). Waiting ${waitTime / 1000}s before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+      console.warn(`⚠️ Fetch error on attempt ${attempt + 1}:`, error.message);
+
+      // Wait before retry on network errors
+      if (attempt < maxRetries - 1) {
+        const waitTime = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+  }
+
+  throw lastError || new Error('Max retries exceeded');
+};
+
 // ROBUST JSON PARSER
 const safeParseJSON = (text) => {
   if (!text || typeof text !== 'string') throw new Error('Empty response from API');
@@ -167,12 +207,15 @@ IMPORTANT DETECTION RULES:
     generationConfig: { temperature: 0.1, maxOutputTokens: 512 }
   };
 
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) }
   );
 
-  if (!response.ok) throw new Error(`Step 1 API Error: ${response.status}`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Step 1 API Error: ${response.status} - ${errorText}`);
+  }
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('No response from Step 1');
@@ -228,7 +271,7 @@ Return JSON:
     generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
   };
 
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) }
   );
@@ -595,12 +638,20 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
   lastApiStatus = `🔍 Analyzing product for ${marketplace}...`;
 
   try {
+    // Compress image to avoid 413 Payload Too Large error
+    let compressedImage = base64ImageDataUrl;
+    if (base64ImageDataUrl && base64ImageDataUrl.length > 500000) {
+      log('🗜️ Compressing image for SEO analysis...');
+      compressedImage = await compressImageForAPI(base64ImageDataUrl);
+      log(`📦 Compressed: ${Math.round(compressedImage.length / 1024)}KB`);
+    }
+
     // Call backend API instead of direct Gemini API
     const response = await fetch('/api/analyze-seo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        image: base64ImageDataUrl,
+        image: compressedImage,
         marketplace: marketplace
       })
     });
