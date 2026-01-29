@@ -89,58 +89,135 @@ def get_fresh_token():
         return None
 
 # ===============================================
-# DYNAMIC PROMPT GENERATOR (Camera Angle Aware)
+# PRODUCT ANALYSIS FOR STUDIO (Text/Logo Detection)
 # ===============================================
 
-def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type):
-    """Generate SHORT, FOCUSED prompt for Imagen 3 - less is more"""
-    
-    # CORE PRINCIPLE: Imagen 3 responds better to short, direct instructions
-    # Long rule-lists confuse the model. Be brief and clear.
-    
+STUDIO_ANALYSIS_PROMPT = """You are an Expert Product Photographer preparing for a studio background swap.
+
+THINK STEP-BY-STEP before analyzing:
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 1: IDENTIFY THE PRODUCT
+═══════════════════════════════════════════════════════════════════════════════
+- What EXACTLY is this product?
+- What materials is it made of?
+- Is it transparent/translucent?
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 2: TEXT/LOGO ANALYSIS (CRITICAL FOR PRESERVATION)
+═══════════════════════════════════════════════════════════════════════════════
+- Does it have ANY text, logos, labels, or printed designs?
+- Document EXACT location and content
+- Identify BLANK areas that must stay blank
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 3: NATURAL STAGING
+═══════════════════════════════════════════════════════════════════════════════
+- How should this product be displayed in a studio?
+- On surface, on hanger, on stand, suspended?
+
+Respond ONLY with JSON:
+{
+    "product_type": "Specific product description",
+    "materials": ["list of materials"],
+    "is_transparent": true/false,
+    "has_text": true/false,
+    "text_details": {
+        "has_visible_text": true/false,
+        "text_content": "exact text or null",
+        "text_location": "location or null",
+        "areas_without_text": ["blank areas"]
+    },
+    "staging_recommendation": "how to display in studio"
+}"""
+
+
+def analyze_product_for_studio(image_bytes):
+    """Analyze product for text/logo preservation in studio mode"""
+    try:
+        if genai_old:
+            model = genai_old.GenerativeModel('gemini-2.0-flash')
+            response = model.generate_content([
+                STUDIO_ANALYSIS_PROMPT,
+                {"mime_type": "image/jpeg", "data": image_bytes}
+            ])
+
+            if response.text:
+                text = response.text.strip()
+                if '{' in text and '}' in text:
+                    start = text.index('{')
+                    end = text.rindex('}') + 1
+                    return json.loads(text[start:end])
+    except Exception as e:
+        print(f"   ⚠️ Studio analysis failed: {e}")
+
+    return {
+        'product_type': 'product',
+        'has_text': False,
+        'text_details': {'has_visible_text': False}
+    }
+
+
+# ===============================================
+# DYNAMIC PROMPT GENERATOR (Camera Angle Aware + Text Preservation)
+# ===============================================
+
+def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis=None):
+    """Generate prompt for Imagen 3 with text preservation rules"""
+
+    # Extract text info if available
+    text_rules = ""
+    if product_analysis:
+        text_details = product_analysis.get('text_details', {})
+        has_text = text_details.get('has_visible_text', False) or product_analysis.get('has_text', False)
+        text_content = text_details.get('text_content', '')
+        text_location = text_details.get('text_location', '')
+        areas_without_text = text_details.get('areas_without_text', [])
+        blank_areas = ", ".join(areas_without_text) if areas_without_text else ""
+
+        if has_text and text_content:
+            text_rules = f"""
+⚠️ TEXT/LOGO PRESERVATION:
+- Text "{text_content}" at {text_location} must remain EXACTLY the same
+- Text must be 100% SHARP and READABLE
+- DO NOT move, change, or distort the text
+- Areas without text ({blank_areas}) must stay BLANK - no added logos
+"""
+        elif not has_text:
+            text_rules = """
+🚫 NO TEXT ON PRODUCT:
+- This product has NO text/logos
+- DO NOT add ANY text or branding
+- Keep surfaces CLEAN and PLAIN
+"""
+
     # Staging decision based on product type
     product_lower = (product_type or "").lower()
     staging_phrase = ""
-    
+
     # Smart staging detection
     if any(k in product_lower for k in ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'dress', 'blouse']):
-        staging_phrase = "on a minimal wooden clothes hanger"
+        staging_phrase = "Product displayed on a minimal wooden clothes hanger."
     elif any(k in product_lower for k in ['necklace', 'pendant', 'chain', 'bracelet']):
-        staging_phrase = "on an elegant black jewelry display stand"
+        staging_phrase = "Jewelry on elegant black display stand."
     elif any(k in product_lower for k in ['ring', 'earring']):
-        staging_phrase = "on a velvet jewelry display pad"
+        staging_phrase = "Jewelry on velvet display pad."
     elif any(k in product_lower for k in ['ornament', 'keychain', 'decoration']) or is_hanging_product:
-        staging_phrase = "hanging from an elegant display hook"
-    elif any(k in product_lower for k in ['shoe', 'sneaker', 'boot']):
-        staging_phrase = "standing on floor"
-    elif any(k in product_lower for k in ['bag', 'purse', 'backpack']):
-        staging_phrase = "standing upright on surface"
-    elif any(k in product_lower for k in ['watch', 'clock']):
-        staging_phrase = "on a watch display stand"
-    elif any(k in product_lower for k in ['glass', 'cup', 'mug', 'bottle']):
-        staging_phrase = "standing on surface"
+        staging_phrase = "Hanging from elegant display hook - NOT floating."
+    elif any(k in product_lower for k in ['gate', 'door', 'barrier']):
+        staging_phrase = "Product shown installed/standing in natural position."
     else:
-        staging_phrase = "placed naturally on surface"
-    
-    # Camera angle phrase
-    angle_phrases = {
-        "OVERHEAD": "from overhead view",
-        "FLAT_LAY": "flat lay from above",
-        "FRONT": "from front view",
-        "THREE_QUARTER": "from three-quarter angle",
-        "SIDE": "from side view",
-        "FROM_BELOW": "from low angle"
-    }
-    angle_phrase = angle_phrases.get(camera_angle, "from front view")
-    
-    # BGSWAP MODE: Prompt should describe ONLY the new background
-    # The model automatically preserves the subject/product
-    # Describing the product may confuse the model!
-    prompt = """Clean warm beige studio background (#E8DDD0). 
+        staging_phrase = "Product placed naturally on surface with contact shadow."
+
+    # BGSWAP MODE: Background description + text preservation
+    prompt = f"""Clean warm beige studio background (#E8DDD0).
 Seamless cyclorama backdrop with soft diffused lighting.
 Professional product photography studio setup.
-Natural contact shadow beneath the product on the floor."""
-    
+Natural contact shadow beneath product.
+{staging_phrase}
+{text_rules}
+CRITICAL: Preserve EVERY detail of the product - colors, materials, shape, and ALL text/logos exactly as they appear."""
+
     return prompt
 
 
@@ -481,9 +558,32 @@ class handler(BaseHTTPRequestHandler):
             print(f"📍 Placement: {product_placement}")
             print(f"🎄 Is Hanging: {is_hanging_product}")
             print(f"🔑 Vertex Key: {'from request' if request_vertex_key else 'from env'}")
-            
-            # Generate dynamic prompt based on detected angle
-            dynamic_prompt = get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type)
+
+            # Analyze product for text/logo preservation
+            product_analysis = None
+            if image_data:
+                print("🔍 Analyzing product for text/logo preservation...")
+                try:
+                    # Clean base64 for analysis
+                    if 'base64,' in image_data:
+                        analysis_base64 = image_data.split('base64,')[1]
+                    else:
+                        analysis_base64 = image_data
+                    analysis_base64 = analysis_base64.strip().replace('\n', '').replace('\r', '')
+                    missing_padding = len(analysis_base64) % 4
+                    if missing_padding:
+                        analysis_base64 += '=' * (4 - missing_padding)
+                    analysis_bytes = base64.b64decode(analysis_base64)
+                    product_analysis = analyze_product_for_studio(analysis_bytes)
+                    if product_analysis.get('has_text'):
+                        print(f"   📝 Text detected: {product_analysis.get('text_details', {}).get('text_content', 'N/A')}")
+                    else:
+                        print("   ✅ No text on product - will keep surfaces clean")
+                except Exception as e:
+                    print(f"   ⚠️ Analysis skipped: {e}")
+
+            # Generate dynamic prompt based on detected angle + text preservation
+            dynamic_prompt = get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis)
             print(f"📝 Using angle-aware prompt for: {camera_angle}")
             
             result = None
@@ -579,30 +679,26 @@ def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
     
-    # Imagen 3 edit endpoint
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
+    # Use imagen-3.0-generate-002 for text-to-image generation
+    # This model is available on standard Vertex AI projects
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
     
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
     
-    # Request body with subjectReferenceImages for subject reference
-    # The prompt must include [1] to reference the subject image
-    prompt_with_ref = f"Professional product photography of [1] in the following setting: {prompt_to_use}"
-    
+    # Simple text-to-image payload
+    # The product details are included in the prompt
     payload = {
         "instances": [{
-            "prompt": prompt_with_ref,
-            "subjectReferenceImages": [{
-                "subjectDescription": "[1]",
-                "subjectImage": {
-                    "bytesBase64Encoded": base64_clean
-                }
-            }]
+            "prompt": prompt_to_use
         }],
         "parameters": {
-            "sampleCount": 1
+            "sampleCount": 1,
+            "aspectRatio": "1:1",
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
         }
     }
     
