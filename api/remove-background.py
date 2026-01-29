@@ -68,7 +68,7 @@ The background must be completely uniform white like a PNG cutout."""
             
             # Try Imagen 3 - INPAINT with MASK_MODE_BACKGROUND first (better for removal)
             result = None
-            models = ['imagen-3.0-capability-001', 'imagen-3.0-generate-002']
+            models = ['imagen-3.0-generate-002', 'imagen-3.0-capability-001']
             
             for model_name in models:
                 try:

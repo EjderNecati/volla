@@ -568,8 +568,8 @@ Product: {product_desc}"""
             # Encode image to base64
             image_b64 = base64.b64encode(image_bytes).decode('utf-8')
             
-            # Imagen 3 edit endpoint
-            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
+            # Imagen 3 edit endpoint (generate-002 - capability-001 is deprecated)
+            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
             
             headers = {
                 "Authorization": f"Bearer {token}",
