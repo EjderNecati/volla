@@ -233,39 +233,33 @@ TRANSPARENCY:
 - Maintain proper reflections and highlights
 """
 
-    # Construct descriptive product string for Text-to-Image
-    product_desc_str = f"{colors_summary} {materials} {product_type}"
-    if has_text:
-        product_desc_str += f" with text '{text_content}' on {text_location}"
+    # Build strict product description
+    product_desc = f"{colors_summary} {materials} {product_type}".strip()
 
-    prompt = f"""Professional lifestyle product photograph of a {product_desc_str}.
+    prompt = f"""E-commerce lifestyle photo: {product_desc} placed naturally in {scene}.
 
-{text_rules}
-{placement_context}
-═══════════════════════════════════════════════════════════════════════════════
-SCENE CONCEPTION (Thinking Process)
-═══════════════════════════════════════════════════════════════════════════════
-{reasoning if reasoning else f"Creating a realistic lifestyle photo of {product_type} in natural environment."}
+🚫 ABSOLUTE RULES - NEVER VIOLATE:
+1. DO NOT put clothing on mannequins or people - show flat/folded/hanging
+2. DO NOT add ANY text, logo, label, or branding
+3. DO NOT modify the product shape, color, or details
+4. DO NOT add accessories or props touching the product
+5. The product must look EXACTLY like the original - only the BACKGROUND changes
 
-ENVIRONMENT: {environment}
 SCENE: {scene}
-BACKGROUND: {bg_elements_summary if bg_elements_summary else "Natural contextual background"}
+ENVIRONMENT: {environment}
 LIGHTING: {lighting}
-PRODUCT POSITION: {product_position if product_position else "Natural positioning"}
+PLACEMENT: {product_position if product_position else f"{product_type} placed naturally on surface"}
 
-═══════════════════════════════════════════════════════════════════════════════
-PRODUCT PRESERVATION
-═══════════════════════════════════════════════════════════════════════════════
-1. EXACT SHAPE: Preserve exact curves, edges, proportions of the {product_type}
-2. EXACT COLORS: Maintain precise colors ({colors_summary})
-3. FINE DETAILS: Keep {details_summary} intact
-4. MATERIAL: Authentic {materials} texture
-{transparency_note}
-{human_part}
+PRODUCT DETAILS (preserve exactly):
+- Type: {product_type}
+- Colors: {colors_summary}
+- Material: {materials}
+- Key features: {details_summary}
+{f"- Text on product: '{text_content}' at {text_location} - keep EXACTLY" if has_text else "- NO text on product - keep it clean"}
 
-PHOTO STYLE: 85mm lens, shallow DOF, product in sharp focus, natural blurred background, magazine quality.
+PHOTO STYLE: Professional product photography, 85mm lens, shallow depth of field, product sharp, background softly blurred, natural lighting, magazine quality.
 
-FORBIDDEN: Adding/moving text, floating products, wrong finger count, plastic skin, distorted shapes."""
+FORBIDDEN: Mannequins wearing clothes, added logos/text, modified product, floating products, unrealistic placement."""
 
     return prompt
 

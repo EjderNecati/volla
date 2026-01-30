@@ -94,32 +94,30 @@ def get_fresh_token():
 # PHYSICS CLASSIFICATION PROMPT
 # ===============================================
 
-PHYSICS_CLASSIFICATION_PROMPT = """You are an Expert Industrial Designer.
+PHYSICS_CLASSIFICATION_PROMPT = """You are an Expert Product Photographer.
 
-Analyze this product image and classify its "Natural Stance" for photography.
+Analyze this product and classify how to photograph it.
 
 CATEGORIES:
-- APPAREL_WORN: Clothing on a person/model
-- APPAREL_FLAT: Folded clothing, flat lay
-- APPAREL_GHOST: Ghost mannequin style
-- WALL_MOUNTED: Wall-mounted items (signs, shelves)
+- APPAREL_HANGER: T-shirts, shirts, jackets, dresses (show on HANGER, never on mannequin)
+- APPAREL_FLAT: Pants, shorts, folded items (show as flat lay)
+- WALL_MOUNTED: Wall-mounted items (signs, shelves, frames)
 - SUSPENDED: Large hanging items (chandeliers, hanging plants)
-- HANGING_ORNAMENT: Small hanging items with hooks/loops (Christmas ornaments, decorations, keychains, jewelry pendants, bag charms)
-- SMALL_IRREGULAR: Small items that sit on surfaces (jewelry boxes, controllers, small gadgets)
-- STANDARD_GROUND: Standing items (bottles, furniture, boxes)
+- HANGING_ORNAMENT: Items with hooks/loops (ornaments, keychains, pendants)
+- SMALL_IRREGULAR: Small items (jewelry, controllers, gadgets)
+- STANDARD_GROUND: Standing items (bottles, furniture, boxes, appliances)
 
-IMPORTANT DETECTION RULES:
-- If product has a hanging loop, hook, string, or ribbon at top = HANGING_ORNAMENT
-- Christmas stockings, ornaments, decorations with loops = HANGING_ORNAMENT
-- Keychains, bag charms, pendants = HANGING_ORNAMENT
-- These products should be shown on display stands or hooks, NOT floating
+IMPORTANT:
+- ALL clothing = APPAREL_HANGER or APPAREL_FLAT (NEVER on mannequin/person)
+- Items with hanging loops = HANGING_ORNAMENT
 
 Respond ONLY with JSON:
 {
     "category": "CATEGORY_NAME",
-    "detected_object": "Brief description",
-    "has_human_model": true/false,
-    "has_hanging_loop": true/false
+    "detected_object": "Detailed description: color, material, type, key features",
+    "has_hanging_loop": true/false,
+    "colors": ["main colors"],
+    "material": "primary material"
 }"""
 
 # ===============================================
@@ -127,25 +125,17 @@ Respond ONLY with JSON:
 # ===============================================
 
 STAGING_MAP = {
-    "APPAREL_WORN": {
-        "angles": ["front view of person wearing it", "three-quarter side view", "back view"],
-        "staging": "Person wearing the clothing in professional studio, feet touching floor"
+    "APPAREL_HANGER": {
+        "angles": ["front view on hanger", "side view on hanger", "back view on hanger"],
+        "staging": "Clothing hanging on wooden hanger, natural drape, NO mannequin, NO person"
     },
     "APPAREL_FLAT": {
         "angles": ["top-down flat lay", "slightly angled overhead", "detail closeup"],
-        "staging": "Flat lay on clean solid surface, fabric touching surface completely"
-    },
-    "APPAREL_GHOST": {
-        "angles": ["front view ghost mannequin", "side view", "back view"],
-        "staging": "Ghost mannequin 3D effect, bottom hem touching floor/surface"
-    },
-    "APPAREL_HANGER": {
-        "angles": ["front view on hanger", "side view on hanger", "back view on hanger"],
-        "staging": "Clothing hanging on minimal wooden or black velvet clothes hanger, hanger hook visible at top, natural drape with gravity"
+        "staging": "Flat lay on clean surface, neatly arranged, NO mannequin"
     },
     "JEWELRY_STAND": {
-        "angles": ["front view on display stand", "side view on bust", "three-quarter on jewelry form"],
-        "staging": "Jewelry displayed on elegant black velvet or white jewelry bust/stand, draped naturally over display form"
+        "angles": ["front view on display stand", "side view", "three-quarter view"],
+        "staging": "Jewelry on elegant display stand or velvet surface"
     },
     "WALL_MOUNTED": {
         "angles": ["straight-on front", "angled left view", "angled right view"],
@@ -236,17 +226,31 @@ class handler(BaseHTTPRequestHandler):
             
             image_bytes = base64.b64decode(base64_clean)
             
-            # Step 1: Classify physics
+            # Step 1: Classify physics and get product description
             print("⚛️ Classifying product physics...")
             physics = classify_physics(image_bytes)
             category = physics.get('category', 'STANDARD_GROUND')
             has_hanging_loop = physics.get('has_hanging_loop', False)
-            
+
+            # Use detected_object for better product description
+            detected_desc = physics.get('detected_object', '')
+            colors = physics.get('colors', [])
+            material = physics.get('material', '')
+
+            # Build enhanced product description
+            if detected_desc and detected_desc != 'Brief description':
+                product_desc = detected_desc
+                if colors:
+                    product_desc = f"{', '.join(colors)} {product_desc}"
+                if material:
+                    product_desc = f"{material} {product_desc}"
+            print(f"   📦 Enhanced desc: {product_desc[:60]}...")
+
             # Determine if this is a hanging product
-            is_hanging_product = (category == 'HANGING_ORNAMENT' or 
-                                  category == 'SUSPENDED' or 
+            is_hanging_product = (category == 'HANGING_ORNAMENT' or
+                                  category == 'SUSPENDED' or
                                   has_hanging_loop)
-            
+
             results['physics_category'] = category
             results['is_hanging_product'] = is_hanging_product
             print(f"   🎯 Category: {category}")
@@ -409,64 +413,59 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
     # ═══════════════════════════════════════════════════════════════════
     
     if source_context == 'LIFE' and scene_info:
-        # LIFE MODE: Preserve the Real Life scene environment
+        # LIFE MODE: Different angle in same scene
         scene_type = scene_info.get('scene_type', 'indoor')
         location = scene_info.get('location', 'lifestyle setting')
         lighting = scene_info.get('lighting', 'natural')
         atmosphere = scene_info.get('atmosphere', 'neutral')
         key_elements = scene_info.get('key_elements', 'environmental context')
-        
-        prompt = f"""LIFESTYLE SCENE PRODUCT PHOTOGRAPHY - {angle_description}
 
-🏞️ SCENE PRESERVATION MODE (CRITICAL):
-You are showing the product from a different angle WITHIN THE SAME REAL-LIFE SCENE.
-This is NOT a studio shot - preserve the EXACT environment!
+        prompt = f"""Product photo: {product_desc} from {angle_description} in {location}.
 
-REFERENCE IMAGE:
-Use the provided reference image. Preserve BOTH:
-1. The EXACT product (100% identical: color, design, texture, details)
-2. The EXACT scene environment (location, lighting, atmosphere)
+🚫 ABSOLUTE RULES:
+1. DO NOT put clothing on mannequins or people - show flat/folded/placed
+2. DO NOT modify the product in any way
+3. DO NOT add any text, logos, or labels
+4. The product must look EXACTLY like the original
 
-SCENE CONTEXT TO PRESERVE:
-- Scene type: {scene_type}
-- Location: {location}
-- Lighting: {lighting}
-- Atmosphere: {atmosphere}
-- Key elements: {key_elements}
+SCENE: {location} ({scene_type})
+LIGHTING: {lighting}
+ATMOSPHERE: {atmosphere}
+BACKGROUND ELEMENTS: {key_elements}
 
-CAMERA ANGLE:
-Show the product from: {angle_description}
-Rotate camera around the product, but keep it in the SAME SCENE.
+CAMERA: View from {angle_description}
 {hanging_instruction}
 
-⚠️ CRITICAL RULES:
-- Product must remain 100% IDENTICAL in appearance
-- Scene/environment must remain the SAME as the reference
-- Only change is the viewing angle of the product
-- Lighting and color grading must match the original scene
-- If there are people, props, or environmental elements, maintain consistent context
-- NO studio background - this is a REAL LIFE scene
+PRODUCT PRESERVATION:
+- Exact same shape, colors, materials
+- All details preserved
+- Same proportions
 
-PRODUCT: {product_desc}
-
-OUTPUT: The IDENTICAL product from {angle_description}, naturally placed in the SAME lifestyle scene."""
+Product: {product_desc}"""
     
     else:
-        # ULTRA-MINIMAL PROMPT - Complex prompts may confuse model
-        prompt = f"""Show this exact product from {angle_description} on clean beige studio background.
+        # STUDIO MODE - Different angles on clean background
+        prompt = f"""Professional product photography: {product_desc} from {angle_description}.
 
-CRITICAL: The product must remain EXACTLY the same:
-- Same shape and structure
-- Same components (all bars, doors, panels, hardware)
-- Same colors
-- Same proportions
-- Same materials (transparent stays transparent)
+🚫 ABSOLUTE RULES:
+1. DO NOT put clothing on mannequins or people - show flat/folded/hanging on hanger
+2. DO NOT modify the product in any way
+3. DO NOT add any text, logos, or labels
+4. DO NOT add accessories or props
+5. The product must look EXACTLY like the original
 
-Do NOT change the product. Do NOT redesign it. Do NOT simplify it.
-Only change the viewing angle and background.
-
+CAMERA ANGLE: {angle_description}
+BACKGROUND: Clean beige/white studio gradient
 STAGING: {staging}
 {hanging_instruction}
+
+PRODUCT PRESERVATION:
+- Exact same shape, structure, proportions
+- Exact same colors and materials
+- All components visible (handles, buttons, details)
+- If transparent parts exist, keep them transparent
+
+PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh shadows.
 
 Product: {product_desc}"""
 
