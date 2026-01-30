@@ -469,87 +469,59 @@ PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh
 
 Product: {product_desc}"""
 
-    # Try Imagen 3 with OAuth2 REST API (with retry for 429)
-    token = get_fresh_token()
-    if token and project_id:
-        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-
-        payload = {
-            "instances": [{ "prompt": prompt }],
-            "parameters": {
-                "sampleCount": 1,
-                "aspectRatio": "1:1",
-                "personGeneration": "allow_adult",
-                "safetyFilterLevel": "block_only_high"
-            }
-        }
-
-        # Retry logic for 429 rate limits
-        retries = 3
-        backoff = 2
-
-        for attempt in range(retries):
-            try:
-                print(f"      🎨 Imagen 3 attempt {attempt+1}/{retries}...")
-                response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    predictions = result.get("predictions", [])
-                    if predictions and predictions[0].get("bytesBase64Encoded"):
-                        img_b64 = predictions[0]["bytesBase64Encoded"]
-                        print(f"      ✅ Imagen 3 angle shot success!")
-                        return f"data:image/png;base64,{img_b64}"
-                    else:
-                        print(f"      ⚠️ Empty response: {str(result)[:100]}")
-
-                elif response.status_code == 429:
-                    print(f"      ⏳ Rate limit (429). Waiting {backoff}s...")
-                    time.sleep(backoff)
-                    backoff *= 2
-                    continue
-                else:
-                    print(f"      ⚠️ Imagen 3: {response.status_code}")
-                    break
-
-            except Exception as e:
-                print(f"      ⚠️ Imagen 3 error: {str(e)[:60]}")
-    
-    # Fallback to Gemini
+    # PRIORITY: Use Gemini FIRST (can see the reference image!)
+    # Imagen 3 generate-002 can't see images, so Gemini is better for angle shots
     if genai_old:
+        print(f"      🔍 Using Gemini (can see reference image)...")
+
+        # Build image-aware prompt for Gemini
+        gemini_prompt = f"""Look at the product in this image carefully.
+
+Generate a NEW photo showing the EXACT SAME product from: {angle_description}
+
+🚫 CRITICAL RULES:
+1. The product must be IDENTICAL - same colors, shape, materials, details
+2. DO NOT change ANYTHING about the product
+3. DO NOT add logos, text, or branding
+4. If it's clothing, show it the same way (on hanger, flat, folded) - NOT on a person/mannequin
+5. Only change the CAMERA ANGLE
+
+STAGING: {staging}
+{hanging_instruction}
+
+Generate the image now."""
+
         try:
-            models = ['gemini-2.0-flash', 'gemini-2.0-flash']
-            
-            for model_name in models:
-                for attempt in range(2):
-                    try:
-                        model = genai_old.GenerativeModel(model_name)
-                        
-                        response = model.generate_content(
-                            [prompt, {"mime_type": "image/jpeg", "data": image_bytes}],
-                            generation_config={"response_modalities": ["IMAGE", "TEXT"]}
-                        )
-                        
-                        if response.candidates:
-                            for candidate in response.candidates:
-                                if hasattr(candidate, 'content') and candidate.content.parts:
-                                    for part in candidate.content.parts:
-                                        if hasattr(part, 'inline_data') and part.inline_data:
-                                            img_data = base64.b64encode(part.inline_data.data).decode('utf-8')
-                                            img_mime = part.inline_data.mime_type or 'image/png'
-                                            return f"data:{img_mime};base64,{img_data}"
-                    except:
-                        if attempt == 0:
-                            time.sleep(1)
-                        continue
+            model = genai_old.GenerativeModel('gemini-2.0-flash')
+
+            for attempt in range(3):
+                try:
+                    print(f"      🎨 Gemini attempt {attempt+1}/3...")
+                    response = model.generate_content(
+                        [gemini_prompt, {"mime_type": "image/jpeg", "data": image_bytes}],
+                        generation_config={"response_modalities": ["IMAGE", "TEXT"]}
+                    )
+
+                    if response.candidates:
+                        for candidate in response.candidates:
+                            if hasattr(candidate, 'content') and candidate.content.parts:
+                                for part in candidate.content.parts:
+                                    if hasattr(part, 'inline_data') and part.inline_data:
+                                        img_data = base64.b64encode(part.inline_data.data).decode('utf-8')
+                                        img_mime = part.inline_data.mime_type or 'image/png'
+                                        print(f"      ✅ Gemini angle shot success!")
+                                        return f"data:{img_mime};base64,{img_data}"
+
+                    print(f"      ⚠️ Gemini: no image in response")
+                except Exception as e:
+                    print(f"      ⚠️ Gemini attempt {attempt+1} failed: {str(e)[:50]}")
+                    time.sleep(1)
+                    continue
+
         except Exception as e:
-            print(f"      ⚠️ Gemini fallback failed: {str(e)[:60]}")
-    
+            print(f"      ⚠️ Gemini error: {str(e)[:60]}")
+
+    print(f"      ❌ All methods failed for angle shot")
     return None
 
 

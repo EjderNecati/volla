@@ -236,30 +236,38 @@ TRANSPARENCY:
     # Build strict product description
     product_desc = f"{colors_summary} {materials} {product_type}".strip()
 
-    prompt = f"""E-commerce lifestyle photo: {product_desc} placed naturally in {scene}.
+    # Determine if clothing should be worn
+    is_clothing = any(word in product_type.lower() for word in ['shirt', 'tshirt', 't-shirt', 'dress', 'jacket', 'pants', 'shorts', 'sweater', 'hoodie', 'top', 'blouse'])
 
-🚫 ABSOLUTE RULES - NEVER VIOLATE:
-1. DO NOT put clothing on mannequins or people - show flat/folded/hanging
-2. DO NOT add ANY text, logo, label, or branding
-3. DO NOT modify the product shape, color, or details
-4. DO NOT add accessories or props touching the product
-5. The product must look EXACTLY like the original - only the BACKGROUND changes
+    clothing_instruction = ""
+    if is_clothing:
+        clothing_instruction = f"""
+CLOTHING DISPLAY: This is a {product_type} - show it WORN by a person naturally in the scene.
+- Person should be in a natural pose in the lifestyle environment
+- The clothing ({product_type}) must be the EXACT same - same color ({colors_summary}), same design
+"""
 
+    prompt = f"""Lifestyle product photo: {product_desc} in {scene}.
+
+🚫🚫🚫 MOST CRITICAL RULE - READ CAREFULLY 🚫🚫🚫
+{f"This product has NO logos, NO text, NO branding - it is PLAIN {colors_summary}." if not has_text else f"This product has ONLY this text: '{text_content}' at {text_location}"}
+DO NOT ADD any logos, text, brand names, graphics, or designs that are not in the original!
+The product surface must remain EXACTLY as described - no additions!
+
+{clothing_instruction}
 SCENE: {scene}
 ENVIRONMENT: {environment}
 LIGHTING: {lighting}
-PLACEMENT: {product_position if product_position else f"{product_type} placed naturally on surface"}
 
-PRODUCT DETAILS (preserve exactly):
+PRODUCT (preserve exactly):
 - Type: {product_type}
-- Colors: {colors_summary}
+- Colors: {colors_summary} - EXACT colors, no change
 - Material: {materials}
-- Key features: {details_summary}
-{f"- Text on product: '{text_content}' at {text_location} - keep EXACTLY" if has_text else "- NO text on product - keep it clean"}
+{f"- Has text: '{text_content}' at {text_location}" if has_text else "- PLAIN surface - absolutely NO text/logos"}
 
-PHOTO STYLE: Professional product photography, 85mm lens, shallow depth of field, product sharp, background softly blurred, natural lighting, magazine quality.
+PHOTO STYLE: Professional lifestyle photography, natural pose, magazine quality.
 
-FORBIDDEN: Mannequins wearing clothes, added logos/text, modified product, floating products, unrealistic placement."""
+FORBIDDEN: Adding logos/text/graphics to plain products, changing product colors, wrong product design."""
 
     return prompt
 
