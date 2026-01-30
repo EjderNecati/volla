@@ -324,7 +324,7 @@ def classify_physics(image_bytes):
     """Classify product physics category"""
     try:
         if genai_old:
-            model = genai_old.GenerativeModel('gemini-2.0-flash-exp')
+            model = genai_old.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content([
                 PHYSICS_CLASSIFICATION_PROMPT,
                 {"mime_type": "image/jpeg", "data": image_bytes}
@@ -364,7 +364,7 @@ def analyze_scene(image_bytes):
     """Analyze the scene/environment of a Real Life image"""
     try:
         if genai_old:
-            model = genai_old.GenerativeModel('gemini-2.0-flash-exp')
+            model = genai_old.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content([
                 SCENE_ANALYSIS_PROMPT,
                 {"mime_type": "image/jpeg", "data": image_bytes}
@@ -475,33 +475,23 @@ Product: {product_desc}"""
     if token and project_id:
         try:
             print(f"      🎨 Trying Imagen 3 via OAuth2...")
-            
-            # Encode image to base64
-            image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-            
-            # Imagen 3 edit endpoint
-            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
+
+            # Imagen 3 text-to-image endpoint
+            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
             
             headers = {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
             }
             
-            # The prompt must include [1] to reference the subject image
-            prompt_with_ref = f"Product photography of [1] from the following angle: {prompt}"
-            
+            # Text-to-image prompt (generate-002 doesn't support subject reference)
             payload = {
-                "instances": [{
-                    "prompt": prompt_with_ref,
-                    "subjectReferenceImages": [{
-                        "subjectDescription": "[1]",
-                        "subjectImage": {
-                            "bytesBase64Encoded": image_b64
-                        }
-                    }]
-                }],
+                "instances": [{ "prompt": prompt }],
                 "parameters": {
-                    "sampleCount": 1
+                    "sampleCount": 1,
+                    "aspectRatio": "1:1",
+                    "personGeneration": "allow_adult",
+                    "safetyFilterLevel": "block_only_high"
                 }
             }
             
@@ -523,7 +513,7 @@ Product: {product_desc}"""
     # Fallback to Gemini
     if genai_old:
         try:
-            models = ['gemini-2.0-flash-exp', 'gemini-2.0-flash']
+            models = ['gemini-2.0-flash', 'gemini-2.0-flash']
             
             for model_name in models:
                 for attempt in range(2):
