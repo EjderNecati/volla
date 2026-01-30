@@ -91,74 +91,35 @@ def get_fresh_token():
         return None
 
 # ===============================================
-# PHYSICS CLASSIFICATION PROMPT (Enhanced with Reasoning)
+# PHYSICS CLASSIFICATION PROMPT
 # ===============================================
 
-PHYSICS_CLASSIFICATION_PROMPT = """You are an Expert Industrial Designer and Product Photographer.
+PHYSICS_CLASSIFICATION_PROMPT = """You are an Expert Industrial Designer.
 
-THINK STEP-BY-STEP about this product before classifying:
+Analyze this product image and classify its "Natural Stance" for photography.
 
-═══════════════════════════════════════════════════════════════════════════════
-STEP 1: IDENTIFY THE PRODUCT
-═══════════════════════════════════════════════════════════════════════════════
-- What EXACTLY is this product? Be very specific.
-- What materials is it made of?
-- Does it have ANY text, logos, labels, or printed designs?
-
-═══════════════════════════════════════════════════════════════════════════════
-STEP 2: WHERE DOES IT NATURALLY BELONG?
-═══════════════════════════════════════════════════════════════════════════════
-Think like a visual merchandiser:
-- A baby gate belongs INSTALLED IN A DOORWAY - not floating!
-- A dog house belongs IN A BACKYARD - not held by someone
-- A door belongs IN A WALL FRAME
-- A t-shirt belongs ON A PERSON or ON A HANGER
-- A ring belongs ON A FINGER or IN A JEWELRY BOX
-- An ornament belongs HANGING FROM A HOOK or STAND
-
-═══════════════════════════════════════════════════════════════════════════════
-STEP 3: TEXT/LOGO ANALYSIS (CRITICAL FOR MULTI-ANGLE)
-═══════════════════════════════════════════════════════════════════════════════
-If product has ANY text or logo:
-- Document EXACT location (front, back, collar, chest, side, etc.)
-- Document EXACT content (what does it say?)
-- Identify which angles will SHOW the text and which will HIDE it
-- Plan how to keep text VISIBLE in different angle shots
-
-═══════════════════════════════════════════════════════════════════════════════
-STEP 4: CLASSIFY PHYSICS CATEGORY
-═══════════════════════════════════════════════════════════════════════════════
 CATEGORIES:
 - APPAREL_WORN: Clothing on a person/model
 - APPAREL_FLAT: Folded clothing, flat lay
 - APPAREL_GHOST: Ghost mannequin style
-- WALL_MOUNTED: Wall-mounted items (signs, shelves, gates in doorways)
+- WALL_MOUNTED: Wall-mounted items (signs, shelves)
 - SUSPENDED: Large hanging items (chandeliers, hanging plants)
-- HANGING_ORNAMENT: Small hanging items with hooks/loops (ornaments, keychains, pendants)
-- SMALL_IRREGULAR: Small items on surfaces (jewelry boxes, controllers, gadgets)
+- HANGING_ORNAMENT: Small hanging items with hooks/loops (Christmas ornaments, decorations, keychains, jewelry pendants, bag charms)
+- SMALL_IRREGULAR: Small items that sit on surfaces (jewelry boxes, controllers, small gadgets)
 - STANDARD_GROUND: Standing items (bottles, furniture, boxes)
+
+IMPORTANT DETECTION RULES:
+- If product has a hanging loop, hook, string, or ribbon at top = HANGING_ORNAMENT
+- Christmas stockings, ornaments, decorations with loops = HANGING_ORNAMENT
+- Keychains, bag charms, pendants = HANGING_ORNAMENT
+- These products should be shown on display stands or hooks, NOT floating
 
 Respond ONLY with JSON:
 {
-    "reasoning": "I'm analyzing this [product]. It naturally belongs [where]. Text/logo is [location or none]. For multi-angle shots, I need to [consideration].",
     "category": "CATEGORY_NAME",
-    "detected_object": "Specific product description",
-    "natural_placement": "Where this product naturally belongs/how it's used",
+    "detected_object": "Brief description",
     "has_human_model": true/false,
-    "has_hanging_loop": true/false,
-    "has_text": true/false,
-    "text_details": {
-        "has_visible_text": true/false,
-        "text_content": "exact text or null",
-        "text_location": "front/back/collar/chest/side/etc or null",
-        "text_size": "large/medium/small/tiny or null",
-        "areas_without_text": ["list of blank areas"]
-    },
-    "angle_recommendations": {
-        "best_angles": ["angles that show product and text well"],
-        "avoid_angles": ["angles that would hide or distort text"],
-        "text_visibility_notes": "How to keep text visible across angles"
-    }
+    "has_hanging_loop": true/false
 }"""
 
 # ===============================================
@@ -316,32 +277,23 @@ class handler(BaseHTTPRequestHandler):
             for i, angle in enumerate(angles):
                 shot_key = f'shot{i+1}'
                 print(f"   📷 Generating {shot_key}: {angle}...")
-
-                # Retry logic - try up to 3 times for each shot
-                shot_image = None
-                for attempt in range(3):
-                    shot_image = generate_angle_shot(
-                        image_bytes=image_bytes,
-                        angle_description=angle,
-                        staging=staging,
-                        product_desc=product_desc,
-                        api_key=active_vertex_key,
-                        is_hanging_product=is_hanging_product,
-                        source_context=source_context,
-                        scene_info=scene_info,
-                        physics_info=physics  # Pass physics info for text detection
-                    )
-                    
-                    if shot_image:
-                        results[shot_key] = shot_image
-                        print(f"   ✅ {shot_key} complete (attempt {attempt+1})")
-                        break
-                    else:
-                        if attempt < 2:
-                            print(f"   🔄 {shot_key} failed, retrying (attempt {attempt+2}/3)...")
-                            time.sleep(1)  # Wait 1 second between retries
-                        else:
-                            print(f"   ⚠️ {shot_key} failed after 3 attempts")
+                
+                shot_image = generate_angle_shot(
+                    image_bytes=image_bytes,
+                    angle_description=angle,
+                    staging=staging,
+                    product_desc=product_desc,
+                    api_key=active_vertex_key,
+                    is_hanging_product=is_hanging_product,
+                    source_context=source_context,
+                    scene_info=scene_info
+                )
+                
+                if shot_image:
+                    results[shot_key] = shot_image
+                    print(f"   ✅ {shot_key} complete")
+                else:
+                    print(f"   ⚠️ {shot_key} failed")
             
             # Check success
             if results['shot1'] or results['shot2'] or results['shot3']:
@@ -436,50 +388,9 @@ def analyze_scene(image_bytes):
     }
 
 
-def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None, physics_info=None):
-    """Generate a single angle shot using Imagen 3 with reference image - V2 Enhanced"""
-
-    # Extract text info from physics analysis
-    text_details = {}
-    if physics_info:
-        text_details = physics_info.get('text_details', {})
-    has_text = text_details.get('has_visible_text', False)
-    text_content = text_details.get('text_content', '')
-    text_location = text_details.get('text_location', '')
-    areas_without_text = text_details.get('areas_without_text', [])
-    blank_areas = ", ".join(areas_without_text) if areas_without_text else ""
-
-    # Build text preservation rules
-    text_rules = ""
-    if has_text and text_content:
-        text_rules = f"""
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ TEXT/LOGO PRESERVATION - ULTRA-CRITICAL
-═══════════════════════════════════════════════════════════════════════════════
-EXISTING TEXT ON PRODUCT:
-- Location: {text_location}
-- Content: "{text_content}"
-
-MANDATORY RULES:
-1. The text "{text_content}" MUST appear EXACTLY as written - same font, size, position
-2. Text MUST be 100% SHARP and READABLE
-3. DO NOT change text color, font, or spacing
-4. DO NOT move text to a different location
-5. If this angle would hide the text, position product to keep text partially visible
-
-🚫 AREAS THAT MUST STAY BLANK:
-{f"- These areas have NO text: {blank_areas}" if blank_areas else "- All other areas are text-free"}
-- DO NOT add any text/logo to blank areas
-- DO NOT hallucinate or duplicate any branding
-"""
-    elif physics_info and not has_text:
-        text_rules = """
-🚫 NO TEXT/LOGO ON THIS PRODUCT:
-- Product has ZERO text, logos, or branding
-- DO NOT add ANY text or branding
-- Keep ALL surfaces PLAIN and CLEAN
-"""
-
+def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None):
+    """Generate a single angle shot using Imagen 3 with reference image"""
+    
     # Special staging for hanging products
     hanging_instruction = ""
     if is_hanging_product:
@@ -504,9 +415,9 @@ MANDATORY RULES:
         lighting = scene_info.get('lighting', 'natural')
         atmosphere = scene_info.get('atmosphere', 'neutral')
         key_elements = scene_info.get('key_elements', 'environmental context')
-
+        
         prompt = f"""LIFESTYLE SCENE PRODUCT PHOTOGRAPHY - {angle_description}
-{text_rules}
+
 🏞️ SCENE PRESERVATION MODE (CRITICAL):
 You are showing the product from a different angle WITHIN THE SAME REAL-LIFE SCENE.
 This is NOT a studio shot - preserve the EXACT environment!
@@ -541,9 +452,9 @@ PRODUCT: {product_desc}
 OUTPUT: The IDENTICAL product from {angle_description}, naturally placed in the SAME lifestyle scene."""
     
     else:
-        # STUDIO MODE - Clean background with text preservation
+        # ULTRA-MINIMAL PROMPT - Complex prompts may confuse model
         prompt = f"""Show this exact product from {angle_description} on clean beige studio background.
-{text_rules}
+
 CRITICAL: The product must remain EXACTLY the same:
 - Same shape and structure
 - Same components (all bars, doors, panels, hardware)
@@ -568,7 +479,7 @@ Product: {product_desc}"""
             # Encode image to base64
             image_b64 = base64.b64encode(image_bytes).decode('utf-8')
             
-            # Imagen 3 edit endpoint - capability-001 required for subjectReferenceImages
+            # Imagen 3 edit endpoint
             url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
             
             headers = {
