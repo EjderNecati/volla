@@ -355,51 +355,59 @@ def analyze_product_for_lifestyle(image_bytes, existing_info=None):
 def _gemini_fallback(image_bytes, prompt):
     """Fallback to Gemini for image generation via REST"""
     if not GOOGLE_API_KEY:
+        print("      ⚠️ No API key for Gemini fallback")
         return None
-        
-    print("      Trying Gemini fallback (REST)...")
-    prompt_text = f"{prompt}\n\nGenerate a photorealistic image based on this description and the input image."
-    
-    # Only Gemini models that support Image Generation
-    # Note: Gemini 2.0 Flash Experimental supports generation, but via different endpoint/method usually.
-    # For now, we reuse the generateContent endpoint which supports image output if model supports it.
-    
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={GOOGLE_API_KEY}"
+
+    print("      🔄 Trying Gemini image generation fallback...")
+
+    # Try multiple models that support image generation
+    models_to_try = [
+        'gemini-2.0-flash-preview-image-generation',
+        'gemini-2.0-flash-exp',
+        'imagen-3.0-generate-001'
+    ]
+
     headers = { "Content-Type": "application/json" }
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-    
-    payload = {
-        "contents": [{
-            "parts": [
-                {"text": prompt_text},
-                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
-            ]
-        }],
-        "generationConfig": { "response_modalities": ["IMAGE"] } 
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
-        if response.status_code == 200:
-            data = response.json()
-            # Extract image from response
-            # Look for inline_data in parts
-            candidates = data.get('candidates', [])
-            if candidates:
-                parts = candidates[0].get('content', {}).get('parts', [])
-                for part in parts:
-                    # JSON key is usually 'inlineData' or 'inline_data' depending on API version
-                    # Checking both to be safe
-                    inline_data = part.get('inline_data') or part.get('inlineData')
-                    if inline_data:
-                        img_data = inline_data.get('data')
-                        mime_type = inline_data.get('mime_type', 'image/png')
-                        if img_data:
-                            print("      ✅ Got image from Gemini fallback")
-                            return f"data:{mime_type};base64,{img_data}"
-    except Exception as e:
-        print(f"      ⚠️ Gemini fallback failed: {e}")
-        
+
+    for model_name in models_to_try:
+        try:
+            print(f"      Trying {model_name}...")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
+
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": f"Generate a photorealistic lifestyle product photo: {prompt[:500]}"},
+                        { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+                    ]
+                }],
+                "generationConfig": { "responseModalities": ["IMAGE", "TEXT"] }
+            }
+
+            response = requests.post(url, headers=headers, json=payload, timeout=90)
+
+            if response.status_code == 200:
+                data = response.json()
+                candidates = data.get('candidates', [])
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    for part in parts:
+                        inline_data = part.get('inline_data') or part.get('inlineData')
+                        if inline_data:
+                            img_data = inline_data.get('data')
+                            mime_type = inline_data.get('mime_type', 'image/png')
+                            if img_data:
+                                print(f"      ✅ Got image from {model_name}")
+                                return f"data:{mime_type};base64,{img_data}"
+            else:
+                print(f"      ⚠️ {model_name}: {response.status_code}")
+
+        except Exception as e:
+            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+            continue
+
+    print("      ❌ All Gemini fallback models failed")
     return None
 
 

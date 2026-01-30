@@ -470,45 +470,56 @@ STAGING: {staging}
 
 Product: {product_desc}"""
 
-    # Try Imagen 3 with OAuth2 REST API
+    # Try Imagen 3 with OAuth2 REST API (with retry for 429)
     token = get_fresh_token()
     if token and project_id:
-        try:
-            print(f"      🎨 Trying Imagen 3 via OAuth2...")
+        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
 
-            # Imagen 3 text-to-image endpoint
-            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-            
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "instances": [{ "prompt": prompt }],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": "1:1",
+                "personGeneration": "allow_adult",
+                "safetyFilterLevel": "block_only_high"
             }
-            
-            # Text-to-image prompt (generate-002 doesn't support subject reference)
-            payload = {
-                "instances": [{ "prompt": prompt }],
-                "parameters": {
-                    "sampleCount": 1,
-                    "aspectRatio": "1:1",
-                    "personGeneration": "allow_adult",
-                    "safetyFilterLevel": "block_only_high"
-                }
-            }
-            
-            response = requests.post(url, headers=headers, json=payload, timeout=120)
-            
-            if response.status_code == 200:
-                result = response.json()
-                predictions = result.get("predictions", [])
-                if predictions and predictions[0].get("bytesBase64Encoded"):
-                    img_b64 = predictions[0]["bytesBase64Encoded"]
-                    print(f"      ✅ Imagen 3 angle shot success!")
-                    return f"data:image/png;base64,{img_b64}"
-            
-            print(f"      ⚠️ Imagen 3 response: {response.status_code}")
-                    
-        except Exception as e:
-            print(f"      ⚠️ Imagen 3 OAuth2 failed: {str(e)[:60]}")
+        }
+
+        # Retry logic for 429 rate limits
+        retries = 3
+        backoff = 2
+
+        for attempt in range(retries):
+            try:
+                print(f"      🎨 Imagen 3 attempt {attempt+1}/{retries}...")
+                response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+                if response.status_code == 200:
+                    result = response.json()
+                    predictions = result.get("predictions", [])
+                    if predictions and predictions[0].get("bytesBase64Encoded"):
+                        img_b64 = predictions[0]["bytesBase64Encoded"]
+                        print(f"      ✅ Imagen 3 angle shot success!")
+                        return f"data:image/png;base64,{img_b64}"
+                    else:
+                        print(f"      ⚠️ Empty response: {str(result)[:100]}")
+
+                elif response.status_code == 429:
+                    print(f"      ⏳ Rate limit (429). Waiting {backoff}s...")
+                    time.sleep(backoff)
+                    backoff *= 2
+                    continue
+                else:
+                    print(f"      ⚠️ Imagen 3: {response.status_code}")
+                    break
+
+            except Exception as e:
+                print(f"      ⚠️ Imagen 3 error: {str(e)[:60]}")
     
     # Fallback to Gemini
     if genai_old:
