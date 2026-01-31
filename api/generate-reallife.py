@@ -130,53 +130,64 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
     for model_name in models_to_try:
-        try:
-            print(f"      🎨 Trying {model_name}...")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
+        # Try with aspect ratio first, then without if it fails
+        for try_with_aspect in [True, False] if (aspect_ratio and aspect_ratio != '1:1') else [False]:
+            try:
+                print(f"      🎨 Trying {model_name}{'(with aspect ratio)' if try_with_aspect else ''}...")
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
-            # Build generation config with aspect ratio
-            gen_config = {
-                "responseModalities": ["IMAGE", "TEXT"]
-            }
-            # Add aspect ratio if supported (some models may not support it)
-            if aspect_ratio and aspect_ratio != '1:1':
-                gen_config["aspectRatio"] = aspect_ratio
+                # Build generation config
+                gen_config = {
+                    "responseModalities": ["IMAGE", "TEXT"]
+                }
 
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": prompt},
-                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
-                    ]
-                }],
-                "generationConfig": gen_config
-            }
+                # Only add aspect ratio on first attempt if requested
+                if try_with_aspect and aspect_ratio and aspect_ratio != '1:1':
+                    gen_config["aspectRatio"] = aspect_ratio
 
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"text": prompt},
+                            {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
+                        ]
+                    }],
+                    "generationConfig": gen_config
+                }
 
-            if response.status_code == 200:
-                data = response.json()
-                candidates = data.get('candidates', [])
+                response = requests.post(url, headers=headers, json=payload, timeout=60)
 
-                if candidates:
-                    parts = candidates[0].get('content', {}).get('parts', [])
-                    for part in parts:
-                        inline_data = part.get('inline_data') or part.get('inlineData')
-                        if inline_data:
-                            img_data = inline_data.get('data')
-                            mime_type = inline_data.get('mime_type', 'image/png')
-                            if img_data:
-                                print(f"      ✅ Got image from {model_name}")
-                                return f"data:{mime_type};base64,{img_data}"
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get('candidates', [])
 
-                print(f"      ⚠️ {model_name}: No image in response")
-            else:
-                error_text = response.text[:100] if response.text else "Unknown error"
-                print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
+                    if candidates:
+                        parts = candidates[0].get('content', {}).get('parts', [])
+                        for part in parts:
+                            inline_data = part.get('inline_data') or part.get('inlineData')
+                            if inline_data:
+                                img_data = inline_data.get('data')
+                                mime_type = inline_data.get('mime_type', 'image/png')
+                                if img_data:
+                                    print(f"      ✅ Got image from {model_name}")
+                                    return f"data:{mime_type};base64,{img_data}"
 
-        except Exception as e:
-            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
-            continue
+                    print(f"      ⚠️ {model_name}: No image in response")
+                else:
+                    error_text = response.text[:100] if response.text else "Unknown error"
+                    print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
+                    # If aspect ratio caused the error, try without it
+                    if try_with_aspect and ('aspectRatio' in error_text or response.status_code == 400):
+                        print(f"      🔄 Retrying without aspectRatio...")
+                        continue
+
+            except Exception as e:
+                print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+                continue
+
+            # Break inner loop if we didn't get a retry condition
+            if not (try_with_aspect and response.status_code != 200):
+                break
 
     return None
 

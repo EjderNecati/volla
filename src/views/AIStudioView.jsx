@@ -1331,8 +1331,8 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     {/* ═══════════════════════════════════════════════════════════════════ */}
                     {/* RIGHT PANEL - 20% - SEO Results */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <aside className="w-[20%] min-w-[280px] max-w-[320px] bg-white border-l border-[#E8E7E4] overflow-y-auto">
-                        <div className="p-4">
+                    <aside className="w-[20%] min-w-[280px] max-w-[320px] bg-white border-l border-[#E8E7E4] flex flex-col">
+                        <div className="p-5 flex-1 flex flex-col overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2">
                                     <Search size={16} />
@@ -1371,26 +1371,31 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 )}
                             </div>
 
-                            {marketplace ? (
-                                results ? (
-                                    renderSEOResults()
-                                ) : loading ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <Loader2 className="animate-spin text-[#E06847]" size={24} />
-                                    </div>
+                            {/* Content area - fills remaining space */}
+                            <div className="flex-1 flex flex-col">
+                                {marketplace ? (
+                                    results ? (
+                                        renderSEOResults()
+                                    ) : loading ? (
+                                        <div className="flex-1 flex items-center justify-center">
+                                            <Loader2 className="animate-spin text-[#E06847]" size={24} />
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 flex items-center justify-center">
+                                            <p className="text-sm text-[#8C8C8C] text-center">
+                                                {t('studio.generateToSeeSEO') || 'Generate images to see SEO recommendations'}
+                                            </p>
+                                        </div>
+                                    )
                                 ) : (
-                                    <p className="text-sm text-[#8C8C8C] text-center py-8">
-                                        {t('studio.generateToSeeSEO') || 'Generate images to see SEO recommendations'}
-                                    </p>
-                                )
-                            ) : (
-                                <div className="text-center py-8">
-                                    <Store size={32} className="mx-auto mb-3 text-[#E8E7E4]" />
-                                    <p className="text-sm text-[#8C8C8C]">
-                                        {t('studioRedesign.seoPanel.noMarketplace') || 'Select a marketplace to get SEO recommendations'}
-                                    </p>
-                                </div>
-                            )}
+                                    <div className="flex-1 flex flex-col items-center justify-center">
+                                        <Store size={32} className="mb-3 text-[#E8E7E4]" />
+                                        <p className="text-sm text-[#8C8C8C] text-center">
+                                            {t('studioRedesign.seoPanel.noMarketplace') || 'Select a marketplace to get SEO recommendations'}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </aside>
                 </main>
