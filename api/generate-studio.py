@@ -683,91 +683,59 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=
         print(f"   ⚠️ Failed to create genai client: {e}")
         return None
 
-    # Validate output_count (Imagen 3 supports 1-4)
+    # Validate output_count
     sample_count = max(1, min(4, int(output_count)))
 
-    # Try different Imagen 3 models
-    models_to_try = [
-        'imagen-3.0-capability-001',
-        'imagen-3.0-generate-002',
-    ]
+    # Try Gemini 2.0 Flash with image generation
+    print(f"   📸 Trying Gemini 2.0 Flash image generation (count={sample_count})...")
 
     generated_images = []
 
-    for model_name in models_to_try:
-        try:
-            print(f"   🔄 Trying {model_name} (count={sample_count}, ratio={aspect_ratio})...")
+    try:
+        for i in range(sample_count):
+            print(f"      📷 Generating image {i+1}/{sample_count}...")
 
-            # Create reference image for edit - THIS IS KEY FOR PRODUCT PRESERVATION!
-            reference_image = types.RawReferenceImage(
-                reference_id=1,
-                reference_image=types.Image(image_bytes=image_bytes)
+            response = client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=[
+                    types.Content(
+                        parts=[
+                            types.Part(text=f"""Look at this product image carefully. Generate a NEW professional studio photograph of THIS EXACT PRODUCT.
+
+{prompt_to_use}
+
+CRITICAL: The product must be IDENTICAL to the reference - same colors, textures, and all details preserved. Only change the background to a clean studio setting."""),
+                            types.Part(inline_data=types.Blob(mime_type='image/jpeg', data=image_bytes))
+                        ]
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    response_modalities=['IMAGE', 'TEXT']
+                )
             )
 
-            # Try INPAINT with auto background mask FIRST
-            # This automatically masks background and preserves the product
-            try:
-                print(f"      📸 Trying INPAINT with MASK_MODE_BACKGROUND...")
-                response = client.models.edit_image(
-                    model=model_name,
-                    prompt=prompt_to_use,
-                    reference_images=[reference_image],
-                    config=types.EditImageConfig(
-                        edit_mode='EDIT_MODE_INPAINT_INSERTION',
-                        mask_mode='MASK_MODE_BACKGROUND',
-                        number_of_images=sample_count
-                    )
-                )
+            if response.candidates:
+                for part in response.candidates[0].content.parts:
+                    if hasattr(part, 'inline_data') and part.inline_data:
+                        img_data = part.inline_data.data
+                        img_b64 = base64.b64encode(img_data).decode('utf-8')
+                        mime = part.inline_data.mime_type or 'image/png'
+                        generated_images.append(f"data:{mime};base64,{img_b64}")
+                        print(f"      ✅ Image {i+1} generated!")
+                        break
 
-                if response.generated_images:
-                    for gen_img in response.generated_images:
-                        img_bytes = gen_img.image.image_bytes
-                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                        generated_images.append(f"data:image/png;base64,{img_b64}")
+        if generated_images:
+            print(f"   ✅ Success with Gemini 2.0 Flash! Generated {len(generated_images)} images")
+            if len(generated_images) == 1:
+                return generated_images[0]
+            return generated_images
 
-                    print(f"   ✅ Success with INPAINT! Generated {len(generated_images)} images")
-                    if len(generated_images) == 1:
-                        return generated_images[0]
-                    return generated_images
-                else:
-                    print(f"      ⚠️ INPAINT returned no images")
+        print(f"      ⚠️ No images generated")
 
-            except Exception as inpaint_error:
-                print(f"      ⚠️ INPAINT failed: {str(inpaint_error)[:100]}, trying BGSWAP...")
+    except Exception as gemini_error:
+        print(f"   ⚠️ Gemini failed: {str(gemini_error)[:150]}")
 
-            # Fallback to BGSWAP mode
-            try:
-                response = client.models.edit_image(
-                    model=model_name,
-                    prompt=prompt_to_use,
-                    reference_images=[reference_image],
-                    config=types.EditImageConfig(
-                        edit_mode='EDIT_MODE_BGSWAP',
-                        number_of_images=sample_count
-                    )
-                )
-
-                if response.generated_images:
-                    for gen_img in response.generated_images:
-                        img_bytes = gen_img.image.image_bytes
-                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-                        generated_images.append(f"data:image/png;base64,{img_b64}")
-
-                    print(f"   ✅ Success with {model_name} BGSWAP! Generated {len(generated_images)} images")
-                    if len(generated_images) == 1:
-                        return generated_images[0]
-                    return generated_images
-                else:
-                    print(f"      ⚠️ BGSWAP returned no images")
-
-            except Exception as bgswap_error:
-                print(f"      ⚠️ BGSWAP failed: {str(bgswap_error)[:100]}")
-
-        except Exception as e:
-            print(f"   ⚠️ {model_name} failed: {str(e)[:150]}")
-            continue
-
-    print("   ❌ All Imagen 3 methods failed")
+    print("   ❌ All generation methods failed")
     return None
 
 
