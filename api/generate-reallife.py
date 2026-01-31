@@ -45,7 +45,7 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-print("✅ Using REST API for all calls (Gemini PRIMARY, Imagen 3 fallback)")
+print("✅ Using Imagen 3 for image generation, Gemini for analysis")
 
 
 def get_fresh_token():
@@ -138,7 +138,7 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
-            # Add aspect ratio to generation config
+            # Add aspect ratio
             if aspect_ratio:
                 gen_config["aspectRatio"] = aspect_ratio
                 print(f"      📐 Using aspect ratio: {aspect_ratio}")
@@ -178,6 +178,57 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
         except Exception as e:
             print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
             continue
+
+    return None
+
+
+def generate_with_imagen3(prompt, aspect_ratio='1:1'):
+    """
+    PRIMARY METHOD: Generate image using Imagen 3 via OAuth2 REST API
+    Imagen 3 is the ONLY reliable image generation method!
+    """
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available for Imagen 3")
+        return None
+
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instances": [{
+            "prompt": prompt
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+
+    try:
+        print(f"      🎨 Calling Imagen 3 (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"      ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+
+        error_text = response.text[:200] if response.text else "Unknown"
+        print(f"      ⚠️ Imagen 3: {response.status_code} - {error_text}")
+
+    except Exception as e:
+        print(f"      ❌ Imagen 3 error: {e}")
 
     return None
 
@@ -536,8 +587,8 @@ class handler(BaseHTTPRequestHandler):
 
             results['analysis'] = product_analysis
 
-            # Step 2: Generate Real Life Shots using GEMINI (can see the product!)
-            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Gemini - can see product)...")
+            # Step 2: Generate Real Life Shots using Gemini (can SEE the product!)
+            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Gemini - product preservation)...")
 
             generated_count = 0
             for i in range(output_count):
@@ -551,7 +602,9 @@ class handler(BaseHTTPRequestHandler):
                 if custom_prompt:
                     prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
 
-                # Use Gemini as PRIMARY - it can SEE the reference image!
+                shot_image = None
+
+                # PRIMARY: Use Gemini - it can SEE the reference image and preserve product!
                 print(f"      🔍 Using Gemini (can see reference image)...")
 
                 for attempt in range(2):
@@ -569,7 +622,20 @@ class handler(BaseHTTPRequestHandler):
                         break
 
                     if attempt < 1:
-                        time.sleep(1)
+                        time.sleep(2)
+
+                # FALLBACK: Try Imagen 3 text-to-image if Gemini failed
+                if not shot_image:
+                    print(f"      🔄 Gemini failed, trying Imagen 3 fallback...")
+                    shot_image = generate_with_imagen3(prompt, aspect_ratio)
+                    if shot_image:
+                        results[shot_key] = shot_image
+                        results['shots'].append({
+                            'image': shot_image,
+                            'label': f'Lifestyle {i+1}'
+                        })
+                        generated_count += 1
+                        print(f"   ✅ {shot_key} complete (Imagen 3 fallback)")
 
                 if not results.get(shot_key):
                     print(f"   ⚠️ {shot_key} failed")

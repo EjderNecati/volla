@@ -121,7 +121,7 @@ def call_gemini_flash(prompt, image_bytes):
 
 
 def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
-    """Call Gemini for image generation via REST API (can see reference image!)"""
+    """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
     if not GOOGLE_API_KEY:
         print("      ⚠️ GOOGLE_API_KEY not set")
         return None
@@ -160,7 +160,7 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
                 "generationConfig": gen_config
             }
 
-            response = requests.post(url, headers=headers, json=payload, timeout=90)
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
 
             if response.status_code == 200:
                 data = response.json()
@@ -185,6 +185,57 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
         except Exception as e:
             print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
             continue
+
+    return None
+
+
+def generate_with_imagen3(prompt, aspect_ratio='1:1'):
+    """
+    PRIMARY METHOD: Generate image using Imagen 3 via OAuth2 REST API
+    Imagen 3 is the ONLY reliable image generation method!
+    """
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available for Imagen 3")
+        return None
+
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instances": [{
+            "prompt": prompt
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+
+    try:
+        print(f"      🎨 Calling Imagen 3 (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"      ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+
+        error_text = response.text[:200] if response.text else "Unknown"
+        print(f"      ⚠️ Imagen 3: {response.status_code} - {error_text}")
+
+    except Exception as e:
+        print(f"      ❌ Imagen 3 error: {e}")
 
     return None
 
@@ -318,7 +369,7 @@ def analyze_scene(image_bytes):
 
 
 def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None, aspect_ratio='1:1'):
-    """Generate a single angle shot using Gemini (can see reference image!)"""
+    """Generate a single angle shot using Imagen 3 (reliable image generation!)"""
 
     # Special staging for hanging products
     hanging_instruction = ""
@@ -334,7 +385,7 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
 """
 
     # ═══════════════════════════════════════════════════════════════════
-    # CONTEXT-AWARE PROMPT BUILDING
+    # CONTEXT-AWARE PROMPT BUILDING FOR IMAGEN 3
     # ═══════════════════════════════════════════════════════════════════
 
     if source_context == 'LIFE' and scene_info:
@@ -345,51 +396,47 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
         atmosphere = scene_info.get('atmosphere', 'neutral')
         key_elements = scene_info.get('key_elements', 'environmental context')
 
-        prompt = f"""Look at the product in this image carefully.
+        prompt = f"""Professional product photography of {product_desc}.
 
-Generate a NEW photo showing the EXACT SAME product from: {angle_description}
+CAMERA ANGLE: {angle_description}
 
-KEEP THE SAME SCENE: {location} ({scene_type})
+SCENE: {location} ({scene_type})
 LIGHTING: {lighting}
 ATMOSPHERE: {atmosphere}
 BACKGROUND ELEMENTS: {key_elements}
 
-🚫 CRITICAL RULES:
-1. The product must be IDENTICAL - same colors, shape, materials, details
-2. DO NOT change ANYTHING about the product
-3. DO NOT add logos, text, or branding
-4. If it's clothing, show it the same way (flat/folded/placed) - NOT on a person/mannequin
-5. Only change the CAMERA ANGLE to: {angle_description}
+CRITICAL RULES:
+1. The product must be clearly visible and high quality
+2. Maintain professional product photography standards
+3. If it's clothing, show it naturally placed - NOT on a person/mannequin
+4. Camera angle: {angle_description}
 {hanging_instruction}
 
-Generate the image now."""
+Professional e-commerce product photo."""
 
     else:
         # STUDIO MODE - Different angles on clean background
-        prompt = f"""Look at the product in this image carefully.
+        prompt = f"""Professional studio product photography of {product_desc}.
 
-Generate a NEW photo showing the EXACT SAME product from: {angle_description}
+CAMERA ANGLE: {angle_description}
 
 STAGING: {staging}
-BACKGROUND: Clean beige/white studio gradient
+BACKGROUND: Clean beige/white studio gradient (#E8DDD0 to #F5F0E8)
 
-🚫 CRITICAL RULES:
-1. The product must be IDENTICAL - same colors, shape, materials, details
-2. DO NOT change ANYTHING about the product
-3. DO NOT add logos, text, or branding
-4. If it's clothing, show it on hanger or flat lay - NOT on a person/mannequin
-5. Only change the CAMERA ANGLE to: {angle_description}
+CRITICAL RULES:
+1. Professional e-commerce photography
+2. Clean studio background, seamless cyclorama style
+3. If it's clothing, show on hanger or flat lay - NOT on a person/mannequin
+4. Camera angle: {angle_description}
 {hanging_instruction}
 
-PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh shadows.
+Soft studio lighting, no harsh shadows. Professional product photo."""
 
-Generate the image now."""
+    # PRIMARY: Use Gemini - it can SEE the reference image and preserve product!
+    print(f"      🔍 Using Gemini (can see reference image)...")
 
-    # Use Gemini REST API for image generation (can see reference image!)
-    print(f"      🔍 Using Gemini REST API (can see reference image)...")
-
-    for attempt in range(3):
-        print(f"      🎨 Attempt {attempt+1}/3...")
+    for attempt in range(2):
+        print(f"      🎨 Attempt {attempt+1}/2 (Gemini)...")
         result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
         if result:
@@ -397,7 +444,20 @@ Generate the image now."""
             return result
 
         # Wait before retry
-        if attempt < 2:
+        if attempt < 1:
+            time.sleep(2)
+
+    # FALLBACK: Try Imagen 3 text-to-image if Gemini failed
+    print(f"      🔄 Gemini failed, trying Imagen 3 fallback...")
+    for attempt in range(2):
+        print(f"      🎨 Attempt {attempt+1}/2 (Imagen 3)...")
+        result = generate_with_imagen3(prompt, aspect_ratio)
+
+        if result:
+            print(f"      ✅ Angle shot success (Imagen 3 fallback)!")
+            return result
+
+        if attempt < 1:
             time.sleep(2)
 
     print(f"      ❌ All attempts failed for angle shot")

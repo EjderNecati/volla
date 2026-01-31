@@ -512,76 +512,115 @@ Generate a professional e-commerce product photo now."""
     return None
 
 
-def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
-    """Generate studio image(s) using Imagen 3 via OAuth2 REST API"""
-
-    token = get_fresh_token()
-    if not token or not project_id:
-        print("   ⚠️ No OAuth2 token or project_id available")
-        return None
+def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
+    """Generate studio image using Imagen 3 edit_image with BGSWAP/INPAINT - PRESERVES PRODUCT!"""
 
     prompt_to_use = custom_prompt or BGSWAP_PROMPT
 
+    # Create client with the provided API key
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        print(f"   ⚠️ Failed to create genai client: {e}")
+        return None
+
+    # Clean base64
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
     else:
         base64_clean = image_data
 
+    # Fix padding
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
 
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    image_bytes = base64.b64decode(base64_clean)
 
     # Validate output_count (Imagen 3 supports 1-4)
     sample_count = max(1, min(4, int(output_count)))
 
-    payload = {
-        "instances": [{
-            "prompt": prompt_to_use
-        }],
-        "parameters": {
-            "sampleCount": sample_count,
-            "aspectRatio": aspect_ratio,
-            "personGeneration": "allow_adult",
-            "safetyFilterLevel": "block_only_high"
-        }
-    }
+    # Try different Imagen 3 models
+    models_to_try = [
+        'imagen-3.0-capability-001',
+        'imagen-3.0-generate-002',
+    ]
 
-    try:
-        print(f"   🎨 Calling Imagen 3 via REST API (count={sample_count}, ratio={aspect_ratio})...")
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
+    generated_images = []
 
-        if response.status_code == 200:
-            result = response.json()
-            predictions = result.get("predictions", [])
+    for model_name in models_to_try:
+        try:
+            print(f"   🔄 Trying {model_name} (count={sample_count}, ratio={aspect_ratio})...")
 
-            if predictions:
-                # Return array of images
-                images = []
-                for pred in predictions:
-                    if pred.get("bytesBase64Encoded"):
-                        img_b64 = pred["bytesBase64Encoded"]
-                        images.append(f"data:image/png;base64,{img_b64}")
+            # Create reference image for edit - THIS IS KEY FOR PRODUCT PRESERVATION!
+            reference_image = types.RawReferenceImage(
+                reference_id=1,
+                reference_image=types.Image(image_bytes=image_bytes)
+            )
 
-                if images:
-                    print(f"   ✅ Imagen 3 success! Generated {len(images)} images")
-                    # Return single image for backward compatibility if only 1 requested
-                    if sample_count == 1:
-                        return images[0]
-                    return images
+            # Try INPAINT with auto background mask FIRST
+            # This automatically masks background and preserves the product
+            try:
+                print(f"      📸 Trying INPAINT with MASK_MODE_BACKGROUND...")
+                response = client.models.edit_image(
+                    model=model_name,
+                    prompt=prompt_to_use,
+                    reference_images=[reference_image],
+                    config=types.EditImageConfig(
+                        edit_mode='EDIT_MODE_INPAINT_INSERTION',
+                        mask_mode='MASK_MODE_BACKGROUND',
+                        number_of_images=sample_count
+                    )
+                )
 
-        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+                if response.generated_images:
+                    for gen_img in response.generated_images:
+                        img_bytes = gen_img.image.image_bytes
+                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                        generated_images.append(f"data:image/png;base64,{img_b64}")
 
-    except Exception as e:
-        print(f"   ❌ Imagen 3 REST API error: {e}")
+                    print(f"   ✅ Success with INPAINT! Generated {len(generated_images)} images")
+                    if len(generated_images) == 1:
+                        return generated_images[0]
+                    return generated_images
 
+            except Exception as inpaint_error:
+                print(f"      ⚠️ INPAINT failed: {str(inpaint_error)[:50]}, trying BGSWAP...")
+
+            # Fallback to BGSWAP mode
+            try:
+                response = client.models.edit_image(
+                    model=model_name,
+                    prompt=prompt_to_use,
+                    reference_images=[reference_image],
+                    config=types.EditImageConfig(
+                        edit_mode='EDIT_MODE_BGSWAP',
+                        number_of_images=sample_count
+                    )
+                )
+
+                if response.generated_images:
+                    for gen_img in response.generated_images:
+                        img_bytes = gen_img.image.image_bytes
+                        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                        generated_images.append(f"data:image/png;base64,{img_b64}")
+
+                    print(f"   ✅ Success with {model_name} BGSWAP! Generated {len(generated_images)} images")
+                    if len(generated_images) == 1:
+                        return generated_images[0]
+                    return generated_images
+
+            except Exception as bgswap_error:
+                print(f"      ⚠️ BGSWAP failed: {str(bgswap_error)[:50]}")
+
+        except Exception as e:
+            print(f"   ⚠️ {model_name} failed: {str(e)[:80]}")
+            continue
+
+    print("   ❌ All Imagen 3 models failed")
     return None
 
 
@@ -596,7 +635,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        print("\n📥 AI STUDIO REQUEST - Gemini Studio Mode")
+        print("\n📥 AI STUDIO REQUEST - Imagen 3 Mode")
 
         category = 'Other'
         
@@ -661,9 +700,48 @@ class handler(BaseHTTPRequestHandler):
             method_used = 'none'
             error_message = None
 
-            if image_data:
-                # PRIMARY: Use Gemini Studio Mode (can SEE and PRESERVE the product!)
-                print("🎨 Using Gemini Studio Mode (product preservation)...")
+            if image_data and active_vertex_key:
+                # PRIMARY: Use Imagen 3 with edit_image API (preserves product!)
+                print("🎨 Trying Imagen 3 (edit_image - product preservation)...")
+                try:
+                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
+                    if result:
+                        method_used = 'Imagen 3'
+                        if isinstance(result, list):
+                            results_array = result
+                            result = result[0] if result else None
+                        else:
+                            results_array = [result] if result else []
+                        print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
+                except Exception as e:
+                    error_message = str(e)
+                    print(f"⚠️ Imagen 3 error: {error_message[:100]}")
+
+                # FALLBACK: Use Gemini Studio if Imagen 3 failed
+                if not result:
+                    print("🎨 Falling back to Gemini Studio...")
+                    try:
+                        result = generate_with_gemini_studio(
+                            image_data,
+                            product_analysis,
+                            custom_prompt_extra,
+                            output_count,
+                            aspect_ratio
+                        )
+                        if result:
+                            method_used = 'Gemini Studio'
+                            if isinstance(result, list):
+                                results_array = result
+                                result = result[0] if result else None
+                            else:
+                                results_array = [result] if result else []
+                            print(f"✅ Gemini Studio Success! ({len(results_array)} images)")
+                    except Exception as e:
+                        error_message = str(e)
+                        print(f"⚠️ Gemini fallback error: {error_message[:100]}")
+            elif image_data:
+                # No Vertex key - try Gemini directly
+                print("🎨 No Vertex key, using Gemini Studio directly...")
                 try:
                     result = generate_with_gemini_studio(
                         image_data,
@@ -674,7 +752,6 @@ class handler(BaseHTTPRequestHandler):
                     )
                     if result:
                         method_used = 'Gemini Studio'
-                        # Handle array or single result
                         if isinstance(result, list):
                             results_array = result
                             result = result[0] if result else None
@@ -683,28 +760,11 @@ class handler(BaseHTTPRequestHandler):
                         print(f"✅ Gemini Studio Success! ({len(results_array)} images)")
                 except Exception as e:
                     error_message = str(e)
-                    print(f"⚠️ Gemini Studio error: {error_message[:100]}")
-
-                # FALLBACK: Try Imagen 3 if Gemini failed (note: won't preserve product as well)
-                if not result and active_vertex_key:
-                    print("🎨 Fallback to Imagen 3...")
-                    try:
-                        result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
-                        if result:
-                            method_used = 'Imagen 3'
-                            if isinstance(result, list):
-                                results_array = result
-                                result = result[0] if result else None
-                            else:
-                                results_array = [result] if result else []
-                            print(f"✅ Imagen 3 Fallback Success! ({len(results_array)} images)")
-                    except Exception as e:
-                        error_message = str(e)
-                        print(f"⚠️ Imagen 3 fallback error: {error_message[:100]}")
+                    print(f"⚠️ Gemini error: {error_message[:100]}")
             else:
                 error_message = "No image provided"
 
-            # Final fallback
+            # Final fallback URL
             if not result:
                 result = FALLBACK_URLS.get(category, FALLBACK_URLS['Other'])
                 results_array = [result]
