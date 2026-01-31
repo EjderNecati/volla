@@ -456,10 +456,9 @@ Generate a professional e-commerce product photo now."""
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
-            # Add aspect ratio to generation config
-            if aspect_ratio:
+            # Add aspect ratio if supported (some models may not support it)
+            if aspect_ratio and aspect_ratio != '1:1':
                 gen_config["aspectRatio"] = aspect_ratio
-                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{
@@ -701,8 +700,8 @@ class handler(BaseHTTPRequestHandler):
             error_message = None
 
             if image_data and active_vertex_key:
-                # PRIMARY: Use Imagen 3 with edit_image API (preserves product!)
-                print("🎨 Trying Imagen 3 (edit_image - product preservation)...")
+                # Use Imagen 3 with edit_image API (preserves product!)
+                print("🎨 Using Imagen 3 (edit_image - product preservation)...")
                 try:
                     result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
                     if result:
@@ -716,53 +715,8 @@ class handler(BaseHTTPRequestHandler):
                 except Exception as e:
                     error_message = str(e)
                     print(f"⚠️ Imagen 3 error: {error_message[:100]}")
-
-                # FALLBACK: Use Gemini Studio if Imagen 3 failed
-                if not result:
-                    print("🎨 Falling back to Gemini Studio...")
-                    try:
-                        result = generate_with_gemini_studio(
-                            image_data,
-                            product_analysis,
-                            custom_prompt_extra,
-                            output_count,
-                            aspect_ratio
-                        )
-                        if result:
-                            method_used = 'Gemini Studio'
-                            if isinstance(result, list):
-                                results_array = result
-                                result = result[0] if result else None
-                            else:
-                                results_array = [result] if result else []
-                            print(f"✅ Gemini Studio Success! ({len(results_array)} images)")
-                    except Exception as e:
-                        error_message = str(e)
-                        print(f"⚠️ Gemini fallback error: {error_message[:100]}")
-            elif image_data:
-                # No Vertex key - try Gemini directly
-                print("🎨 No Vertex key, using Gemini Studio directly...")
-                try:
-                    result = generate_with_gemini_studio(
-                        image_data,
-                        product_analysis,
-                        custom_prompt_extra,
-                        output_count,
-                        aspect_ratio
-                    )
-                    if result:
-                        method_used = 'Gemini Studio'
-                        if isinstance(result, list):
-                            results_array = result
-                            result = result[0] if result else None
-                        else:
-                            results_array = [result] if result else []
-                        print(f"✅ Gemini Studio Success! ({len(results_array)} images)")
-                except Exception as e:
-                    error_message = str(e)
-                    print(f"⚠️ Gemini error: {error_message[:100]}")
             else:
-                error_message = "No image provided"
+                error_message = "No image or API key provided"
 
             # Final fallback URL
             if not result:
@@ -776,7 +730,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             response = {
-                'success': method_used in ['Gemini Studio', 'Imagen 3'],
+                'success': method_used == 'Imagen 3',
                 'generated_image': result,
                 'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,

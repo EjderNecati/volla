@@ -120,83 +120,93 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
-    """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
-    if not GOOGLE_API_KEY:
-        print("      ⚠️ GOOGLE_API_KEY not set")
+def generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio='1:1'):
+    """
+    Generate image using Imagen 3 edit_image API - PRESERVES PRODUCT!
+    Uses INPAINT/BGSWAP to keep product intact while changing background/scene.
+    """
+    # Create client with the provided API key
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        print(f"      ⚠️ Failed to create genai client: {e}")
         return None
 
-    # Models that support image generation
+    # Try different Imagen 3 models
     models_to_try = [
-        'gemini-2.0-flash-preview-image-generation',
-        'gemini-2.0-flash-exp-image-generation',
-        'gemini-2.0-flash'
+        'imagen-3.0-capability-001',
+        'imagen-3.0-generate-002',
     ]
-
-    headers = {"Content-Type": "application/json"}
-    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
     for model_name in models_to_try:
         try:
-            print(f"      🎨 Trying {model_name}...")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
+            print(f"      🔄 Trying {model_name}...")
 
-            # Build generation config with aspect ratio
-            gen_config = {
-                "responseModalities": ["IMAGE", "TEXT"]
-            }
-            # Always include aspect ratio
-            if aspect_ratio:
-                gen_config["aspectRatio"] = aspect_ratio
-                print(f"      📐 Using aspect ratio: {aspect_ratio}")
+            # Create reference image for edit - THIS IS KEY FOR PRODUCT PRESERVATION!
+            reference_image = types.RawReferenceImage(
+                reference_id=1,
+                reference_image=types.Image(image_bytes=image_bytes)
+            )
 
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": prompt},
-                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
-                    ]
-                }],
-                "generationConfig": gen_config
-            }
+            # Try INPAINT with auto background mask FIRST
+            try:
+                print(f"         📸 Trying INPAINT with MASK_MODE_BACKGROUND...")
+                response = client.models.edit_image(
+                    model=model_name,
+                    prompt=prompt,
+                    reference_images=[reference_image],
+                    config=types.EditImageConfig(
+                        edit_mode='EDIT_MODE_INPAINT_INSERTION',
+                        mask_mode='MASK_MODE_BACKGROUND',
+                        number_of_images=1
+                    )
+                )
 
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
+                if response.generated_images:
+                    img_bytes = response.generated_images[0].image.image_bytes
+                    img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                    print(f"      ✅ Success with INPAINT!")
+                    return f"data:image/png;base64,{img_b64}"
 
-            if response.status_code == 200:
-                data = response.json()
-                candidates = data.get('candidates', [])
+            except Exception as inpaint_error:
+                print(f"         ⚠️ INPAINT failed: {str(inpaint_error)[:50]}, trying BGSWAP...")
 
-                if candidates:
-                    parts = candidates[0].get('content', {}).get('parts', [])
-                    for part in parts:
-                        inline_data = part.get('inline_data') or part.get('inlineData')
-                        if inline_data:
-                            img_data = inline_data.get('data')
-                            mime_type = inline_data.get('mime_type', 'image/png')
-                            if img_data:
-                                print(f"      ✅ Got image from {model_name}")
-                                return f"data:{mime_type};base64,{img_data}"
+            # Fallback to BGSWAP mode
+            try:
+                response = client.models.edit_image(
+                    model=model_name,
+                    prompt=prompt,
+                    reference_images=[reference_image],
+                    config=types.EditImageConfig(
+                        edit_mode='EDIT_MODE_BGSWAP',
+                        number_of_images=1
+                    )
+                )
 
-                print(f"      ⚠️ {model_name}: No image in response")
-            else:
-                error_text = response.text[:100] if response.text else "Unknown error"
-                print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
+                if response.generated_images:
+                    img_bytes = response.generated_images[0].image.image_bytes
+                    img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                    print(f"      ✅ Success with BGSWAP!")
+                    return f"data:image/png;base64,{img_b64}"
+
+            except Exception as bgswap_error:
+                print(f"         ⚠️ BGSWAP failed: {str(bgswap_error)[:50]}")
 
         except Exception as e:
-            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+            print(f"      ⚠️ {model_name} failed: {str(e)[:80]}")
             continue
 
+    print("      ❌ All Imagen 3 models failed")
     return None
 
 
-def generate_with_imagen3(prompt, aspect_ratio='1:1'):
-    """
-    PRIMARY METHOD: Generate image using Imagen 3 via OAuth2 REST API
-    Imagen 3 is the ONLY reliable image generation method!
-    """
+# Keep for backward compatibility but not used
+def generate_with_imagen3_text(prompt, aspect_ratio='1:1'):
+    """DEPRECATED - Use generate_with_imagen3_edit instead"""
     token = get_fresh_token()
     if not token or not project_id:
-        print("      ⚠️ No OAuth2 token or project_id available for Imagen 3")
         return None
 
     url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
@@ -432,32 +442,19 @@ CRITICAL RULES:
 
 Soft studio lighting, no harsh shadows. Professional product photo."""
 
-    # PRIMARY: Use Gemini - it can SEE the reference image and preserve product!
-    print(f"      🔍 Using Gemini (can see reference image)...")
+    # Use Imagen 3 edit_image API (preserves product!)
+    print(f"      🔍 Using Imagen 3 edit_image (product preservation)...")
 
-    for attempt in range(2):
-        print(f"      🎨 Attempt {attempt+1}/2 (Gemini)...")
-        result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
+    for attempt in range(3):
+        print(f"      🎨 Attempt {attempt+1}/3...")
+        result = generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio)
 
         if result:
             print(f"      ✅ Angle shot success!")
             return result
 
         # Wait before retry
-        if attempt < 1:
-            time.sleep(2)
-
-    # FALLBACK: Try Imagen 3 text-to-image if Gemini failed
-    print(f"      🔄 Gemini failed, trying Imagen 3 fallback...")
-    for attempt in range(2):
-        print(f"      🎨 Attempt {attempt+1}/2 (Imagen 3)...")
-        result = generate_with_imagen3(prompt, aspect_ratio)
-
-        if result:
-            print(f"      ✅ Angle shot success (Imagen 3 fallback)!")
-            return result
-
-        if attempt < 1:
+        if attempt < 2:
             time.sleep(2)
 
     print(f"      ❌ All attempts failed for angle shot")
