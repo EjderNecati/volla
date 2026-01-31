@@ -349,58 +349,136 @@ FALLBACK_URLS = {
 }
 
 
-def generate_with_gemini_fallback(image_data):
-    """Fallback to Gemini chat model for image generation"""
+def generate_studio_with_gemini(image_data, custom_prompt=None, aspect_ratio='1:1'):
+    """Generate studio image using Gemini - CAN see the reference image for proper background swap"""
     if not GOOGLE_API_KEY:
         return None
-        
-    print("      Trying Gemini fallback (REST)...")
-    
+
+    print("      🎨 Trying Gemini Studio (with reference image)...")
+
     # Clean base64
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
     else:
         base64_clean = image_data
-        
+
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+
     image_bytes = base64.b64decode(base64_clean)
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-    
-    # Simple prompt for fallback
-    fallback_prompt = "Professional product photography on clean warm beige studio background. High resolution."
-    
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={GOOGLE_API_KEY}"
+
+    # CRITICAL: Prompt that preserves the EXACT product
+    studio_prompt = custom_prompt or """Look at this product image carefully.
+
+YOUR TASK: Create a professional e-commerce studio photo of THIS EXACT PRODUCT.
+
+CRITICAL RULES - YOU MUST FOLLOW:
+1. The product must be 100% IDENTICAL to the input - same shape, colors, textures, details, labels, text
+2. DO NOT change, modify, or reimagine the product in ANY way
+3. DO NOT add or remove any features, logos, or text from the product
+4. ONLY change the BACKGROUND to a clean, professional studio setting
+
+BACKGROUND:
+- Clean, warm beige/cream studio backdrop (#E8DDD0 to #F5F0EB gradient)
+- Seamless cyclorama style (no visible edges or corners)
+- Soft shadows under the product for depth
+
+LIGHTING:
+- Professional soft studio lighting
+- Gentle highlights, no harsh reflections
+- Natural product appearance
+
+OUTPUT:
+- High quality professional e-commerce product photo
+- The product should be the clear focus
+- Clean, minimal, professional aesthetic
+
+Generate the studio photo now."""
+
+    # Add aspect ratio instruction to prompt (more reliable than API parameter)
+    if aspect_ratio and aspect_ratio != '1:1':
+        aspect_map = {
+            '16:9': 'wide horizontal (16:9 ratio, landscape format)',
+            '9:16': 'tall vertical (9:16 ratio, portrait format, like phone screen)',
+            '4:3': 'horizontal (4:3 ratio)',
+            '3:4': 'vertical (3:4 ratio)',
+            '3:2': 'horizontal (3:2 ratio)',
+            '2:3': 'vertical (2:3 ratio)',
+            '4:5': 'slightly vertical (4:5 ratio, Instagram portrait)'
+        }
+        aspect_desc = aspect_map.get(aspect_ratio, f'{aspect_ratio} aspect ratio')
+        studio_prompt += f"\n\nIMAGE FORMAT: Generate this image in {aspect_desc}. The output image dimensions MUST match this aspect ratio."
+
+    # Models to try
+    models_to_try = [
+        'gemini-2.0-flash-exp-image-generation',
+        'gemini-2.0-flash-exp'
+    ]
+
     headers = { "Content-Type": "application/json" }
-    
-    payload = {
-        "contents": [{
-            "parts": [
-                {"text": fallback_prompt},
-                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
-            ]
-        }],
-        "generationConfig": { "response_modalities": ["IMAGE"] } 
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
-        if response.status_code == 200:
-            data = response.json()
-            candidates = data.get('candidates', [])
-            if candidates:
-                parts = candidates[0].get('content', {}).get('parts', [])
-                for part in parts:
-                    # JSON key is usually 'inlineData' or 'inline_data' depending on API version
-                    # Checking both to be safe
-                    inline_data = part.get('inline_data') or part.get('inlineData')
-                    if inline_data:
-                        img_data = inline_data.get('data')
-                        mime_type = inline_data.get('mime_type', 'image/png')
-                        if img_data:
-                            print("      ✅ Got image from Gemini fallback")
-                            return f"data:{mime_type};base64,{img_data}"
-    except Exception as e:
-        print(f"      ⚠️ Gemini fallback failed: {e}")
-        
+
+    for model_name in models_to_try:
+        # Try with aspect ratio first, then without if it fails
+        for try_with_aspect in [True, False] if (aspect_ratio and aspect_ratio != '1:1') else [False]:
+            try:
+                print(f"      🎨 Trying {model_name}{'(with aspect ratio)' if try_with_aspect else ''}...")
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
+
+                # Build generation config
+                gen_config = {
+                    "responseModalities": ["IMAGE", "TEXT"]
+                }
+
+                # Add aspect ratio if requested
+                if try_with_aspect and aspect_ratio and aspect_ratio != '1:1':
+                    gen_config["aspectRatio"] = aspect_ratio
+
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"text": studio_prompt},
+                            { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+                        ]
+                    }],
+                    "generationConfig": gen_config
+                }
+
+                response = requests.post(url, headers=headers, json=payload, timeout=90)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get('candidates', [])
+                    if candidates:
+                        parts = candidates[0].get('content', {}).get('parts', [])
+                        for part in parts:
+                            inline_data = part.get('inline_data') or part.get('inlineData')
+                            if inline_data:
+                                img_data = inline_data.get('data')
+                                mime_type = inline_data.get('mime_type', 'image/png')
+                                if img_data:
+                                    print(f"      ✅ Got studio image from {model_name}")
+                                    return f"data:{mime_type};base64,{img_data}"
+
+                    print(f"      ⚠️ {model_name}: No image in response")
+                else:
+                    error_text = response.text[:100] if response.text else "Unknown error"
+                    print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
+                    # If aspect ratio caused the error, retry without it
+                    if try_with_aspect and ('aspectRatio' in error_text or response.status_code == 400):
+                        print(f"      🔄 Retrying without aspectRatio...")
+                        continue
+
+            except Exception as e:
+                print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+                continue
+
+            # Break inner loop if we didn't get a retry condition
+            if not (try_with_aspect and response.status_code != 200):
+                break
+
     return None
 
 
@@ -553,36 +631,35 @@ class handler(BaseHTTPRequestHandler):
             method_used = 'none'
             error_message = None
 
-            if image_data and active_vertex_key:
-                # Try Imagen 3 first
-                print("🎨 Trying Imagen 3...")
+            if image_data:
+                # FIRST: Try Gemini Studio (can see reference image for proper background swap)
+                print("🎨 Trying Gemini Studio (with reference image)...")
                 try:
-                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
+                    result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
                     if result:
-                        method_used = 'Imagen 3'
-                        # Handle array or single result
-                        if isinstance(result, list):
-                            results_array = result
-                            result = result[0] if result else None
-                        else:
-                            results_array = [result] if result else []
-                        print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
+                        method_used = 'Gemini Studio'
+                        results_array = [result]
+                        print("✅ Gemini Studio Success!")
                 except Exception as e:
-                        error_message = str(e)
-                        print(f"⚠️ Imagen 3 error: {error_message[:100]}")
-                
-                # Fallback to old Gemini
-                if not result:
-                    print("🎨 Falling back to Gemini...")
+                    error_message = str(e)
+                    print(f"⚠️ Gemini Studio error: {error_message[:100]}")
+
+                # SECOND: Fallback to Imagen 3 (text-to-image, no reference)
+                if not result and active_vertex_key:
+                    print("🎨 Falling back to Imagen 3...")
                     try:
-                        result = generate_with_gemini_fallback(image_data)
+                        result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
                         if result:
-                            method_used = 'Gemini Fallback'
-                            results_array = [result]
-                            print("✅ Gemini Fallback Success!")
+                            method_used = 'Imagen 3'
+                            if isinstance(result, list):
+                                results_array = result
+                                result = result[0] if result else None
+                            else:
+                                results_array = [result] if result else []
+                            print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
                     except Exception as e:
                         error_message = str(e)
-                        print(f"⚠️ Gemini fallback error: {error_message[:100]}")
+                        print(f"⚠️ Imagen 3 error: {error_message[:100]}")
             else:
                 error_message = "No image provided"
 
@@ -598,7 +675,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             response = {
-                'success': method_used in ['Imagen 3', 'Gemini Fallback'],
+                'success': method_used in ['Gemini Studio', 'Imagen 3'],
                 'generated_image': result,
                 'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,

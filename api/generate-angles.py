@@ -404,6 +404,20 @@ PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh
 
 Generate the image now."""
 
+    # Add aspect ratio instruction to prompt (more reliable than API parameter)
+    if aspect_ratio and aspect_ratio != '1:1':
+        aspect_map = {
+            '16:9': 'wide horizontal (16:9 ratio, landscape format)',
+            '9:16': 'tall vertical (9:16 ratio, portrait format, like phone screen)',
+            '4:3': 'horizontal (4:3 ratio)',
+            '3:4': 'vertical (3:4 ratio)',
+            '3:2': 'horizontal (3:2 ratio)',
+            '2:3': 'vertical (2:3 ratio)',
+            '4:5': 'slightly vertical (4:5 ratio, Instagram portrait)'
+        }
+        aspect_desc = aspect_map.get(aspect_ratio, f'{aspect_ratio} aspect ratio')
+        prompt += f"\n\nIMAGE FORMAT: Generate this image in {aspect_desc}. The output image dimensions MUST match this aspect ratio."
+
     # Use Gemini REST API for image generation (can see reference image!)
     print(f"      🔍 Using Gemini REST API (can see reference image)...")
 

@@ -693,10 +693,10 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
         const description = getDescription();
 
         return (
-            <div className="bg-white border border-[#E8E7E4] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-[#E8E7E4] rounded-2xl overflow-hidden flex-1 flex flex-col">
                 {/* Header */}
                 <div
-                    className="px-4 py-3 flex items-center gap-2"
+                    className="px-4 py-3 flex items-center gap-2 flex-shrink-0"
                     style={{ backgroundColor: color.primary + '10', borderBottom: `2px solid ${color.primary}` }}
                 >
                     <Search className="w-4 h-4" style={{ color: color.primary }} />
@@ -705,7 +705,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     </span>
                 </div>
 
-                <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div className="p-4 space-y-4 flex-1 overflow-y-auto">
                     {/* SEO Title */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
