@@ -242,7 +242,44 @@
         "generatingRealLife": "Generazione Vita Reale...",
         "assets": "risorse",
         "uploadForAnalysis": "Carica un'immagine per l'analisi SEO",
-        "addApiKeySettings": "Aggiungi chiave API Gemini nelle Impostazioni"
+        "addApiKeySettings": "Aggiungi chiave API Gemini nelle Impostazioni",
+        "uploadFirst": "Carica un'immagine per iniziare",
+        "generateToSeeSEO": "Genera immagini per vedere i consigli SEO"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Tipo di Foto",
+            "realLife": "Vita Reale",
+            "shots": "Scatti",
+            "studio": "Studio"
+        },
+        "outputCount": {
+            "title": "Numero di Output",
+            "images": "immagini"
+        },
+        "aspectRatio": {
+            "title": "Rapporto Aspetto",
+            "default": "Predefinito (1:1)"
+        },
+        "customPrompt": {
+            "title": "Istruzioni Personalizzate",
+            "placeholder": "Aggiungi istruzioni extra per l'IA..."
+        },
+        "generate": {
+            "button": "Genera",
+            "credits": "{{count}} crediti"
+        },
+        "marketplace": {
+            "optional": "Opzionale - Seleziona per SEO",
+            "none": "Nessun Marketplace"
+        },
+        "canvas": {
+            "shotsButton": "Genera Scatti",
+            "shotsCredits": "6 crediti"
+        },
+        "seoPanel": {
+            "noMarketplace": "Seleziona un marketplace per consigli SEO"
+        }
     },
     "shots": {
         "title": "Scatti Multi-Angolo",

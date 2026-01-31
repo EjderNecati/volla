@@ -262,7 +262,44 @@
         "generatingRealLife": "Generating Real Life...",
         "assets": "assets",
         "uploadForAnalysis": "Upload an image to get SEO analysis",
-        "addApiKeySettings": "Add Gemini API key in Settings"
+        "addApiKeySettings": "Add Gemini API key in Settings",
+        "uploadFirst": "Upload an image to get started",
+        "generateToSeeSEO": "Generate images to see SEO recommendations"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Photo Type",
+            "realLife": "Real Life",
+            "shots": "Shots",
+            "studio": "Studio"
+        },
+        "outputCount": {
+            "title": "Output Count",
+            "images": "images"
+        },
+        "aspectRatio": {
+            "title": "Aspect Ratio",
+            "default": "Default (1:1)"
+        },
+        "customPrompt": {
+            "title": "Custom Prompt",
+            "placeholder": "Add extra instructions for AI..."
+        },
+        "generate": {
+            "button": "Generate",
+            "credits": "{{count}} credits"
+        },
+        "marketplace": {
+            "optional": "Optional - Select for SEO",
+            "none": "No Marketplace"
+        },
+        "canvas": {
+            "shotsButton": "Generate Shots",
+            "shotsCredits": "6 credits"
+        },
+        "seoPanel": {
+            "noMarketplace": "Select a marketplace to get SEO recommendations"
+        }
     },
     "shots": {
         "title": "Multi-Angle Shots",

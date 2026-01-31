@@ -234,7 +234,44 @@
         "generatingRealLife": "Real Life wird generiert...",
         "assets": "Assets",
         "uploadForAnalysis": "Bild hochladen für SEO-Analyse",
-        "addApiKeySettings": "Gemini API-Schlüssel in Einstellungen hinzufügen"
+        "addApiKeySettings": "Gemini API-Schlüssel in Einstellungen hinzufügen",
+        "uploadFirst": "Laden Sie ein Bild hoch, um zu beginnen",
+        "generateToSeeSEO": "Generieren Sie Bilder, um SEO-Empfehlungen zu sehen"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Fototyp",
+            "realLife": "Real Life",
+            "shots": "Aufnahmen",
+            "studio": "Studio"
+        },
+        "outputCount": {
+            "title": "Ausgabeanzahl",
+            "images": "Bilder"
+        },
+        "aspectRatio": {
+            "title": "Seitenverhältnis",
+            "default": "Standard (1:1)"
+        },
+        "customPrompt": {
+            "title": "Benutzerdefinierte Anweisung",
+            "placeholder": "Zusätzliche Anweisungen für KI hinzufügen..."
+        },
+        "generate": {
+            "button": "Generieren",
+            "credits": "{{count}} Credits"
+        },
+        "marketplace": {
+            "optional": "Optional - Für SEO auswählen",
+            "none": "Kein Marktplatz"
+        },
+        "canvas": {
+            "shotsButton": "Aufnahmen generieren",
+            "shotsCredits": "6 Credits"
+        },
+        "seoPanel": {
+            "noMarketplace": "Wählen Sie einen Marktplatz für SEO-Empfehlungen"
+        }
     },
     "shots": {
         "title": "Multi-Winkel-Aufnahmen",

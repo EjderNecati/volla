@@ -234,7 +234,44 @@
         "generatingRealLife": "Generando Vida Real...",
         "assets": "recursos",
         "uploadForAnalysis": "Sube una imagen para obtener análisis SEO",
-        "addApiKeySettings": "Agrega la clave API de Gemini en Configuración"
+        "addApiKeySettings": "Agrega la clave API de Gemini en Configuración",
+        "uploadFirst": "Sube una imagen para comenzar",
+        "generateToSeeSEO": "Genera imágenes para ver recomendaciones SEO"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Tipo de Foto",
+            "realLife": "Vida Real",
+            "shots": "Tomas",
+            "studio": "Estudio"
+        },
+        "outputCount": {
+            "title": "Cantidad de Salida",
+            "images": "imágenes"
+        },
+        "aspectRatio": {
+            "title": "Relación de Aspecto",
+            "default": "Predeterminado (1:1)"
+        },
+        "customPrompt": {
+            "title": "Instrucción Personalizada",
+            "placeholder": "Añade instrucciones adicionales para IA..."
+        },
+        "generate": {
+            "button": "Generar",
+            "credits": "{{count}} créditos"
+        },
+        "marketplace": {
+            "optional": "Opcional - Selecciona para SEO",
+            "none": "Sin Marketplace"
+        },
+        "canvas": {
+            "shotsButton": "Generar Tomas",
+            "shotsCredits": "6 créditos"
+        },
+        "seoPanel": {
+            "noMarketplace": "Selecciona un marketplace para obtener recomendaciones SEO"
+        }
     },
     "shots": {
         "title": "Tomas Multi-Ángulo",

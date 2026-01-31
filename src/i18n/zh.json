@@ -227,7 +227,44 @@
         "generatingRealLife": "生成实景...",
         "assets": "资源",
         "uploadForAnalysis": "上传图片以获取SEO分析",
-        "addApiKeySettings": "在设置中添加Gemini API密钥"
+        "addApiKeySettings": "在设置中添加Gemini API密钥",
+        "uploadFirst": "上传图片以开始",
+        "generateToSeeSEO": "生成图片以查看SEO建议"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "照片类型",
+            "realLife": "真实生活",
+            "shots": "拍摄",
+            "studio": "工作室"
+        },
+        "outputCount": {
+            "title": "输出数量",
+            "images": "张图片"
+        },
+        "aspectRatio": {
+            "title": "宽高比",
+            "default": "默认 (1:1)"
+        },
+        "customPrompt": {
+            "title": "自定义指令",
+            "placeholder": "为AI添加额外指令..."
+        },
+        "generate": {
+            "button": "生成",
+            "credits": "{{count}} 积分"
+        },
+        "marketplace": {
+            "optional": "可选 - 选择以获取SEO",
+            "none": "无市场"
+        },
+        "canvas": {
+            "shotsButton": "生成拍摄",
+            "shotsCredits": "6 积分"
+        },
+        "seoPanel": {
+            "noMarketplace": "选择市场以获取SEO建议"
+        }
     },
     "shots": {
         "title": "多角度拍摄",

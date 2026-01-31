@@ -242,7 +242,44 @@
         "generatingRealLife": "Génération Vie Réelle...",
         "assets": "ressources",
         "uploadForAnalysis": "Téléversez une image pour l'analyse SEO",
-        "addApiKeySettings": "Ajoutez la clé API Gemini dans les Paramètres"
+        "addApiKeySettings": "Ajoutez la clé API Gemini dans les Paramètres",
+        "uploadFirst": "Téléversez une image pour commencer",
+        "generateToSeeSEO": "Générez des images pour voir les recommandations SEO"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Type de Photo",
+            "realLife": "Vie Réelle",
+            "shots": "Prises",
+            "studio": "Studio"
+        },
+        "outputCount": {
+            "title": "Nombre de Sorties",
+            "images": "images"
+        },
+        "aspectRatio": {
+            "title": "Ratio d'Aspect",
+            "default": "Par défaut (1:1)"
+        },
+        "customPrompt": {
+            "title": "Instructions Personnalisées",
+            "placeholder": "Ajoutez des instructions supplémentaires pour l'IA..."
+        },
+        "generate": {
+            "button": "Générer",
+            "credits": "{{count}} crédits"
+        },
+        "marketplace": {
+            "optional": "Optionnel - Sélectionnez pour SEO",
+            "none": "Aucun Marketplace"
+        },
+        "canvas": {
+            "shotsButton": "Générer Prises",
+            "shotsCredits": "6 crédits"
+        },
+        "seoPanel": {
+            "noMarketplace": "Sélectionnez un marketplace pour des recommandations SEO"
+        }
     },
     "shots": {
         "title": "Prises Multi-Angles",

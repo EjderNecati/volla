@@ -19,6 +19,7 @@ import {
     canAddAssets,
     getStorageUsage
 } from '../utils/projectManager';
+import { calculateGenerationCost } from '../utils/creditManager';
 import AssetFilmStrip from '../components/AssetFilmStrip';
 import WelcomeOverlay from '../components/WelcomeOverlay';
 import MascotAnimation from '../components/MascotAnimation';
@@ -70,6 +71,26 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // HANDSFREE MODE STATE
     // ═══════════════════════════════════════════════════════════════════
     const [isHandsfreeMode, setIsHandsfreeMode] = useState(false);
+
+    // ═══════════════════════════════════════════════════════════════════
+    // NEW: GENERATION CONFIGURATION STATE (for 3-panel layout)
+    // ═══════════════════════════════════════════════════════════════════
+    const [photoType, setPhotoType] = useState('reallife'); // 'reallife' | 'shots' | 'studio'
+    const [outputCount, setOutputCount] = useState(2); // 1-4
+    const [aspectRatio, setAspectRatio] = useState('1:1'); // Default 1:1
+    const [customPrompt, setCustomPrompt] = useState('');
+
+    // Aspect ratio options
+    const ASPECT_RATIOS = [
+        { value: '1:1', label: '1:1' },
+        { value: '16:9', label: '16:9' },
+        { value: '9:16', label: '9:16' },
+        { value: '4:3', label: '4:3' },
+        { value: '3:4', label: '3:4' },
+        { value: '3:2', label: '3:2' },
+        { value: '2:3', label: '2:3' },
+        { value: '4:5', label: '4:5' }
+    ];
 
     // ═══════════════════════════════════════════════════════════════════
     // SESSION-BASED ASSETS STATE
@@ -402,6 +423,84 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
         } catch (err) {
             setError(`Real Life generation failed: ${err.message}`);
         } finally {
+            setRealLifeLoading(false);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // UNIFIED GENERATE HANDLER (NEW 3-PANEL LAYOUT)
+    // ═══════════════════════════════════════════════════════════════════
+    const handleUnifiedGenerate = async () => {
+        const activeAsset = sessionAssets.find(a => a.id === activeAssetId) || sessionAssets[0];
+        if (!activeAsset) return;
+
+        try {
+            if (photoType === 'reallife') {
+                setRealLifeLoading(true);
+                console.log(`🌟 Generating Real Life from: ${activeAsset.type}`);
+
+                const realLifeResult = await generateRealLifePhotos(
+                    activeAsset.url,
+                    productInfo || {},
+                    outputCount,
+                    aspectRatio,
+                    customPrompt
+                );
+
+                if (realLifeResult.success) {
+                    // Add generated shots to session
+                    for (let i = 1; i <= 4; i++) {
+                        if (realLifeResult[`shot${i}`]) {
+                            addAssetToSession(
+                                realLifeResult[`shot${i}`],
+                                'REALLIFE',
+                                activeAsset.id,
+                                realLifeResult.labels?.[`shot${i}`] || `Lifestyle ${i}`
+                            );
+                        }
+                    }
+                }
+            } else if (photoType === 'shots') {
+                setAnglesLoading(true);
+                console.log(`📷 Generating Shots from: ${activeAsset.type}`);
+
+                const sourceContext = activeAsset.type === 'REALLIFE' ? 'LIFE' : 'STUDIO';
+                const anglesResult = await generateProductAngles(activeAsset.url, sourceContext, aspectRatio);
+
+                if (anglesResult.success) {
+                    if (anglesResult.shot1) addAssetToSession(anglesResult.shot1, 'SHOT', activeAsset.id, anglesResult.labels?.shot1 || 'Angle 1');
+                    if (anglesResult.shot2) addAssetToSession(anglesResult.shot2, 'SHOT', activeAsset.id, anglesResult.labels?.shot2 || 'Angle 2');
+                    if (anglesResult.shot3) addAssetToSession(anglesResult.shot3, 'SHOT', activeAsset.id, anglesResult.labels?.shot3 || 'Angle 3');
+                }
+            } else if (photoType === 'studio') {
+                setStudioLoading(true);
+                console.log(`🎨 Generating Studio from: ${activeAsset.type}`);
+
+                const studioResult = await generateStudioImage(
+                    results?.category || 'Other',
+                    activeAsset.url,
+                    productInfo || {},
+                    outputCount,
+                    aspectRatio,
+                    customPrompt
+                );
+
+                if (studioResult.image) {
+                    addAssetToSession(studioResult.image, 'STUDIO', activeAsset.id, 'Studio');
+                }
+                // Handle multiple images
+                if (studioResult.images && studioResult.images.length > 1) {
+                    studioResult.images.slice(1).forEach((img, idx) => {
+                        addAssetToSession(img, 'STUDIO', activeAsset.id, `Studio ${idx + 2}`);
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Generation failed:', err);
+            setError(err.message || 'Generation failed');
+        } finally {
+            setStudioLoading(false);
+            setAnglesLoading(false);
             setRealLifeLoading(false);
         }
     };
@@ -1074,11 +1173,147 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     onNavigate={onNavigate}
                 />
             ) : (
-                <main className="flex-1 py-6 px-4">
-                    <div className="max-w-6xl mx-auto">
-                        {/* Platform Selector */}
-                        {renderPlatformSelector()}
+                <main className="flex-1 flex min-h-0">
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    {/* LEFT PANEL - 30% - Upload & Configuration */}
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    <aside className="w-[30%] min-w-[320px] max-w-[400px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
+                        <div className="p-5 space-y-5">
+                            {/* Upload Zone */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
+                                    {t('studio.uploadImage') || 'Upload Image'}
+                                </label>
+                                {renderUploadZone()}
+                            </div>
 
+                            {/* Marketplace Selector - Optional */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide flex items-center gap-2">
+                                    {t('marketplace.title') || 'Marketplace'}
+                                    <span className="text-[10px] font-normal text-[#8C8C8C] normal-case">({t('common.optional') || 'Optional'})</span>
+                                </label>
+                                {renderPlatformSelector()}
+                            </div>
+
+                            {/* Photo Type Selector */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
+                                    {t('studioRedesign.photoType.title') || 'Photo Type'}
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'reallife', label: t('studioRedesign.photoType.realLife') || 'Real Life', icon: Users },
+                                        { id: 'shots', label: t('studioRedesign.photoType.shots') || 'Shots', icon: Camera },
+                                        { id: 'studio', label: t('studioRedesign.photoType.studio') || 'Studio', icon: ImageIcon }
+                                    ].map(type => (
+                                        <button
+                                            key={type.id}
+                                            onClick={() => setPhotoType(type.id)}
+                                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                                                photoType === type.id
+                                                    ? 'bg-[#E06847] text-white border-[#E06847]'
+                                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#E06847]'
+                                            }`}
+                                        >
+                                            <type.icon size={18} />
+                                            <span className="text-xs font-medium">{type.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Output Count Selector */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
+                                    {t('studioRedesign.outputCount.title') || 'Output Count'}
+                                </label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {[1, 2, 3, 4].map(count => (
+                                        <button
+                                            key={count}
+                                            onClick={() => setOutputCount(count)}
+                                            className={`aspect-square rounded-xl font-bold text-lg border-2 transition-all ${
+                                                outputCount === count
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                            }`}
+                                        >
+                                            {count}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Aspect Ratio Selector - Optional */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide flex items-center gap-2">
+                                    {t('studioRedesign.aspectRatio.title') || 'Aspect Ratio'}
+                                    <span className="text-[10px] font-normal text-[#8C8C8C] normal-case">({t('common.optional') || 'Optional'})</span>
+                                </label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {ASPECT_RATIOS.map(ratio => (
+                                        <button
+                                            key={ratio.value}
+                                            onClick={() => setAspectRatio(ratio.value)}
+                                            className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                                                aspectRatio === ratio.value
+                                                    ? 'bg-[#5C5C5C] text-white border-[#5C5C5C]'
+                                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
+                                            }`}
+                                        >
+                                            {ratio.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Custom Prompt - Optional */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide flex items-center gap-2">
+                                    {t('studioRedesign.customPrompt.title') || 'Custom Prompt'}
+                                    <span className="text-[10px] font-normal text-[#8C8C8C] normal-case">({t('common.optional') || 'Optional'})</span>
+                                </label>
+                                <textarea
+                                    value={customPrompt}
+                                    onChange={(e) => setCustomPrompt(e.target.value)}
+                                    placeholder={t('studioRedesign.customPrompt.placeholder') || 'Add extra instructions for AI...'}
+                                    className="w-full p-3 rounded-xl border-2 border-[#E8E7E4] focus:border-[#E06847] focus:outline-none text-sm resize-none"
+                                    rows={3}
+                                />
+                            </div>
+
+                            {/* Generate Button */}
+                            <button
+                                onClick={handleUnifiedGenerate}
+                                disabled={sessionAssets.length === 0 || studioLoading || anglesLoading || realLifeLoading}
+                                className={`w-full py-4 rounded-2xl font-bold text-lg flex flex-col items-center gap-1 transition-all ${
+                                    sessionAssets.length === 0 || studioLoading || anglesLoading || realLifeLoading
+                                        ? 'bg-[#E8E7E4] text-[#8C8C8C] cursor-not-allowed'
+                                        : 'bg-[#E06847] hover:bg-[#D05737] text-white'
+                                }`}
+                            >
+                                {studioLoading || anglesLoading || realLifeLoading ? (
+                                    <>
+                                        <Loader2 className="animate-spin" size={20} />
+                                        <span className="text-sm">{t('common.generating') || 'Generating...'}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>{t('studioRedesign.generate.button') || 'Generate'}</span>
+                                        <span className="text-xs opacity-70">
+                                            {calculateGenerationCost(outputCount, !!marketplace, false)} {t('credits.creditsUnit') || 'credits'}
+                                        </span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    {/* CENTER CANVAS - 50% - Main Display */}
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    <section className="flex-1 bg-[#FAF9F6] p-6 flex flex-col overflow-y-auto">
                         {/* Error Display */}
                         {error && (
                             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
@@ -1087,9 +1322,51 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                             </div>
                         )}
 
-                        {/* Upload Zone or Main Stage */}
-                        {sessionAssets.length === 0 ? renderUploadZone() : renderMainStage()}
-                    </div>
+                        {/* Main Stage */}
+                        {sessionAssets.length > 0 ? (
+                            renderMainStage()
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="text-center text-[#8C8C8C]">
+                                    <ImageIcon size={48} className="mx-auto mb-4 opacity-30" />
+                                    <p className="text-sm">{t('studio.uploadFirst') || 'Upload an image to get started'}</p>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    {/* RIGHT PANEL - 20% - SEO Results */}
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    <aside className="w-[20%] min-w-[280px] max-w-[320px] bg-white border-l border-[#E8E7E4] overflow-y-auto">
+                        <div className="p-4">
+                            <h3 className="text-sm font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                                <Search size={16} />
+                                {t('results.seoResults') || 'SEO Results'}
+                            </h3>
+
+                            {marketplace ? (
+                                results ? (
+                                    renderSEOResults()
+                                ) : loading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="animate-spin text-[#E06847]" size={24} />
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-[#8C8C8C] text-center py-8">
+                                        {t('studio.generateToSeeSEO') || 'Generate images to see SEO recommendations'}
+                                    </p>
+                                )
+                            ) : (
+                                <div className="text-center py-8">
+                                    <Store size={32} className="mx-auto mb-3 text-[#E8E7E4]" />
+                                    <p className="text-sm text-[#8C8C8C]">
+                                        {t('studioRedesign.seoPanel.noMarketplace') || 'Select a marketplace to get SEO recommendations'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </aside>
                 </main>
             )}
         </div>

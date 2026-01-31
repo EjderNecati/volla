@@ -242,7 +242,44 @@
         "generatingRealLife": "リアルライフを生成中...",
         "assets": "アセット",
         "uploadForAnalysis": "SEO分析のために画像をアップロード",
-        "addApiKeySettings": "設定でGemini APIキーを追加"
+        "addApiKeySettings": "設定でGemini APIキーを追加",
+        "uploadFirst": "開始するには画像をアップロードしてください",
+        "generateToSeeSEO": "SEO推奨を見るには画像を生成してください"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "写真タイプ",
+            "realLife": "リアルライフ",
+            "shots": "ショット",
+            "studio": "スタジオ"
+        },
+        "outputCount": {
+            "title": "出力数",
+            "images": "枚"
+        },
+        "aspectRatio": {
+            "title": "アスペクト比",
+            "default": "デフォルト (1:1)"
+        },
+        "customPrompt": {
+            "title": "カスタム指示",
+            "placeholder": "AIへの追加指示を入力..."
+        },
+        "generate": {
+            "button": "生成",
+            "credits": "{{count}} クレジット"
+        },
+        "marketplace": {
+            "optional": "オプション - SEO用に選択",
+            "none": "マーケットプレイスなし"
+        },
+        "canvas": {
+            "shotsButton": "ショット生成",
+            "shotsCredits": "6 クレジット"
+        },
+        "seoPanel": {
+            "noMarketplace": "SEO推奨を取得するにはマーケットプレイスを選択"
+        }
     },
     "shots": {
         "title": "マルチアングルショット",

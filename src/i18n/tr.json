@@ -254,7 +254,44 @@
         "generatingRealLife": "Gerçek Yaşam Oluşturuluyor...",
         "assets": "varlık",
         "uploadForAnalysis": "SEO analizi için görsel yükleyin",
-        "addApiKeySettings": "Ayarlar'da Gemini API anahtarı ekleyin"
+        "addApiKeySettings": "Ayarlar'da Gemini API anahtarı ekleyin",
+        "uploadFirst": "Başlamak için bir görsel yükleyin",
+        "generateToSeeSEO": "SEO önerilerini görmek için görseller oluşturun"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Fotoğraf Tipi",
+            "realLife": "Gerçek Yaşam",
+            "shots": "Çekimler",
+            "studio": "Stüdyo"
+        },
+        "outputCount": {
+            "title": "Çıktı Sayısı",
+            "images": "görsel"
+        },
+        "aspectRatio": {
+            "title": "En Boy Oranı",
+            "default": "Varsayılan (1:1)"
+        },
+        "customPrompt": {
+            "title": "Özel Yönerge",
+            "placeholder": "AI için ek talimatlar ekleyin..."
+        },
+        "generate": {
+            "button": "Oluştur",
+            "credits": "{{count}} kredi"
+        },
+        "marketplace": {
+            "optional": "İsteğe bağlı - SEO için seçin",
+            "none": "Pazar Yeri Yok"
+        },
+        "canvas": {
+            "shotsButton": "Çekimleri Oluştur",
+            "shotsCredits": "6 kredi"
+        },
+        "seoPanel": {
+            "noMarketplace": "SEO önerileri almak için bir pazar yeri seçin"
+        }
     },
     "shots": {
         "title": "Çoklu Açı Çekimleri",

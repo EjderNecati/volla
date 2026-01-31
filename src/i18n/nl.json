@@ -242,7 +242,44 @@
         "generatingRealLife": "Real Life Genereren...",
         "assets": "assets",
         "uploadForAnalysis": "Upload een afbeelding voor SEO-analyse",
-        "addApiKeySettings": "Voeg Gemini API-sleutel toe in Instellingen"
+        "addApiKeySettings": "Voeg Gemini API-sleutel toe in Instellingen",
+        "uploadFirst": "Upload een afbeelding om te beginnen",
+        "generateToSeeSEO": "Genereer afbeeldingen om SEO-aanbevelingen te zien"
+    },
+    "studioRedesign": {
+        "photoType": {
+            "title": "Fototype",
+            "realLife": "Real Life",
+            "shots": "Opnames",
+            "studio": "Studio"
+        },
+        "outputCount": {
+            "title": "Aantal Outputs",
+            "images": "afbeeldingen"
+        },
+        "aspectRatio": {
+            "title": "Beeldverhouding",
+            "default": "Standaard (1:1)"
+        },
+        "customPrompt": {
+            "title": "Aangepaste Instructies",
+            "placeholder": "Voeg extra instructies toe voor AI..."
+        },
+        "generate": {
+            "button": "Genereren",
+            "credits": "{{count}} credits"
+        },
+        "marketplace": {
+            "optional": "Optioneel - Selecteer voor SEO",
+            "none": "Geen Marketplace"
+        },
+        "canvas": {
+            "shotsButton": "Opnames Genereren",
+            "shotsCredits": "6 credits"
+        },
+        "seoPanel": {
+            "noMarketplace": "Selecteer een marketplace voor SEO-aanbevelingen"
+        }
     },
     "shots": {
         "title": "Multi-Hoek Shots",
