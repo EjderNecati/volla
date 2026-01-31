@@ -234,17 +234,32 @@ def generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio='1:1')
     if result:
         return result
 
-    # METHOD 2: Fallback to genai.Client with API key
-    if not api_key:
-        print("      ⚠️ No API key provided for genai.Client fallback")
-        return None
-
-    print(f"      🔄 Trying genai.Client with API key...")
+    # METHOD 2: Fallback to genai.Client with Vertex AI (not API key)
+    print(f"      🔄 Trying genai.Client with Vertex AI...")
 
     try:
         from google import genai
         from google.genai import types
-        client = genai.Client(api_key=api_key)
+
+        # Create Vertex AI client (not API key client)
+        if GOOGLE_CREDENTIALS_JSON:
+            import tempfile
+            import os as temp_os
+
+            # Write credentials to temp file for SDK
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                f.write(GOOGLE_CREDENTIALS_JSON)
+                temp_creds_path = f.name
+
+            # Set env var for SDK
+            temp_os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
+
+            client = genai.Client(vertexai=True, project=project_id, location='us-central1')
+            print(f"      ✅ Created Vertex AI client for project: {project_id}")
+        else:
+            print("      ⚠️ No credentials for Vertex AI client")
+            return None
+
     except Exception as e:
         print(f"      ⚠️ Failed to create genai client: {e}")
         return None
