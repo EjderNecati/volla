@@ -235,6 +235,8 @@
     },
     "studio": {
         "title": "AI Stüdyo",
+        "studioLabel": "Stüdyo",
+        "refreshSEO": "SEO Yenile (1 kredi)",
         "normal": "Normal",
         "handsfree": "Handsfree",
         "studioImage": "AI Stüdyo Görseli",

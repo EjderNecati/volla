@@ -138,9 +138,10 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
-            # Add aspect ratio if supported (some models may not support it)
-            if aspect_ratio and aspect_ratio != '1:1':
+            # Add aspect ratio to generation config
+            if aspect_ratio:
                 gen_config["aspectRatio"] = aspect_ratio
+                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{

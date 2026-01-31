@@ -452,10 +452,14 @@ Generate a professional e-commerce product photo now."""
             print(f"      🔄 Trying {model_name}...")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
-            # Build generation config
+            # Build generation config with aspect ratio
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
+            # Add aspect ratio to generation config
+            if aspect_ratio:
+                gen_config["aspectRatio"] = aspect_ratio
+                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{

@@ -243,6 +243,8 @@
     },
     "studio": {
         "title": "AI Studio",
+        "studioLabel": "Studio",
+        "refreshSEO": "Refresh SEO (1 credit)",
         "normal": "Normal",
         "handsfree": "Handsfree",
         "studioImage": "AI Studio Image",

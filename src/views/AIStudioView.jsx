@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Camera, Sparkles, Users, RotateCcw, Upload, ArrowLeft,
     Store, ShoppingBag, ShoppingCart, Type, Image as ImageIcon,
-    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap
+    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw
 } from 'lucide-react';
 import {
     callGeminiAPI,
@@ -112,6 +112,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     const [studioLoading, setStudioLoading] = useState(false);
     const [anglesLoading, setAnglesLoading] = useState(false);
     const [realLifeLoading, setRealLifeLoading] = useState(false);
+
+    // SEO analysis state - track if already analyzed for this session
+    const [seoAnalyzedForMarketplace, setSeoAnalyzedForMarketplace] = useState(null); // 'etsy' | 'amazon' | 'shopify' | null
 
     // API Keys
     const [apiKey, setApiKey] = useState('');
@@ -500,19 +503,21 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                 }
             }
 
-            // Run SEO analysis if marketplace is selected (only after generation)
-            if (marketplace && activeAsset) {
+            // Run SEO analysis ONLY if marketplace is selected AND not already analyzed for this marketplace
+            if (marketplace && activeAsset && seoAnalyzedForMarketplace !== marketplace) {
                 try {
-                    console.log('🔍 Running SEO analysis for:', marketplace);
+                    console.log('🔍 Running SEO analysis for:', marketplace, '(first time)');
                     setLoading(true);
                     const seoResult = await callGeminiAPI(activeAsset.url, marketplace, '');
                     setResults(seoResult);
                     setProductInfo(seoResult._productInfo);
+                    setSeoAnalyzedForMarketplace(marketplace); // Mark as analyzed
                     console.log('✅ SEO analysis complete');
                 } catch (seoErr) {
                     console.warn('⚠️ SEO analysis failed:', seoErr.message);
-                    // Don't show error for SEO failure, generation was still successful
                 }
+            } else if (marketplace && seoAnalyzedForMarketplace === marketplace) {
+                console.log('ℹ️ Skipping SEO - already analyzed for', marketplace);
             }
         } catch (err) {
             console.error('Generation failed:', err);
@@ -521,6 +526,32 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             setStudioLoading(false);
             setAnglesLoading(false);
             setRealLifeLoading(false);
+            setLoading(false);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // REFRESH SEO ANALYSIS (costs 1 credit)
+    // ═══════════════════════════════════════════════════════════════════
+    const handleRefreshSEO = async () => {
+        const activeAsset = sessionAssets.find(a => a.id === activeAssetId) || sessionAssets[0];
+        if (!activeAsset || !marketplace) return;
+
+        try {
+            console.log('🔄 Refreshing SEO analysis for:', marketplace);
+            setLoading(true);
+            setResults(null); // Clear current results
+            setSeoAnalyzedForMarketplace(null); // Reset analyzed state
+
+            const seoResult = await callGeminiAPI(activeAsset.url, marketplace, '');
+            setResults(seoResult);
+            setProductInfo(seoResult._productInfo);
+            setSeoAnalyzedForMarketplace(marketplace);
+            console.log('✅ SEO refresh complete');
+        } catch (seoErr) {
+            console.warn('⚠️ SEO refresh failed:', seoErr.message);
+            setError('SEO analysis failed: ' + seoErr.message);
+        } finally {
             setLoading(false);
         }
     };
@@ -1058,21 +1089,20 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             {renderDragonAnimation()}
 
             {/* Header */}
-            <header className="px-6 py-4 border-b border-[#E8E7E4] bg-white">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* Back Button - Always visible */}
+            <header className="px-6 py-3 border-b border-[#E8E7E4] bg-white">
+                <div className="flex items-center justify-between">
+                    {/* Left: Back + Mode Switch */}
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => onNavigate?.('home')}
                             className="p-2 hover:bg-[#F5F4F1] rounded-lg transition-colors"
                             title={t('common.back') || 'Back'}
                         >
-                            <ArrowLeft size={20} className="text-[#5C5C5C]" />
+                            <ArrowLeft size={18} className="text-[#5C5C5C]" />
                         </button>
-                        <h1 className="text-xl font-bold text-[#1A1A1A]">{t('studio.title')}</h1>
 
                         {/* Mode Switch */}
-                        <div className="ml-4 inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg p-0.5">
+                        <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg p-0.5">
                             <button
                                 onClick={() => setIsHandsfreeMode(false)}
                                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${!isHandsfreeMode
@@ -1095,12 +1125,16 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         </div>
                     </div>
 
-                    {/* Session Asset Count */}
-                    {!isHandsfreeMode && sessionAssets.length > 0 && (
-                        <span className="text-sm text-[#5C5C5C]">
-                            {sessionAssets.length} {t('studio.assets')}
+                    {/* Center: Volla Studio Logo */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1.5">
+                        <span className="text-xl font-bold text-[#E06847]">Volla</span>
+                        <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-sm font-semibold rounded-md">
+                            {t('studio.studioLabel') || 'Studio'}
                         </span>
-                    )}
+                    </div>
+
+                    {/* Right: Empty space for balance */}
+                    <div className="w-[120px]"></div>
                 </div>
             </header>
 
@@ -1273,10 +1307,23 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     {/* ═══════════════════════════════════════════════════════════════════ */}
                     <aside className="w-[20%] min-w-[280px] max-w-[320px] bg-white border-l border-[#E8E7E4] overflow-y-auto">
                         <div className="p-4">
-                            <h3 className="text-sm font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                                <Search size={16} />
-                                {t('results.seoResults') || 'SEO Results'}
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2">
+                                    <Search size={16} />
+                                    {t('results.seoResults') || 'SEO Results'}
+                                </h3>
+                                {/* Refresh SEO Button */}
+                                {results && marketplace && (
+                                    <button
+                                        onClick={handleRefreshSEO}
+                                        disabled={loading}
+                                        className="p-1.5 hover:bg-[#F5F4F1] rounded-lg transition-colors text-[#5C5C5C] hover:text-[#E06847] disabled:opacity-50"
+                                        title={t('studio.refreshSEO') || 'Refresh SEO (1 credit)'}
+                                    >
+                                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                                    </button>
+                                )}
+                            </div>
 
                             {marketplace ? (
                                 results ? (
