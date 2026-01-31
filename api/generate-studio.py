@@ -404,62 +404,76 @@ def generate_with_gemini_fallback(image_data):
     return None
 
 
-def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
-    """Generate studio image using Imagen 3 via OAuth2 REST API"""
-    
+def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
+    """Generate studio image(s) using Imagen 3 via OAuth2 REST API"""
+
     token = get_fresh_token()
     if not token or not project_id:
         print("   ⚠️ No OAuth2 token or project_id available")
         return None
-    
+
     prompt_to_use = custom_prompt or BGSWAP_PROMPT
-    
+
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
     else:
         base64_clean = image_data
-    
+
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
-    
+
     url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-    
+
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    
+
+    # Validate output_count (Imagen 3 supports 1-4)
+    sample_count = max(1, min(4, int(output_count)))
+
     payload = {
         "instances": [{
             "prompt": prompt_to_use
         }],
         "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": "1:1",
+            "sampleCount": sample_count,
+            "aspectRatio": aspect_ratio,
             "personGeneration": "allow_adult",
             "safetyFilterLevel": "block_only_high"
         }
     }
-    
+
     try:
-        print(f"   🎨 Calling Imagen 3 via REST API...")
+        print(f"   🎨 Calling Imagen 3 via REST API (count={sample_count}, ratio={aspect_ratio})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
-        
+
         if response.status_code == 200:
             result = response.json()
             predictions = result.get("predictions", [])
-            if predictions and predictions[0].get("bytesBase64Encoded"):
-                img_b64 = predictions[0]["bytesBase64Encoded"]
-                print(f"   ✅ Imagen 3 success!")
-                return f"data:image/png;base64,{img_b64}"
-        
+
+            if predictions:
+                # Return array of images
+                images = []
+                for pred in predictions:
+                    if pred.get("bytesBase64Encoded"):
+                        img_b64 = pred["bytesBase64Encoded"]
+                        images.append(f"data:image/png;base64,{img_b64}")
+
+                if images:
+                    print(f"   ✅ Imagen 3 success! Generated {len(images)} images")
+                    # Return single image for backward compatibility if only 1 requested
+                    if sample_count == 1:
+                        return images[0]
+                    return images
+
         print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
-        
+
     except Exception as e:
         print(f"   ❌ Imagen 3 REST API error: {e}")
-    
+
     return None
 
 
@@ -486,16 +500,25 @@ class handler(BaseHTTPRequestHandler):
             category = data.get('category', 'Other')
             image_data = data.get('image', '')
             request_vertex_key = data.get('vertex_api_key', '')
-            
+
             camera_angle = data.get('camera_angle', 'FRONT')
             product_placement = data.get('product_placement', 'ON_SURFACE')
             is_hanging_product = data.get('is_hanging_product', False)
             product_type = data.get('product_type', '')
-            
+
+            # NEW: Configurable output count and aspect ratio
+            output_count = data.get('output_count', 1)  # 1-4, default 1
+            aspect_ratio = data.get('aspect_ratio', '1:1')  # Default 1:1
+            custom_prompt_extra = data.get('custom_prompt', '')  # Optional extra prompt
+
+            # Validate output_count
+            output_count = max(1, min(4, int(output_count)))
+
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
-            
+
             print(f"📦 Category: {category}")
             print(f"🖼️ Image: {len(image_data)} chars")
+            print(f"📊 Output count: {output_count}, Aspect ratio: {aspect_ratio}")
             
             # Analyze product for text/logo preservation
             product_analysis = None
@@ -518,20 +541,32 @@ class handler(BaseHTTPRequestHandler):
 
             # Generate dynamic prompt
             dynamic_prompt = get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis)
+
+            # Add custom prompt if provided
+            if custom_prompt_extra:
+                dynamic_prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt_extra}"
+
             print(f"📝 Using angle-aware prompt for: {camera_angle}")
-            
+
             result = None
+            results_array = []
             method_used = 'none'
             error_message = None
-            
+
             if image_data and active_vertex_key:
                 # Try Imagen 3 first
                 print("🎨 Trying Imagen 3...")
                 try:
-                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt)
+                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
                     if result:
                         method_used = 'Imagen 3'
-                        print("✅ Imagen 3 Success!")
+                        # Handle array or single result
+                        if isinstance(result, list):
+                            results_array = result
+                            result = result[0] if result else None
+                        else:
+                            results_array = [result] if result else []
+                        print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
                 except Exception as e:
                         error_message = str(e)
                         print(f"⚠️ Imagen 3 error: {error_message[:100]}")
@@ -543,30 +578,34 @@ class handler(BaseHTTPRequestHandler):
                         result = generate_with_gemini_fallback(image_data)
                         if result:
                             method_used = 'Gemini Fallback'
+                            results_array = [result]
                             print("✅ Gemini Fallback Success!")
                     except Exception as e:
                         error_message = str(e)
                         print(f"⚠️ Gemini fallback error: {error_message[:100]}")
             else:
                 error_message = "No image provided"
-            
+
             # Final fallback
             if not result:
                 result = FALLBACK_URLS.get(category, FALLBACK_URLS['Other'])
+                results_array = [result]
                 method_used = 'Fallback URL'
-            
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
+
             response = {
                 'success': method_used in ['Imagen 3', 'Gemini Fallback'],
                 'generated_image': result,
+                'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,
                 'background_url': FALLBACK_URLS.get(category, FALLBACK_URLS['Other']),
                 'category': category,
                 'method_used': method_used,
+                'output_count': len(results_array),
                 'error_message': error_message
             }
             self.wfile.write(json.dumps(response).encode())

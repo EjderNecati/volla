@@ -57,13 +57,28 @@ export const PLANS = {
     }
 };
 
-// Credit costs per feature
+// Credit costs per feature (NEW: per-photo pricing)
 export const CREDIT_COSTS = {
-    seo_analysis: 1,
+    // NEW: Per-unit costs
+    photo_generation: 2,      // 2 credits per photo generated
+    seo_analysis: 1,          // 1 credit for SEO (when marketplace selected)
+    canvas_shots: 6,          // Fixed 6 credits for Shots button on canvas (3 outputs)
+
+    // Legacy costs (for backward compatibility)
     seo_content: 2,
-    studio_shot: 5,
-    real_life: 5,
-    handsfree: 8
+    studio_shot: 5,           // Deprecated - use photo_generation * count
+    real_life: 5,             // Deprecated - use photo_generation * count
+    handsfree: 8              // Keep existing handsfree cost
+};
+
+// NEW: Calculate generation cost dynamically
+export const calculateGenerationCost = (outputCount, hasMarketplace, isCanvasShots = false) => {
+    if (isCanvasShots) {
+        return CREDIT_COSTS.canvas_shots; // Fixed 6 credits
+    }
+    const photoCost = outputCount * CREDIT_COSTS.photo_generation;
+    const seoCost = hasMarketplace ? CREDIT_COSTS.seo_analysis : 0;
+    return photoCost + seoCost;
 };
 
 // Get credit cost for a feature
@@ -71,13 +86,25 @@ export const getCreditCost = (feature) => {
     return CREDIT_COSTS[feature] || 0;
 };
 
-// Check if user can afford a feature
+// NEW: Check if user can afford generation
+export const canAffordGeneration = (currentCredits, outputCount, hasMarketplace, isCanvasShots = false) => {
+    const cost = calculateGenerationCost(outputCount, hasMarketplace, isCanvasShots);
+    return currentCredits >= cost;
+};
+
+// Check if user can afford a feature (legacy)
 export const canAfford = (currentCredits, feature) => {
     const cost = getCreditCost(feature);
     return currentCredits >= cost;
 };
 
-// Deduct credits
+// NEW: Deduct generation credits
+export const deductGenerationCredits = (currentCredits, outputCount, hasMarketplace, isCanvasShots = false) => {
+    const cost = calculateGenerationCost(outputCount, hasMarketplace, isCanvasShots);
+    return Math.max(0, currentCredits - cost);
+};
+
+// Deduct credits (legacy)
 export const deductCredits = (currentCredits, feature) => {
     const cost = getCreditCost(feature);
     return Math.max(0, currentCredits - cost);

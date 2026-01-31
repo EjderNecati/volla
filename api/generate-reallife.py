@@ -113,7 +113,7 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def call_gemini_image_generation(prompt, image_bytes):
+def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
     """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
     if not GOOGLE_API_KEY:
         print("      ⚠️ GOOGLE_API_KEY not set")
@@ -134,6 +134,14 @@ def call_gemini_image_generation(prompt, image_bytes):
             print(f"      🎨 Trying {model_name}...")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
+            # Build generation config with aspect ratio
+            gen_config = {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+            # Add aspect ratio if supported (some models may not support it)
+            if aspect_ratio and aspect_ratio != '1:1':
+                gen_config["aspectRatio"] = aspect_ratio
+
             payload = {
                 "contents": [{
                     "parts": [
@@ -141,9 +149,7 @@ def call_gemini_image_generation(prompt, image_bytes):
                         {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
                     ]
                 }],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"]
-                }
+                "generationConfig": gen_config
             }
 
             response = requests.post(url, headers=headers, json=payload, timeout=60)
@@ -441,10 +447,13 @@ class handler(BaseHTTPRequestHandler):
 
         results = {
             'success': False,
-            'shot1': None,
+            'shots': [],  # Dynamic array instead of fixed shot1/shot2/shot3
+            'shot1': None,  # Keep for backward compatibility
             'shot2': None,
             'shot3': None,
+            'shot4': None,
             'analysis': None,
+            'output_count': 0,
             'error': None
         }
 
@@ -455,6 +464,16 @@ class handler(BaseHTTPRequestHandler):
 
             source_image = data.get('source_image', '')
             product_info = data.get('product_info', {})
+
+            # NEW: Configurable output count and aspect ratio
+            output_count = data.get('output_count', 3)  # 1-4, default 3
+            aspect_ratio = data.get('aspect_ratio', '1:1')  # Default 1:1
+            custom_prompt = data.get('custom_prompt', '')  # Optional extra prompt
+
+            # Validate output_count
+            output_count = max(1, min(4, int(output_count)))
+
+            print(f"   📊 Output count: {output_count}, Aspect ratio: {aspect_ratio}")
 
             source_image = source_image or ""
 
@@ -516,38 +535,50 @@ class handler(BaseHTTPRequestHandler):
 
             results['analysis'] = product_analysis
 
-            # Step 2: Generate 3 Real Life Shots using GEMINI (can see the product!)
-            print("📷 Step 2: Generating Real Life Shots (Gemini - can see product)...")
+            # Step 2: Generate Real Life Shots using GEMINI (can see the product!)
+            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Gemini - can see product)...")
 
-            for i in range(3):
+            generated_count = 0
+            for i in range(output_count):
                 shot_key = f'shot{i+1}'
                 print(f"   📷 Generating {shot_key}...")
 
                 # Build preservation-focused prompt
                 prompt = build_reallife_prompt(product_analysis, None, i)
 
+                # Add custom prompt if provided
+                if custom_prompt:
+                    prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
+
                 # Use Gemini as PRIMARY - it can SEE the reference image!
                 print(f"      🔍 Using Gemini (can see reference image)...")
 
                 for attempt in range(2):
                     print(f"      🎨 Attempt {attempt+1}/2...")
-                    shot_image = call_gemini_image_generation(prompt, image_bytes)
+                    shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
                     if shot_image:
                         results[shot_key] = shot_image
+                        results['shots'].append({
+                            'image': shot_image,
+                            'label': f'Lifestyle {i+1}'
+                        })
+                        generated_count += 1
                         print(f"   ✅ {shot_key} complete")
                         break
 
                     if attempt < 1:
                         time.sleep(1)
 
-                if not results[shot_key]:
+                if not results.get(shot_key):
                     print(f"   ⚠️ {shot_key} failed")
 
+            results['output_count'] = generated_count
+
             # Check success
-            if results['shot1'] or results['shot2'] or results['shot3']:
+            if generated_count > 0:
                 results['success'] = True
-                print("✅ Real Life generation complete!")
+                print(f"✅ Real Life generation complete! ({generated_count}/{output_count} shots)")
             else:
                 results['error'] = 'All shots failed'
                 print("❌ All shots failed")

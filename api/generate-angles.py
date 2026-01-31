@@ -120,7 +120,7 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def call_gemini_image_generation(prompt, image_bytes):
+def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
     """Call Gemini for image generation via REST API (can see reference image!)"""
     if not GOOGLE_API_KEY:
         print("      ⚠️ GOOGLE_API_KEY not set")
@@ -141,6 +141,13 @@ def call_gemini_image_generation(prompt, image_bytes):
             print(f"      🎨 Trying {model_name}...")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
+            # Build generation config with aspect ratio
+            gen_config = {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+            if aspect_ratio and aspect_ratio != '1:1':
+                gen_config["aspectRatio"] = aspect_ratio
+
             payload = {
                 "contents": [{
                     "parts": [
@@ -148,9 +155,7 @@ def call_gemini_image_generation(prompt, image_bytes):
                         {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
                     ]
                 }],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"]
-                }
+                "generationConfig": gen_config
             }
 
             response = requests.post(url, headers=headers, json=payload, timeout=90)
@@ -309,7 +314,7 @@ def analyze_scene(image_bytes):
     }
 
 
-def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None):
+def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None, aspect_ratio='1:1'):
     """Generate a single angle shot using Gemini (can see reference image!)"""
 
     # Special staging for hanging products
@@ -382,7 +387,7 @@ Generate the image now."""
 
     for attempt in range(3):
         print(f"      🎨 Attempt {attempt+1}/3...")
-        result = call_gemini_image_generation(prompt, image_bytes)
+        result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
         if result:
             print(f"      ✅ Angle shot success!")
@@ -422,6 +427,8 @@ class handler(BaseHTTPRequestHandler):
             request_vertex_key = data.get('vertex_api_key', '')
             # Source context from frontend (STUDIO or LIFE)
             source_context = data.get('source_context', 'STUDIO')
+            # NEW: Aspect ratio support
+            aspect_ratio = data.get('aspect_ratio', '1:1')
 
             # Use request key or fall back to env var
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
@@ -429,6 +436,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"🖼️ Image: {len(source_image)} chars")
             print(f"📦 Product: {product_desc[:50]}...")
             print(f"🎬 Source Context: {source_context}")
+            print(f"📐 Aspect Ratio: {aspect_ratio}")
             print(f"🔑 API Key: {'from request' if request_vertex_key else 'from env'}")
 
             results = {
@@ -527,7 +535,8 @@ class handler(BaseHTTPRequestHandler):
                     api_key=active_vertex_key,
                     is_hanging_product=is_hanging_product,
                     source_context=source_context,
-                    scene_info=scene_info
+                    scene_info=scene_info,
+                    aspect_ratio=aspect_ratio
                 )
 
                 if shot_image:

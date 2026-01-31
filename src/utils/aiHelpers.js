@@ -801,10 +801,11 @@ export const SCENE_MAPPINGS = {
 };
 
 // Generate AI Studio Image (Backend Integration with Gemini)
-export const generateStudioImage = async (category, imageBase64 = null, productInfo = {}) => {
+export const generateStudioImage = async (category, imageBase64 = null, productInfo = {}, outputCount = 1, aspectRatio = '1:1', customPrompt = '') => {
   log(`✨ Smart AI Studio: Generating scene for ${category}...`);
   log(`📐 Camera angle: ${productInfo.camera_angle || 'FRONT'}`);
   log(`📍 Placement: ${productInfo.product_placement || 'ON_SURFACE'}`);
+  log(`📊 Output Count: ${outputCount}, Aspect Ratio: ${aspectRatio}`);
 
   const sceneConfig = SCENE_MAPPINGS[category] || SCENE_MAPPINGS['Other'];
   log(`🎨 Scene: "${sceneConfig.prompt}"`);
@@ -836,7 +837,11 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
         camera_angle: productInfo.camera_angle || 'FRONT',
         product_placement: productInfo.product_placement || 'ON_SURFACE',
         is_hanging_product: productInfo.is_hanging_product || false,
-        product_type: productInfo.product_type || ''
+        product_type: productInfo.product_type || '',
+        // NEW: Output configuration
+        output_count: outputCount,
+        aspect_ratio: aspectRatio,
+        custom_prompt: customPrompt
       })
     });
 
@@ -852,19 +857,22 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
       warn('⚠️ Backend warning:', data.error_message);
     }
 
-    // Check for generated image and background
+    // Check for generated image(s) and background
     const imageUrl = data.generated_image || data.image_url;
+    const imagesArray = data.generated_images || (imageUrl ? [imageUrl] : []);
     const backgroundUrl = data.background_url;
 
-    if (imageUrl || backgroundUrl) {
-      log('✅ Studio data received from backend');
+    if (imageUrl || backgroundUrl || imagesArray.length > 0) {
+      log(`✅ Studio data received from backend (${imagesArray.length} images)`);
       log(`   Method: ${data.method_used}`);
       // Return object with both image and background for composite
       return {
         image: imageUrl,
+        images: imagesArray,  // NEW: Array of generated images
         background: backgroundUrl,
         method: data.method_used,
-        supportsComposite: data.supports_composite
+        supportsComposite: data.supports_composite,
+        output_count: data.output_count || imagesArray.length
       };
     } else {
       warn('⚠️ No image in backend response, using fallback');
@@ -880,9 +888,11 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
     await new Promise(resolve => setTimeout(resolve, 300));
     return {
       image: null,
+      images: [],
       background: `https://source.unsplash.com/800x800/?${sceneConfig.keywords}`,
       method: 'Fallback',
-      supportsComposite: true
+      supportsComposite: true,
+      output_count: 0
     };
   }
 };
@@ -892,9 +902,10 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
 // Analyzes input angle, generates OPPOSITE angles
 // =====================================================
 
-export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO') => {
+export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO', aspectRatio = '1:1') => {
   log('🎬 Multi-Angle Generator v3.0 (Dynamic Detection): Starting...');
   log(`   Source Context: ${sourceContext}`);
+  log(`   Aspect Ratio: ${aspectRatio}`);
 
   if (!sourceImage) {
     throw new Error('No source image provided');
@@ -918,8 +929,9 @@ export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         source_image: compressedImage,
-        source_context: sourceContext, // NEW: 'STUDIO' or 'LIFE' - tells backend to preserve scene
-        vertex_api_key: vertexApiKey // Send Vertex API key for Imagen 3
+        source_context: sourceContext, // 'STUDIO' or 'LIFE' - tells backend to preserve scene
+        vertex_api_key: vertexApiKey, // Send Vertex API key for Imagen 3
+        aspect_ratio: aspectRatio // NEW: Aspect ratio support
       })
     });
 
@@ -973,10 +985,11 @@ export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO
 // Generates product photos in real-world usage contexts
 // =====================================================
 
-export const generateRealLifePhotos = async (sourceImage, productInfo = {}) => {
+export const generateRealLifePhotos = async (sourceImage, productInfo = {}, outputCount = 3, aspectRatio = '1:1', customPrompt = '') => {
   log('🌟 Real Life Photos Generator: Starting...');
   log(`   Product: ${productInfo.product_type || 'unknown'}`);
   log(`   Category: ${productInfo.category || 'unknown'}`);
+  log(`   Output Count: ${outputCount}, Aspect Ratio: ${aspectRatio}`);
 
   if (!sourceImage) {
     throw new Error('No source image provided');
@@ -1002,7 +1015,10 @@ export const generateRealLifePhotos = async (sourceImage, productInfo = {}) => {
       body: JSON.stringify({
         source_image: compressedImage,
         product_info: productInfo,
-        vertex_api_key: vertexApiKey
+        vertex_api_key: vertexApiKey,
+        output_count: outputCount,
+        aspect_ratio: aspectRatio,
+        custom_prompt: customPrompt
       })
     });
 
@@ -1019,21 +1035,27 @@ export const generateRealLifePhotos = async (sourceImage, productInfo = {}) => {
     }
 
     if (data.success) {
-      log('✅ Real Life generation complete!');
+      log(`✅ Real Life generation complete! (${data.output_count || outputCount} shots)`);
       log(`   📦 Analysis: ${data.analysis?.product_type || 'N/A'}`);
 
-      return {
+      // Build dynamic response based on actual output count
+      const result = {
         success: true,
-        shot1: data.shot1,
-        shot2: data.shot2,
-        shot3: data.shot3,
+        shots: data.shots || [],  // NEW: Array of shots
         analysis: data.analysis,
-        labels: {
-          shot1: data.analysis?.lifestyle_contexts?.[0]?.scene?.substring(0, 30) || 'Lifestyle 1',
-          shot2: data.analysis?.lifestyle_contexts?.[1]?.scene?.substring(0, 30) || 'Lifestyle 2',
-          shot3: data.analysis?.lifestyle_contexts?.[2]?.scene?.substring(0, 30) || 'Lifestyle 3'
-        }
+        output_count: data.output_count || 0,
+        labels: {}
       };
+
+      // Add legacy shot1/shot2/shot3/shot4 for backward compatibility
+      for (let i = 1; i <= 4; i++) {
+        if (data[`shot${i}`]) {
+          result[`shot${i}`] = data[`shot${i}`];
+          result.labels[`shot${i}`] = data.analysis?.lifestyle_contexts?.[i-1]?.scene?.substring(0, 30) || `Lifestyle ${i}`;
+        }
+      }
+
+      return result;
     } else {
       throw new Error('Generation failed');
     }
