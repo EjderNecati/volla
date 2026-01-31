@@ -196,16 +196,19 @@ PHYSICS_CLASSIFICATION_PROMPT = """You are an Expert Product Photographer.
 Analyze this product and classify how to photograph it.
 
 CATEGORIES:
-- APPAREL_HANGER: T-shirts, shirts, jackets, dresses (show on HANGER, never on mannequin)
-- APPAREL_FLAT: Pants, shorts, folded items (show as flat lay)
+- APPAREL_MANNEQUIN: Clothing displayed ON a mannequin (keep on mannequin!)
+- APPAREL_HANGER: Clothing on hanger (keep on hanger)
+- APPAREL_FLAT: Folded/flat lay clothing (keep flat)
 - WALL_MOUNTED: Wall-mounted items (signs, shelves, frames)
 - SUSPENDED: Large hanging items (chandeliers, hanging plants)
 - HANGING_ORNAMENT: Items with hooks/loops (ornaments, keychains, pendants)
 - SMALL_IRREGULAR: Small items (jewelry, controllers, gadgets)
 - STANDARD_GROUND: Standing items (bottles, furniture, boxes, appliances)
 
-IMPORTANT:
-- ALL clothing = APPAREL_HANGER or APPAREL_FLAT (NEVER on mannequin/person)
+IMPORTANT RULES:
+- If clothing is ON A MANNEQUIN in the image = APPAREL_MANNEQUIN (keep it on mannequin!)
+- If clothing is ON A HANGER = APPAREL_HANGER
+- If clothing is FLAT/FOLDED = APPAREL_FLAT
 - Items with hanging loops = HANGING_ORNAMENT
 
 Respond ONLY with JSON:
@@ -213,6 +216,7 @@ Respond ONLY with JSON:
     "category": "CATEGORY_NAME",
     "detected_object": "Detailed description: color, material, type, key features",
     "has_hanging_loop": true/false,
+    "is_on_mannequin": true/false,
     "colors": ["main colors"],
     "material": "primary material"
 }"""
@@ -222,13 +226,17 @@ Respond ONLY with JSON:
 # ===============================================
 
 STAGING_MAP = {
+    "APPAREL_MANNEQUIN": {
+        "angles": ["front view on mannequin", "side view on mannequin", "three-quarter view on mannequin"],
+        "staging": "Clothing displayed on the SAME mannequin, keep the mannequin visible, professional fashion photography"
+    },
     "APPAREL_HANGER": {
         "angles": ["front view on hanger", "side view on hanger", "back view on hanger"],
-        "staging": "Clothing hanging on wooden hanger, natural drape, NO mannequin, NO person"
+        "staging": "Clothing hanging on wooden hanger, natural drape"
     },
     "APPAREL_FLAT": {
         "angles": ["top-down flat lay", "slightly angled overhead", "detail closeup"],
-        "staging": "Flat lay on clean surface, neatly arranged, NO mannequin"
+        "staging": "Flat lay on clean surface, neatly arranged"
     },
     "JEWELRY_STAND": {
         "angles": ["front view on display stand", "side view", "three-quarter view"],
@@ -355,8 +363,9 @@ BACKGROUND ELEMENTS: {key_elements}
 1. The product must be IDENTICAL - same colors, shape, materials, details
 2. DO NOT change ANYTHING about the product
 3. DO NOT add logos, text, or branding
-4. If it's clothing, show it the same way (flat/folded/placed) - NOT on a person/mannequin
-5. Only change the CAMERA ANGLE to: {angle_description}
+4. If clothing is ON A MANNEQUIN, KEEP IT ON THE MANNEQUIN - do not remove it
+5. Preserve the EXACT SAME display method (mannequin/hanger/flat) as in the original
+6. Only change the CAMERA ANGLE to: {angle_description}
 {hanging_instruction}
 
 Generate the image now."""
@@ -374,8 +383,9 @@ BACKGROUND: Clean beige/white studio gradient
 1. The product must be IDENTICAL - same colors, shape, materials, details
 2. DO NOT change ANYTHING about the product
 3. DO NOT add logos, text, or branding
-4. If it's clothing, show it on hanger or flat lay - NOT on a person/mannequin
-5. Only change the CAMERA ANGLE to: {angle_description}
+4. If clothing is ON A MANNEQUIN, KEEP IT ON THE MANNEQUIN - do not remove it
+5. Preserve the EXACT SAME display method (mannequin/hanger/flat) as in the original
+6. Only change the CAMERA ANGLE to: {angle_description}
 {hanging_instruction}
 
 PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh shadows.

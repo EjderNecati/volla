@@ -578,6 +578,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // RENDER: Platform Selector (grid layout matching other selectors)
     // ═══════════════════════════════════════════════════════════════════
     const renderPlatformSelector = () => {
+        // Lock marketplace selection after SEO is analyzed
+        const isLocked = seoAnalyzedForMarketplace !== null;
+
         const marketplaces = [
             { id: null, label: t('marketplace.none') || 'None', icon: null, colors: { primary: '#E8E7E4', text: '#5C5C5C' } },
             ...Object.entries(MARKETPLACE_COLORS).map(([key, colors]) => ({
@@ -593,17 +596,23 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                 {marketplaces.map(mp => {
                     const isActive = marketplace === mp.id;
                     const Icon = mp.icon;
+                    // Disable if locked and not the active marketplace
+                    const isDisabled = isLocked && !isActive;
                     return (
                         <button
                             key={mp.id || 'none'}
                             onClick={() => {
+                                if (isDisabled) return;
                                 setLocalMarketplace(mp.id);
                                 if (onMarketplaceSelect) onMarketplaceSelect(mp.id);
                             }}
+                            disabled={isDisabled}
                             className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all aspect-square ${
                                 isActive
                                     ? mp.id ? '' : 'bg-[#5C5C5C] text-white border-[#5C5C5C]'
-                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
+                                    : isDisabled
+                                        ? 'bg-[#F5F4F1] text-[#C0C0C0] border-[#E8E7E4] cursor-not-allowed opacity-50'
+                                        : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
                             }`}
                             style={isActive && mp.id ? {
                                 backgroundColor: mp.colors.primary,
@@ -1022,11 +1031,16 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 setProductInfo(null);
                                 setError(null);
                                 setCurrentProjectId(null);
+                                // Reset SEO state to allow new analysis
+                                setSeoAnalyzedForMarketplace(null);
+                                // Reset marketplace selection
+                                setLocalMarketplace(null);
+                                if (onMarketplaceSelect) onMarketplaceSelect(null);
                                 // Clear cached project/asset in parent (App.jsx)
                                 if (onClearLoaded) onClearLoaded();
                             }}
                             className="absolute top-4 left-4 p-2 bg-red-500 hover:bg-red-600 rounded-full shadow-lg transition-all hover:scale-105"
-                            title="Clear and upload new product"
+                            title=""
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1168,11 +1182,10 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                             {/* Upload Zone */}
                             {renderUploadZone()}
 
-                            {/* Marketplace Selector - Optional */}
+                            {/* Marketplace Selector */}
                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide flex items-center gap-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
                                     {t('marketplace.title') || 'Marketplace'}
-                                    <span className="text-[10px] font-normal text-[#8C8C8C] normal-case">({t('common.optional') || 'Optional'})</span>
                                 </label>
                                 {renderPlatformSelector()}
                             </div>
@@ -1328,16 +1341,21 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 {/* SEO Action Buttons */}
                                 {results && marketplace && (
                                     <div className="flex items-center gap-1">
-                                        {/* Refresh SEO Button */}
-                                        <button
-                                            onClick={handleRefreshSEO}
-                                            disabled={loading}
-                                            className="p-1.5 hover:bg-[#F5F4F1] rounded-lg transition-colors text-[#5C5C5C] hover:text-[#E06847] disabled:opacity-50"
-                                            title={t('studio.refreshSEO') || 'Refresh SEO (1 credit)'}
-                                        >
-                                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                                        </button>
-                                        {/* Clear SEO Button */}
+                                        {/* Refresh SEO Button with Custom Tooltip */}
+                                        <div className="relative group">
+                                            <button
+                                                onClick={handleRefreshSEO}
+                                                disabled={loading}
+                                                className="p-1.5 hover:bg-[#F5F4F1] rounded-lg transition-colors text-[#5C5C5C] hover:text-[#E06847] disabled:opacity-50"
+                                            >
+                                                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                                            </button>
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#1A1A1A] text-white text-[10px] font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                1 {t('credits.creditsUnit') || 'credit'}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1A1A1A]"></div>
+                                            </div>
+                                        </div>
+                                        {/* Clear SEO Button - No Tooltip */}
                                         <button
                                             onClick={() => {
                                                 setResults(null);
@@ -1346,7 +1364,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                                 console.log('🗑️ SEO cleared - platform can be re-selected');
                                             }}
                                             className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#5C5C5C] hover:text-red-500"
-                                            title={t('studio.clearSEO') || 'Clear SEO (allows platform change)'}
                                         >
                                             <X size={16} />
                                         </button>

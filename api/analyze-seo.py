@@ -100,15 +100,32 @@ class handler(BaseHTTPRequestHandler):
 Return a JSON object with:
 {
   "title": "Optimized Etsy title (max 140 chars, keyword-rich)",
-  "description": "Compelling 2-3 paragraph description",
-  "tags": ["tag1", "tag2", ... up to 13 tags],
+  "description": "DETAILED product description (minimum 300 words). Must include: opening hook about the product, detailed material/quality description, dimensions/sizing info if applicable, care instructions, why this product is special, perfect occasions to use/gift it, and a compelling call-to-action. NO EMOJIS. Professional tone but warm and inviting.",
+  "tags": ["tag1", "tag2", ... exactly 13 tags],
   "category": "Suggested category",
   "productType": "What type of product this is",
   "materials": ["material1", "material2"],
   "colors": ["color1", "color2"],
   "occasion": "Gift occasion if applicable",
-  "style": "Design style (modern, vintage, etc)"
+  "style": "Design style (modern, vintage, etc)",
+  "suggestedPrice": "$XX.XX - $YY.YY (realistic price range based on product quality and market)"
 }
+
+DESCRIPTION REQUIREMENTS:
+- Start with an engaging hook that captures attention
+- Describe the craftsmanship and quality in detail
+- Mention the materials used and their benefits
+- Include care/maintenance tips
+- Explain who would love this product and why
+- Add urgency or scarcity elements
+- End with a clear call-to-action
+- NO EMOJIS - keep it professional
+- Minimum 300 words, rich and detailed
+
+PRICE REQUIREMENTS:
+- Suggest a realistic price range based on the product quality
+- Consider materials, craftsmanship, and market positioning
+- Never suggest $0.00 - always provide a reasonable estimate
 
 Focus on SEO-optimized keywords that Etsy shoppers would search for."""
 
@@ -122,8 +139,13 @@ Return a JSON object with:
   "description": "Detailed product description",
   "searchTerms": "backend search terms (max 249 bytes)",
   "category": "Suggested Amazon category",
-  "productType": "What type of product this is"
+  "productType": "What type of product this is",
+  "suggestedPrice": "$XX.XX - $YY.YY (realistic price range)"
 }
+
+PRICE REQUIREMENTS:
+- Always suggest a realistic price range
+- Never suggest $0.00
 
 Focus on A9 algorithm optimization with relevant keywords."""
 
@@ -138,8 +160,13 @@ Return a JSON object with:
   "description": "Full product description with HTML formatting",
   "tags": ["tag1", "tag2", ...],
   "productType": "Product type",
-  "vendor": "Suggested vendor/brand name"
+  "vendor": "Suggested vendor/brand name",
+  "suggestedPrice": "$XX.XX - $YY.YY (realistic price range)"
 }
+
+PRICE REQUIREMENTS:
+- Always suggest a realistic price range
+- Never suggest $0.00
 
 Focus on Google SEO best practices."""
             
