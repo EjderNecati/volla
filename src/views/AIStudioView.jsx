@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Camera, Sparkles, Users, RotateCcw, Upload, ArrowLeft,
     Store, ShoppingBag, ShoppingCart, Type, Image as ImageIcon,
-    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw
+    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X
 } from 'lucide-react';
+import { useCredits } from '../contexts/CreditContext';
 import {
     callGeminiAPI,
     fileToBase64,
@@ -55,6 +56,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
 
     // i18n hook
     const { t } = useTranslation();
+
+    // Credits hook
+    const { credits, isAdmin } = useCredits();
 
     // ═══════════════════════════════════════════════════════════════════
     // DRAGON ANIMATION STATE - Only show if no marketplace pre-selected
@@ -1125,16 +1129,25 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         </div>
                     </div>
 
-                    {/* Center: Volla Studio Logo */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1.5">
-                        <span className="text-xl font-bold text-[#E06847]">Volla</span>
-                        <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-sm font-semibold rounded-md">
-                            {t('studio.studioLabel') || 'Studio'}
-                        </span>
-                    </div>
+                    {/* Right: Volla Studio Logo + Credit Display */}
+                    <div className="flex items-center gap-4">
+                        {/* Credit Balance */}
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
+                            credits < 10 ? 'bg-red-100 text-red-600' : 'bg-emerald-50 text-emerald-700'
+                        }`}>
+                            <span className={`w-2 h-2 rounded-full ${credits < 10 ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                            <span className="font-bold">{isAdmin ? '∞' : credits}</span>
+                            <span className="opacity-60 text-xs">{t('credits.creditsUnit') || 'credits'}</span>
+                        </div>
 
-                    {/* Right: Empty space for balance */}
-                    <div className="w-[120px]"></div>
+                        {/* Volla Studio Logo */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-xl font-bold text-[#E06847]">Volla</span>
+                            <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-sm font-semibold rounded-md">
+                                {t('studio.studioLabel') || 'Studio'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -1269,7 +1282,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                     <>
                                         <span>{t('studioRedesign.generate.button') || 'Generate'}</span>
                                         <span className="text-xs opacity-70">
-                                            {calculateGenerationCost(outputCount, !!marketplace, false)} {t('credits.creditsUnit') || 'credits'}
+                                            {calculateGenerationCost(outputCount, !!(marketplace && seoAnalyzedForMarketplace !== marketplace), false)} {t('credits.creditsUnit') || 'credits'}
                                         </span>
                                     </>
                                 )}
@@ -1312,16 +1325,32 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                     <Search size={16} />
                                     {t('results.seoResults') || 'SEO Results'}
                                 </h3>
-                                {/* Refresh SEO Button */}
+                                {/* SEO Action Buttons */}
                                 {results && marketplace && (
-                                    <button
-                                        onClick={handleRefreshSEO}
-                                        disabled={loading}
-                                        className="p-1.5 hover:bg-[#F5F4F1] rounded-lg transition-colors text-[#5C5C5C] hover:text-[#E06847] disabled:opacity-50"
-                                        title={t('studio.refreshSEO') || 'Refresh SEO (1 credit)'}
-                                    >
-                                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {/* Refresh SEO Button */}
+                                        <button
+                                            onClick={handleRefreshSEO}
+                                            disabled={loading}
+                                            className="p-1.5 hover:bg-[#F5F4F1] rounded-lg transition-colors text-[#5C5C5C] hover:text-[#E06847] disabled:opacity-50"
+                                            title={t('studio.refreshSEO') || 'Refresh SEO (1 credit)'}
+                                        >
+                                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                                        </button>
+                                        {/* Clear SEO Button */}
+                                        <button
+                                            onClick={() => {
+                                                setResults(null);
+                                                setProductInfo(null);
+                                                setSeoAnalyzedForMarketplace(null);
+                                                console.log('🗑️ SEO cleared - platform can be re-selected');
+                                            }}
+                                            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#5C5C5C] hover:text-red-500"
+                                            title={t('studio.clearSEO') || 'Clear SEO (allows platform change)'}
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
