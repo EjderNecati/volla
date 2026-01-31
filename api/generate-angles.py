@@ -162,7 +162,7 @@ def generate_with_vertex_rest(image_bytes, prompt):
                 "instances": [{
                     "prompt": prompt,
                     "referenceImages": [{
-                        "referenceType": 1,
+                        "referenceType": "REFERENCE_TYPE_RAW",
                         "referenceId": 1,
                         "referenceImage": {
                             "bytesBase64Encoded": image_b64

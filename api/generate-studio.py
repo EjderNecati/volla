@@ -556,7 +556,7 @@ def generate_with_vertex_rest_studio(image_bytes, prompt, output_count=1, aspect
                 "instances": [{
                     "prompt": prompt,
                     "referenceImages": [{
-                        "referenceType": 1,
+                        "referenceType": "REFERENCE_TYPE_RAW",
                         "referenceId": 1,
                         "referenceImage": {
                             "bytesBase64Encoded": image_b64
