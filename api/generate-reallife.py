@@ -44,16 +44,8 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Fallback to old SDK for Gemini analysis
-genai_old = None
-try:
-    import google.generativeai as genai_module
-    genai_old = genai_module
-    if GOOGLE_API_KEY:
-        genai_old.configure(api_key=GOOGLE_API_KEY)
-        print("✅ google-generativeai (fallback) configured")
-except ImportError as e:
-    print(f"⚠️ google-generativeai not available: {e}")
+# Using REST API only - no SDK needed
+print("✅ Using REST API for all Gemini calls")
 
 
 def get_fresh_token():
@@ -300,7 +292,7 @@ def call_gemini_flash(prompt, image_bytes):
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
         
         if response.status_code != 200:
             print(f"   ⚠️ Gemini Error {response.status_code}: {response.text[:200]}")
@@ -387,7 +379,7 @@ def _gemini_fallback(image_bytes, prompt):
                 "generationConfig": { "responseModalities": ["IMAGE", "TEXT"] }
             }
 
-            response = requests.post(url, headers=headers, json=payload, timeout=90)
+            response = requests.post(url, headers=headers, json=payload, timeout=45)
 
             if response.status_code == 200:
                 data = response.json()
@@ -441,14 +433,14 @@ def generate_reallife_shot(image_bytes, prompt, api_key=None):
         }
     }
     
-    # Retry Logic for 429 and 500
-    retries = 3
-    backoff = 2 # Starts at 2s, then 4s, 8s
+    # Retry Logic for 429 and 500 (reduced for speed)
+    retries = 2
+    backoff = 1 # Starts at 1s, then 2s
     
     for attempt in range(retries):
         try:
             print(f"   🌟 Calling Imagen 3 (Attempt {attempt+1}/{retries})...")
-            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            response = requests.post(url, headers=headers, json=payload, timeout=50)
             
             if response.status_code == 200:
                 result = response.json()
