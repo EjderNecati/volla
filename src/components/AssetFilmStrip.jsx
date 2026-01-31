@@ -1,26 +1,30 @@
 import React from 'react';
 import { Camera, Sparkles, Users, RotateCcw } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 /**
  * Asset Film Strip Component
- * Horizontal scrollable gallery showing all generated images in the session
+ * Grid gallery showing all generated images in the session
+ * Wraps to new row after 8 images for better visibility
  * Part of the Non-Linear Multi-Asset Workflow feature
  */
 
 const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
+    const { t } = useTranslation();
+
     if (!assets || assets.length === 0) return null;
 
     // Get icon and style based on asset type - matte colors
     const getAssetStyle = (type) => {
         switch (type) {
             case 'ORIGINAL':
-                return { icon: Camera, color: 'bg-[#E8E7E4]', label: 'Orig' };
+                return { icon: Camera, color: 'bg-[#E8E7E4]', label: t('filmStrip.original') || 'Orig' };
             case 'STUDIO':
-                return { icon: Sparkles, color: 'bg-[#E06847]', label: 'Studio' };
+                return { icon: Sparkles, color: 'bg-[#E06847]', label: t('filmStrip.studio') || 'Studio' };
             case 'REALLIFE':
-                return { icon: Users, color: 'bg-emerald-600', label: 'Life' };
+                return { icon: Users, color: 'bg-emerald-600', label: t('filmStrip.realLife') || 'Life' };
             case 'SHOT':
-                return { icon: RotateCcw, color: 'bg-[#8C8C8C]', label: 'Shot' };
+                return { icon: RotateCcw, color: 'bg-[#8C8C8C]', label: t('filmStrip.shot') || 'Shot' };
             default:
                 return { icon: Camera, color: 'bg-[#E8E7E4]', label: '?' };
         }
@@ -31,15 +35,15 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-[#8C8C8C] uppercase tracking-wider">
-                    Session Gallery
+                    {t('filmStrip.sessionGallery') || 'Session Gallery'}
                 </span>
-                <span className="text-xs text-[#E8E7E4]">
-                    {assets.length} asset{assets.length !== 1 ? 's' : ''}
+                <span className="text-xs text-[#8C8C8C]">
+                    {assets.length} {t('filmStrip.assets') || 'assets'}
                 </span>
             </div>
 
-            {/* Film Strip */}
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            {/* Film Strip - Grid with max 8 per row */}
+            <div className="grid grid-cols-8 gap-2">
                 {assets.map((asset) => {
                     const { icon: Icon, color, label } = getAssetStyle(asset.type);
                     const isActive = asset.id === activeAssetId;
@@ -60,7 +64,7 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
                         >
                             {/* Thumbnail Image */}
                             <img
-                                src={asset.imageData}
+                                src={asset.url || asset.imageData}
                                 alt={asset.label}
                                 className="w-full h-full object-cover"
                             />
@@ -96,8 +100,8 @@ const AssetFilmStrip = ({ assets, activeAssetId, onAssetClick }) => {
             </div>
 
             {/* Helper Text */}
-            <p className="text-[10px] text-[#E8E7E4] mt-1 text-center">
-                Click any image to select it, then use the action buttons above
+            <p className="text-[10px] text-[#8C8C8C] mt-2 text-center">
+                {t('filmStrip.helperText') || 'Click any image to select it'}
             </p>
         </div>
     );

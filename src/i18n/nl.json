@@ -281,6 +281,15 @@
             "noMarketplace": "Selecteer een marketplace voor SEO-aanbevelingen"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Sessiegalerij",
+        "assets": "items",
+        "original": "Origineel",
+        "studio": "Studio",
+        "realLife": "Leven",
+        "shot": "Opname",
+        "helperText": "Klik op een afbeelding om te selecteren"
+    },
     "shots": {
         "title": "Multi-Hoek Shots",
         "generateAngles": "Hoeken Genereren",

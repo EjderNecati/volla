@@ -273,6 +273,15 @@
             "noMarketplace": "Wählen Sie einen Marktplatz für SEO-Empfehlungen"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Sitzungsgalerie",
+        "assets": "Assets",
+        "original": "Original",
+        "studio": "Studio",
+        "realLife": "Leben",
+        "shot": "Aufnahme",
+        "helperText": "Klicken Sie auf ein Bild, um es auszuwählen"
+    },
     "shots": {
         "title": "Multi-Winkel-Aufnahmen",
         "generateAngles": "Winkel generieren",

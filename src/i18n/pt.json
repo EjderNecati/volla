@@ -281,6 +281,15 @@
             "noMarketplace": "Selecione um marketplace para recomendações SEO"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Galeria da sessão",
+        "assets": "ativos",
+        "original": "Original",
+        "studio": "Estúdio",
+        "realLife": "Vida",
+        "shot": "Foto",
+        "helperText": "Clique em qualquer imagem para selecioná-la"
+    },
     "shots": {
         "title": "Fotos Multi-Ângulo",
         "generateAngles": "Gerar Ângulos",

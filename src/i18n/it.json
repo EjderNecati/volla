@@ -281,6 +281,15 @@
             "noMarketplace": "Seleziona un marketplace per consigli SEO"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Galleria sessione",
+        "assets": "risorse",
+        "original": "Originale",
+        "studio": "Studio",
+        "realLife": "Vita",
+        "shot": "Scatto",
+        "helperText": "Clicca su un'immagine per selezionarla"
+    },
     "shots": {
         "title": "Scatti Multi-Angolo",
         "generateAngles": "Genera Angoli",

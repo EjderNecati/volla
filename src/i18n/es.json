@@ -273,6 +273,15 @@
             "noMarketplace": "Selecciona un marketplace para obtener recomendaciones SEO"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Galería de sesión",
+        "assets": "activos",
+        "original": "Original",
+        "studio": "Estudio",
+        "realLife": "Vida",
+        "shot": "Toma",
+        "helperText": "Haz clic en cualquier imagen para seleccionarla"
+    },
     "shots": {
         "title": "Tomas Multi-Ángulo",
         "generateAngles": "Generar Ángulos",

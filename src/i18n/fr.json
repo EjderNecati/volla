@@ -281,6 +281,15 @@
             "noMarketplace": "Sélectionnez un marketplace pour des recommandations SEO"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Galerie de session",
+        "assets": "actifs",
+        "original": "Original",
+        "studio": "Studio",
+        "realLife": "Vie",
+        "shot": "Prise",
+        "helperText": "Cliquez sur une image pour la sélectionner"
+    },
     "shots": {
         "title": "Prises Multi-Angles",
         "generateAngles": "Générer Angles",

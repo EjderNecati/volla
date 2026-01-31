@@ -301,6 +301,15 @@
             "noMarketplace": "Select a marketplace to get SEO recommendations"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Session Gallery",
+        "assets": "assets",
+        "original": "Orig",
+        "studio": "Studio",
+        "realLife": "Life",
+        "shot": "Shot",
+        "helperText": "Click any image to select it"
+    },
     "shots": {
         "title": "Multi-Angle Shots",
         "generateAngles": "Generate Angles",

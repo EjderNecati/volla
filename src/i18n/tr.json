@@ -293,6 +293,15 @@
             "noMarketplace": "SEO önerileri almak için bir pazar yeri seçin"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "Oturum Galerisi",
+        "assets": "görsel",
+        "original": "Orijinal",
+        "studio": "Stüdyo",
+        "realLife": "Yaşam",
+        "shot": "Çekim",
+        "helperText": "Seçmek için herhangi bir görsele tıklayın"
+    },
     "shots": {
         "title": "Çoklu Açı Çekimleri",
         "generateAngles": "Açıları Oluştur",

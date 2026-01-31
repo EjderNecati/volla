@@ -281,6 +281,15 @@
             "noMarketplace": "SEO推奨を取得するにはマーケットプレイスを選択"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "セッションギャラリー",
+        "assets": "アセット",
+        "original": "オリジナル",
+        "studio": "スタジオ",
+        "realLife": "ライフ",
+        "shot": "ショット",
+        "helperText": "画像をクリックして選択"
+    },
     "shots": {
         "title": "マルチアングルショット",
         "generateAngles": "アングルを生成",

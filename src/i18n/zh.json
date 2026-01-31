@@ -266,6 +266,15 @@
             "noMarketplace": "选择市场以获取SEO建议"
         }
     },
+    "filmStrip": {
+        "sessionGallery": "会话图库",
+        "assets": "资源",
+        "original": "原图",
+        "studio": "工作室",
+        "realLife": "生活",
+        "shot": "拍摄",
+        "helperText": "点击任意图片选择"
+    },
     "shots": {
         "title": "多角度拍摄",
         "generateAngles": "生成角度",

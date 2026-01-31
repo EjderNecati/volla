@@ -249,11 +249,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             };
             setSessionAssets([asset]);
             setActiveAssetId(asset.id);
-
-            // Auto-analyze when image loaded - callGeminiAPI uses DEFAULT_API_KEY if not set
-            if (marketplace) {
-                autoAnalyze(initialAsset.url, marketplace, savedApiKey || '');
-            }
+            // Note: SEO analysis now only runs on Generate button click
         }
     }, [initialAsset, initialProject, marketplace]);
 
@@ -333,11 +329,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
         try {
             const base64 = await fileToBase64(file);
             addAssetToSession(base64, 'ORIGINAL', null, 'Upload');
-
-            // Auto-analyze when marketplace is set - callGeminiAPI uses DEFAULT_API_KEY if not set
-            if (marketplace) {
-                await autoAnalyze(base64, marketplace, apiKey || '');
-            }
+            // Note: SEO analysis now only runs on Generate button click
         } catch (err) {
             setError('Failed to upload image');
         }
@@ -464,7 +456,11 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                 setAnglesLoading(true);
                 console.log(`📷 Generating ${outputCount} Shots from: ${activeAsset.type}`);
 
-                const sourceContext = activeAsset.type === 'REALLIFE' ? 'LIFE' : 'STUDIO';
+                // Use 'AUTO' for original uploads to let backend auto-detect environment
+                // REALLIFE assets always use LIFE context, STUDIO assets use STUDIO
+                const sourceContext = activeAsset.type === 'REALLIFE' ? 'LIFE'
+                    : activeAsset.type === 'STUDIO' ? 'STUDIO'
+                    : 'AUTO'; // Let backend detect for ORIGINAL or other types
                 const anglesResult = await generateProductAngles(activeAsset.url, sourceContext, aspectRatio, outputCount);
 
                 if (anglesResult.success) {
@@ -503,6 +499,21 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     });
                 }
             }
+
+            // Run SEO analysis if marketplace is selected (only after generation)
+            if (marketplace && activeAsset) {
+                try {
+                    console.log('🔍 Running SEO analysis for:', marketplace);
+                    setLoading(true);
+                    const seoResult = await callGeminiAPI(activeAsset.url, marketplace, '');
+                    setResults(seoResult);
+                    setProductInfo(seoResult._productInfo);
+                    console.log('✅ SEO analysis complete');
+                } catch (seoErr) {
+                    console.warn('⚠️ SEO analysis failed:', seoErr.message);
+                    // Don't show error for SEO failure, generation was still successful
+                }
+            }
         } catch (err) {
             console.error('Generation failed:', err);
             setError(err.message || 'Generation failed');
@@ -510,6 +521,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             setStudioLoading(false);
             setAnglesLoading(false);
             setRealLifeLoading(false);
+            setLoading(false);
         }
     };
 
@@ -553,7 +565,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 setLocalMarketplace(mp.id);
                                 if (onMarketplaceSelect) onMarketplaceSelect(mp.id);
                             }}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                            className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl border-2 transition-all aspect-square ${
                                 isActive
                                     ? mp.id ? '' : 'bg-[#5C5C5C] text-white border-[#5C5C5C]'
                                     : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
@@ -564,8 +576,10 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 color: mp.colors.text
                             } : {}}
                         >
-                            {Icon ? <Icon size={16} /> : <span className="text-lg">—</span>}
-                            <span className="text-[10px] font-medium">{mp.label}</span>
+                            <div className="flex items-center justify-center h-5">
+                                {Icon ? <Icon size={18} /> : <span className="text-base font-medium">—</span>}
+                            </div>
+                            <span className="text-[10px] font-medium leading-tight">{mp.label}</span>
                         </button>
                     );
                 })}
@@ -1105,12 +1119,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     <aside className="w-[30%] min-w-[320px] max-w-[400px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
                         <div className="p-5 space-y-5">
                             {/* Upload Zone */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
-                                    {t('studio.uploadImage') || 'Upload Image'}
-                                </label>
-                                {renderUploadZone()}
-                            </div>
+                            {renderUploadZone()}
 
                             {/* Marketplace Selector - Optional */}
                             <div className="space-y-2">
@@ -1137,8 +1146,8 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                             onClick={() => setPhotoType(type.id)}
                                             className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
                                                 photoType === type.id
-                                                    ? 'bg-[#E06847] text-white border-[#E06847]'
-                                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#E06847]'
+                                                    ? 'bg-[#5C5C5C] text-white border-[#5C5C5C]'
+                                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
                                             }`}
                                         >
                                             <type.icon size={18} />
