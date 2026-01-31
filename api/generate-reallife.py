@@ -1,5 +1,6 @@
 # Real Life Photos Generator - Hyper-Realistic Lifestyle Photography
 # Generates AI product photos in real-world usage contexts
+# CRITICAL: Product must be preserved EXACTLY - no texture/text/detail changes
 
 import os
 import json
@@ -9,7 +10,7 @@ import time
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
-print("🌟 REAL LIFE PHOTOS GENERATOR - Imagen 3 Mode (OAuth2)")
+print("🌟 REAL LIFE PHOTOS GENERATOR - Product Preservation Mode")
 print("=" * 60)
 
 # Environment
@@ -17,7 +18,7 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 VERTEX_API_KEY = os.environ.get("VERTEX_API_KEY")
 GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 
-# OAuth2 Setup for Imagen 3
+# OAuth2 Setup for Imagen 3 (fallback)
 oauth2_token = None
 project_id = None
 
@@ -25,46 +26,45 @@ try:
     if GOOGLE_CREDENTIALS_JSON:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-        
+
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         project_id = creds_dict.get("project_id", "")
-        
+
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-        
+
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
-        
+
         print(f"✅ OAuth2 token obtained for project: {project_id}")
     else:
         print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Using REST API only - no SDK needed
-print("✅ Using REST API for all Gemini calls")
+print("✅ Using REST API for all calls (Gemini PRIMARY, Imagen 3 fallback)")
 
 
 def get_fresh_token():
-    """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
+    """Get a fresh OAuth2 token"""
     global oauth2_token
-    
+
     if not GOOGLE_CREDENTIALS_JSON:
         return None
-    
+
     try:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-        
+
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-        
+
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
@@ -73,231 +73,39 @@ def get_fresh_token():
         print(f"⚠️ Token refresh failed: {e}")
         return None
 
-# ===============================================
-# DEEP PRODUCT ANALYSIS PROMPT
-# ===============================================
-
-PRODUCT_ANALYSIS_PROMPT = """You are an Expert Product Photographer and E-commerce Specialist.
-
-Analyze this product image DEEPLY and return a comprehensive analysis for lifestyle photography.
-
-RETURN JSON ONLY:
-{
-    "product_type": "Specific product name",
-    "product_category": "Category",
-    "material": "Primary materials",
-    "colors": ["list of main colors"],
-    "key_details_to_preserve": ["list of critical details"],
-
-    "has_text": true/false,
-    "text_details": {
-        "has_visible_text": true/false,
-        "text_content": "Exact text visible",
-        "text_location": "Where is the text located",
-        "text_colors": ["color of text"],
-        "text_size": "small/medium/large",
-        "areas_WITHOUT_text": ["list of areas that are blank/plain"]
-    },
-
-    "natural_placement": {
-        "belongs_to": "Where does this naturally belong? (e.g., kitchen counter, office desk, bathroom shelf, garden)",
-        "mounting_method": "How is it placed? (standing, hanging, lying flat, stuck to wall)"
-    },
-
-    "lifestyle_contexts": [
-        {
-            "scene": "Specific, realistic scene description (e.g., 'Modern minimalist kitchen counter with morning sunlight')",
-            "environment": "General environment (e.g., 'Indoor Kitchen')",
-            "lighting": "Lighting type (e.g., 'Soft morning window light')",
-            "background_elements": ["List of relevant background items"],
-            "product_position": "How the product is placed",
-            "reasoning": "Why this scene fits the product"
-        },
-        { "scene": "...", "environment": "...", "lighting": "...", "background_elements": [], "product_position": "...", "reasoning": "..." },
-        { "scene": "...", "environment": "...", "lighting": "...", "background_elements": [], "product_position": "...", "reasoning": "..." }
-    ]
-}"""
 
 # ===============================================
-# HYPER-REALISM PROMPT BUILDER
-# ===============================================
-
-def build_reallife_prompt(product_analysis, context_index):
-    """Build an optimized prompt for Imagen 3 lifestyle photography - V4 (Enhanced Reasoning)"""
-
-    contexts = product_analysis.get('lifestyle_contexts', [])
-    if context_index >= len(contexts):
-        return None
-
-    context = contexts[context_index]
-    product_type = product_analysis.get('product_type', 'product')
-    key_details = product_analysis.get('key_details_to_preserve', [])
-    materials = product_analysis.get('material', '')
-    colors = product_analysis.get('colors', [])
-    is_transparent = product_analysis.get('is_transparent', False)
-    body_part = product_analysis.get('body_part_if_worn')
-    
-    # Natural placement info
-    natural_placement = product_analysis.get('natural_placement', {})
-    belongs_to = natural_placement.get('belongs_to', '')
-    mounting_method = natural_placement.get('mounting_method', '')
-    
-    # Context fields
-    reasoning = context.get('reasoning', '')
-    scene = context.get('scene', 'Professional lifestyle setting')
-    environment = context.get('environment', '')
-    background_elements = context.get('background_elements', [])
-    lighting = context.get('lighting', 'Natural soft light')
-    product_position = context.get('product_position', '')
-
-    # Text detection
-    text_details = product_analysis.get('text_details', {})
-    has_text = text_details.get('has_visible_text', False) or product_analysis.get('has_text', False)
-    text_content = text_details.get('text_content', '')
-    text_size = text_details.get('text_size', 'medium')
-    text_location = text_details.get('text_location', '')
-    text_colors = text_details.get('text_colors', [])
-    areas_without_text = text_details.get('areas_WITHOUT_text', [])
-    
-    # Build summaries
-    details_summary = ", ".join(key_details[:5]) if key_details else "all visible details"
-    colors_summary = ", ".join(colors[:3]) if colors else ""
-    bg_elements_summary = ", ".join(background_elements[:5]) if background_elements else ""
-    blank_areas = ", ".join(areas_without_text) if areas_without_text else ""
-    text_colors_str = ", ".join(text_colors) if text_colors else ""
-
-    # TEXT RULES (Ultra-strict)
-    if has_text:
-        text_rules = f"""
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ TEXT/LOGO PRESERVATION - ULTRA-CRITICAL
-═══════════════════════════════════════════════════════════════════════════════
-EXISTING TEXT: "{text_content}" at {text_location}
-DETAILS: {text_size} size, colors: {text_colors_str}
-
-MANDATORY RULES:
-1. The text "{text_content}" MUST appear EXACTLY as written
-2. Text MUST be 100% SHARP and READABLE
-3. Text MUST face the camera directly
-4. DO NOT change text color, font, size, or spacing
-5. DO NOT move text to a different location
-
-🚫 AREAS THAT MUST STAY BLANK (NO TEXT):
-{f"- These areas have NO text in original: {blank_areas}" if blank_areas else "- All other areas of product are text-free"}
-- DO NOT add any text, logo, or branding to blank areas
-"""
-    else:
-        text_rules = """
-═══════════════════════════════════════════════════════════════════════════════
-🚫 NO TEXT/LOGO ON THIS PRODUCT
-═══════════════════════════════════════════════════════════════════════════════
-- The original product has ZERO text, logos, or branding
-- DO NOT add ANY text, logo, brand name, label, or writing
-- ALL surfaces must remain PLAIN and CLEAN as in original
-"""
-
-    # Natural placement context
-    placement_context = ""
-    if belongs_to or mounting_method:
-        placement_context = f"""
-NATURAL PLACEMENT:
-- Belongs: {belongs_to}
-- Position: {mounting_method}
-- Product MUST be shown in this natural context
-"""
-
-    # Human element
-    human_part = ""
-    if body_part:
-        human_part = f"""
-HUMAN ELEMENT:
-- Realistic {body_part}, natural skin texture
-- EXACTLY 5 fingers on each hand
-- Natural relaxed pose
-"""
-
-    # Transparency handling
-    transparency_note = ""
-    if is_transparent:
-        transparency_note = """
-TRANSPARENCY:
-- Product is transparent/translucent - show realistic light passing through
-- Maintain proper reflections and highlights
-"""
-
-    # Build strict product description
-    product_desc = f"{colors_summary} {materials} {product_type}".strip()
-
-    # Determine if clothing should be worn
-    is_clothing = any(word in product_type.lower() for word in ['shirt', 'tshirt', 't-shirt', 'dress', 'jacket', 'pants', 'shorts', 'sweater', 'hoodie', 'top', 'blouse'])
-
-    clothing_instruction = ""
-    if is_clothing:
-        clothing_instruction = f"""
-CLOTHING DISPLAY: This is a {product_type} - show it WORN by a person naturally in the scene.
-- Person should be in a natural pose in the lifestyle environment
-- The clothing ({product_type}) must be the EXACT same - same color ({colors_summary}), same design
-"""
-
-    prompt = f"""Lifestyle product photo: {product_desc} in {scene}.
-
-🚫🚫🚫 MOST CRITICAL RULE - READ CAREFULLY 🚫🚫🚫
-{f"This product has NO logos, NO text, NO branding - it is PLAIN {colors_summary}." if not has_text else f"This product has ONLY this text: '{text_content}' at {text_location}"}
-DO NOT ADD any logos, text, brand names, graphics, or designs that are not in the original!
-The product surface must remain EXACTLY as described - no additions!
-
-{clothing_instruction}
-SCENE: {scene}
-ENVIRONMENT: {environment}
-LIGHTING: {lighting}
-
-PRODUCT (preserve exactly):
-- Type: {product_type}
-- Colors: {colors_summary} - EXACT colors, no change
-- Material: {materials}
-{f"- Has text: '{text_content}' at {text_location}" if has_text else "- PLAIN surface - absolutely NO text/logos"}
-
-PHOTO STYLE: Professional lifestyle photography, natural pose, magazine quality.
-
-FORBIDDEN: Adding logos/text/graphics to plain products, changing product colors, wrong product design."""
-
-    return prompt
-
-
-# ===============================================
-# HELPER FUNCTIONS (Gemini via REST)
+# REST API HELPERS
 # ===============================================
 
 def call_gemini_flash(prompt, image_bytes):
-    """Call Gemini 2.0 Flash via REST API (No SDK)"""
+    """Call Gemini 2.0 Flash via REST API for text/analysis"""
     if not GOOGLE_API_KEY:
-        print("⚠️ GOOGLE_API_KEY not set for Gemini call")
+        print("   ⚠️ GOOGLE_API_KEY not set")
         return None
-        
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
-    
-    headers = { "Content-Type": "application/json" }
-    
-    # Encode image
+
+    headers = {"Content-Type": "application/json"}
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-    
+
     payload = {
         "contents": [{
             "parts": [
                 {"text": prompt},
-                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+                {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
             ]
         }],
-        "generationConfig": { "temperature": 0.5, "maxOutputTokens": 4096 }
+        "generationConfig": {"temperature": 0.5, "maxOutputTokens": 4096}
     }
-    
+
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
-        
+
         if response.status_code != 200:
             print(f"   ⚠️ Gemini Error {response.status_code}: {response.text[:200]}")
             return None
-            
+
         data = response.json()
         return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
     except Exception as e:
@@ -305,85 +113,45 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def analyze_product_for_lifestyle(image_bytes, existing_info=None):
-    """Deep product analysis for lifestyle context generation"""
-    
-    # Try Gemini via REST
-    text = call_gemini_flash(PRODUCT_ANALYSIS_PROMPT, image_bytes)
-    
-    if text:
-        try:
-            # Clean possible markdown
-            if '```json' in text:
-                text = text.split('```json')[1].split('```')[0]
-            elif '```' in text:
-                text = text.split('```')[1].split('```')[0]
-            
-            return json.loads(text.strip())
-        except Exception as e:
-            print(f"   ⚠️ valid JSON not found in analysis: {e}")
-    
-    # Fallback: use existing info or defaults
-    print("   ⚠️ Using fallback analysis data")
-    product_type = existing_info.get('product_type', 'product') if existing_info else 'product'
-    category = existing_info.get('category', 'Other') if existing_info else 'Other'
-    
-    return {
-        'product_type': product_type,
-        'product_category': category,
-        'material': 'mixed',
-        'key_details_to_preserve': ['all visible details', 'colors', 'textures'],
-        'usage_type': 'placed',
-        'typical_users': ['general'],
-        'body_part_if_worn': None,
-        'lifestyle_contexts': [
-            {'scene': 'Modern home interior setting', 'environment': 'Indoor living room', 'lighting': 'Natural daylight', 'reasoning': 'General context'},
-            {'scene': 'Cozy lifestyle environment', 'environment': 'Indoor bedroom', 'lighting': 'Warm ambient light', 'reasoning': 'Relaxed context'},
-            {'scene': 'Contemporary setting', 'environment': 'Modern space', 'lighting': 'Soft natural light', 'reasoning': 'Clean context'}
-        ],
-        'photography_style': 'lifestyle',
-        'risk_areas': ['product preservation']
-    }
-
-
-def _gemini_fallback(image_bytes, prompt):
-    """Fallback to Gemini for image generation via REST"""
+def call_gemini_image_generation(prompt, image_bytes):
+    """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
     if not GOOGLE_API_KEY:
-        print("      ⚠️ No API key for Gemini fallback")
+        print("      ⚠️ GOOGLE_API_KEY not set")
         return None
 
-    print("      🔄 Trying Gemini image generation fallback...")
-
-    # Try multiple models that support image generation
+    # Models that support image generation
     models_to_try = [
         'gemini-2.0-flash-preview-image-generation',
-        'gemini-2.0-flash-exp',
-        'imagen-3.0-generate-001'
+        'gemini-2.0-flash-exp-image-generation',
+        'gemini-2.0-flash'
     ]
 
-    headers = { "Content-Type": "application/json" }
+    headers = {"Content-Type": "application/json"}
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
     for model_name in models_to_try:
         try:
-            print(f"      Trying {model_name}...")
+            print(f"      🎨 Trying {model_name}...")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
             payload = {
                 "contents": [{
                     "parts": [
-                        {"text": f"Generate a photorealistic lifestyle product photo: {prompt[:500]}"},
-                        { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+                        {"text": prompt},
+                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
                     ]
                 }],
-                "generationConfig": { "responseModalities": ["IMAGE", "TEXT"] }
+                "generationConfig": {
+                    "responseModalities": ["IMAGE", "TEXT"]
+                }
             }
 
-            response = requests.post(url, headers=headers, json=payload, timeout=45)
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
 
             if response.status_code == 200:
                 data = response.json()
                 candidates = data.get('candidates', [])
+
                 if candidates:
                     parts = candidates[0].get('content', {}).get('parts', [])
                     for part in parts:
@@ -394,80 +162,220 @@ def _gemini_fallback(image_bytes, prompt):
                             if img_data:
                                 print(f"      ✅ Got image from {model_name}")
                                 return f"data:{mime_type};base64,{img_data}"
+
+                print(f"      ⚠️ {model_name}: No image in response")
             else:
-                print(f"      ⚠️ {model_name}: {response.status_code}")
+                error_text = response.text[:100] if response.text else "Unknown error"
+                print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
 
         except Exception as e:
             print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
             continue
 
-    print("      ❌ All Gemini fallback models failed")
     return None
 
 
-def generate_reallife_shot(image_bytes, prompt, api_key=None):
-    """Generate a single real life shot using Imagen 3 via OAuth2 REST API with Retry"""
-    
-    # Get fresh OAuth2 token
-    token = get_fresh_token()
-    if not token or not project_id:
-        print("   ⚠️ No OAuth2 token or project_id available")
-        return _gemini_fallback(image_bytes, prompt)
-    
-    print(f"   🎨 Using OAuth2 for project: {project_id[:20]}...")
-    
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-    
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "instances": [{ "prompt": prompt }],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": "1:1",
-            "personGeneration": "allow_adult",
-            "safetyFilterLevel": "block_only_high"
-        }
-    }
-    
-    # Retry Logic for 429 and 500 (reduced for speed)
-    retries = 2
-    backoff = 1 # Starts at 1s, then 2s
-    
-    for attempt in range(retries):
-        try:
-            print(f"   🌟 Calling Imagen 3 (Attempt {attempt+1}/{retries})...")
-            response = requests.post(url, headers=headers, json=payload, timeout=50)
-            
-            if response.status_code == 200:
-                result = response.json()
-                predictions = result.get("predictions", [])
-                
-                if predictions and predictions[0].get("bytesBase64Encoded"):
-                    img_b64 = predictions[0]["bytesBase64Encoded"]
-                    print(f"   ✅ Imagen 3 Real Life success!")
-                    return f"data:image/png;base64,{img_b64}"
-                else:
-                    # Capture empty 200 OK response
-                    print(f"   ⚠️ Empty response (200 OK): {json.dumps(result)[:500]}")
-                    
-            elif response.status_code == 429:
-                print(f"   ⏳ Quota/Rate Limit (429). Waiting {backoff}s...")
-                time.sleep(backoff)
-                backoff *= 2
-                continue
-                
-            else:
-                print(f"   ⚠️ Imagen 3 Error {response.status_code}: {response.text[:200]}")
-                
-        except Exception as e:
-            print(f"   ❌ Imagen 3 Request Error: {e}")
-            
-    # Fallback to Gemini if all retries failed
-    return _gemini_fallback(image_bytes, prompt)
+# ===============================================
+# PRODUCT ANALYSIS PROMPT - Focus on preservation details
+# ===============================================
+
+PRODUCT_ANALYSIS_PROMPT = """You are an Expert Product Photographer analyzing a product for lifestyle photography.
+
+CRITICAL: Your analysis will be used to PRESERVE every detail of this product when placing it in a scene.
+
+Analyze this product image and return JSON:
+{
+    "product_type": "Specific product name (e.g., 'crew neck t-shirt', 'ceramic coffee mug', 'action figure')",
+    "category": "Category (apparel, home, electronics, toy, etc.)",
+
+    "texture_details": {
+        "surface_type": "smooth/textured/patterned/knitted/woven/glossy/matte/etc.",
+        "texture_description": "Detailed texture description (e.g., 'ribbed cotton fabric', 'dotted rubber surface', 'brushed metal')",
+        "must_preserve": ["list of texture details that MUST be preserved exactly"]
+    },
+
+    "text_and_graphics": {
+        "has_text": true/false,
+        "has_logos": true/false,
+        "has_graphics": true/false,
+        "text_content": "Exact text if any (empty string if none)",
+        "text_location": "Where text is located",
+        "graphic_description": "Description of any graphics/logos",
+        "plain_areas": ["list of areas that are PLAIN with no text/graphics"]
+    },
+
+    "colors": {
+        "primary": "main color",
+        "secondary": ["other colors"],
+        "exact_shades": "describe exact color shades (e.g., 'light sky blue', 'deep navy')"
+    },
+
+    "structural_details": {
+        "components": ["list all visible parts/components"],
+        "transparent_parts": ["any transparent/translucent areas"],
+        "special_features": ["buttons, zippers, handles, hinges, etc."]
+    },
+
+    "is_wearable": true/false,
+    "wear_on": "body part if wearable (torso, feet, head, etc.)",
+
+    "lifestyle_scenes": [
+        {"scene": "Specific scene description", "person_needed": true/false},
+        {"scene": "Another scene", "person_needed": true/false},
+        {"scene": "Third scene", "person_needed": true/false}
+    ]
+}"""
+
+
+# ===============================================
+# LIFESTYLE PROMPT BUILDER - Ultra-strict preservation
+# ===============================================
+
+def build_reallife_prompt(product_analysis, scene_info, scene_index):
+    """Build a prompt that STRICTLY preserves the original product"""
+
+    product_type = product_analysis.get('product_type', 'product')
+    category = product_analysis.get('category', 'general')
+
+    # Texture details
+    texture = product_analysis.get('texture_details', {})
+    texture_type = texture.get('surface_type', 'original')
+    texture_desc = texture.get('texture_description', '')
+    texture_preserve = texture.get('must_preserve', [])
+
+    # Text and graphics
+    text_info = product_analysis.get('text_and_graphics', {})
+    has_text = text_info.get('has_text', False)
+    has_logos = text_info.get('has_logos', False)
+    has_graphics = text_info.get('has_graphics', False)
+    text_content = text_info.get('text_content', '')
+    text_location = text_info.get('text_location', '')
+    plain_areas = text_info.get('plain_areas', [])
+
+    # Colors
+    colors = product_analysis.get('colors', {})
+    primary_color = colors.get('primary', '')
+    exact_shades = colors.get('exact_shades', '')
+
+    # Structure
+    structure = product_analysis.get('structural_details', {})
+    components = structure.get('components', [])
+    transparent_parts = structure.get('transparent_parts', [])
+    special_features = structure.get('special_features', [])
+
+    # Wearable info
+    is_wearable = product_analysis.get('is_wearable', False)
+    wear_on = product_analysis.get('wear_on', '')
+
+    # Scene info
+    scenes = product_analysis.get('lifestyle_scenes', [])
+    if scene_index < len(scenes):
+        scene = scenes[scene_index]
+        scene_desc = scene.get('scene', 'lifestyle setting')
+        person_needed = scene.get('person_needed', False)
+    else:
+        scene_desc = 'modern lifestyle setting'
+        person_needed = is_wearable
+
+    # Build texture preservation rules
+    texture_rules = f"""
+TEXTURE PRESERVATION (CRITICAL):
+- Original texture: {texture_type} - {texture_desc}
+- This texture MUST appear EXACTLY as in the original image
+- DO NOT smooth out textures, DO NOT add textures
+- If dotted → keep dotted, if ribbed → keep ribbed, if smooth → keep smooth
+{f"- Must preserve: {', '.join(texture_preserve)}" if texture_preserve else ""}
+"""
+
+    # Build text/graphics rules
+    if has_text or has_logos or has_graphics:
+        text_rules = f"""
+TEXT/LOGO PRESERVATION (CRITICAL):
+- This product HAS text/logos/graphics - they MUST be preserved EXACTLY
+- Text content: "{text_content}" at {text_location}
+- Every letter, every line, every pixel must be IDENTICAL
+- DO NOT move, resize, recolor, or modify any text/logo/graphic
+"""
+    else:
+        text_rules = f"""
+NO TEXT/LOGO RULE (CRITICAL):
+- This product has NO text, NO logos, NO graphics - it is PLAIN
+- The surface is clean and unmarked
+- DO NOT ADD any text, logos, brand names, labels, or graphics
+- Plain areas: {', '.join(plain_areas) if plain_areas else 'entire product surface'}
+- Any addition of text/logos = FAILURE
+"""
+
+    # Build structure rules
+    structure_rules = f"""
+STRUCTURAL PRESERVATION:
+- Components: {', '.join(components) if components else 'all visible parts'}
+- ALL components must appear in the final image
+{f"- Transparent parts: {', '.join(transparent_parts)} - keep transparency!" if transparent_parts else ""}
+{f"- Special features: {', '.join(special_features)} - must be visible" if special_features else ""}
+"""
+
+    # Build color rules
+    color_rules = f"""
+COLOR PRESERVATION:
+- Primary color: {primary_color}
+- Exact shade: {exact_shades}
+- Colors must be EXACT - not lighter, not darker, not different hue
+"""
+
+    # Person/wearing instructions
+    if is_wearable and person_needed:
+        person_instruction = f"""
+WEARING INSTRUCTION:
+- This {product_type} should be WORN by a person in the scene
+- Person should be in a natural pose
+- The {product_type} on the person must be IDENTICAL to the original
+- Same color, same texture, same everything
+"""
+    else:
+        person_instruction = """
+PLACEMENT:
+- Place the product naturally in the scene
+- Product should be the hero/focus of the image
+"""
+
+    # Final prompt
+    prompt = f"""Look at this product image VERY CAREFULLY. You must place this EXACT product in a lifestyle scene.
+
+SCENE: {scene_desc}
+
+═══════════════════════════════════════════════════════════════════════════════
+🚫🚫🚫 ABSOLUTE RULES - PRODUCT MUST BE IDENTICAL 🚫🚫🚫
+═══════════════════════════════════════════════════════════════════════════════
+
+The product in your generated image MUST be a PERFECT COPY of the original.
+NOT similar. NOT inspired by. IDENTICAL. EXACT. PIXEL-PERFECT.
+
+{texture_rules}
+{text_rules}
+{color_rules}
+{structure_rules}
+{person_instruction}
+
+PRODUCT: {primary_color} {product_type}
+
+WHAT TO DO:
+1. Study every detail of this product
+2. Generate a lifestyle photo with this EXACT product in: {scene_desc}
+3. Change ONLY the environment/background/context
+4. The product itself = ZERO changes
+
+FORBIDDEN:
+- Changing texture (smooth→dotted, dotted→smooth, etc.)
+- Adding text/logos to plain products
+- Removing or modifying existing text/logos
+- Changing colors or shades
+- Adding/removing components
+- Modifying any structural detail
+
+Generate the image now with the EXACT same product in the lifestyle scene."""
+
+    return prompt
 
 
 # ===============================================
@@ -475,7 +383,7 @@ def generate_reallife_shot(image_bytes, prompt, api_key=None):
 # ===============================================
 
 class handler(BaseHTTPRequestHandler):
-    
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -484,8 +392,8 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        print("\n📸 REAL LIFE PHOTOS REQUEST (REST API)")
-        
+        print("\n📸 REAL LIFE REQUEST - Product Preservation Mode")
+
         results = {
             'success': False,
             'shot1': None,
@@ -494,80 +402,103 @@ class handler(BaseHTTPRequestHandler):
             'analysis': None,
             'error': None
         }
-        
+
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body.decode('utf-8'))
-            
+
             source_image = data.get('source_image', '')
-            request_vertex_key = data.get('vertex_api_key', '')
             product_info = data.get('product_info', {})
-            
+
             source_image = source_image or ""
-            
+
             # Clean base64
             if 'base64,' in source_image:
                 base64_clean = source_image.split('base64,')[1]
             else:
                 base64_clean = source_image
-            
+
             base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-            
-            # Prevent decoding errors on empty string
+
             if not base64_clean:
                 raise ValueError("Empty image data")
-                
+
             missing_padding = len(base64_clean) % 4
             if missing_padding:
                 base64_clean += '=' * (4 - missing_padding)
-            
+
             image_bytes = base64.b64decode(base64_clean)
-            
+
             # Step 1: Deep Product Analysis
-            print("🔍 Step 1: Deep Product Analysis...")
-            product_analysis = analyze_product_for_lifestyle(image_bytes, product_info)
+            print("🔍 Step 1: Deep Product Analysis for preservation...")
+            analysis_text = call_gemini_flash(PRODUCT_ANALYSIS_PROMPT, image_bytes)
+
+            product_analysis = None
+            if analysis_text:
+                try:
+                    # Clean possible markdown
+                    if '```json' in analysis_text:
+                        analysis_text = analysis_text.split('```json')[1].split('```')[0]
+                    elif '```' in analysis_text:
+                        analysis_text = analysis_text.split('```')[1].split('```')[0]
+
+                    product_analysis = json.loads(analysis_text.strip())
+                    print(f"   📦 Product: {product_analysis.get('product_type', 'unknown')}")
+                    print(f"   🎨 Texture: {product_analysis.get('texture_details', {}).get('surface_type', 'unknown')}")
+                    text_info = product_analysis.get('text_and_graphics', {})
+                    print(f"   📝 Has text: {text_info.get('has_text', False)}")
+                except Exception as e:
+                    print(f"   ⚠️ JSON parse error: {e}")
+
+            # Fallback analysis
+            if not product_analysis:
+                print("   ⚠️ Using fallback analysis")
+                product_analysis = {
+                    'product_type': product_info.get('product_type', 'product'),
+                    'category': product_info.get('category', 'general'),
+                    'texture_details': {'surface_type': 'original', 'must_preserve': ['all textures']},
+                    'text_and_graphics': {'has_text': False, 'plain_areas': ['entire surface']},
+                    'colors': {'primary': 'original colors'},
+                    'structural_details': {'components': ['all parts']},
+                    'is_wearable': False,
+                    'lifestyle_scenes': [
+                        {'scene': 'Modern home interior', 'person_needed': False},
+                        {'scene': 'Cozy lifestyle setting', 'person_needed': False},
+                        {'scene': 'Professional environment', 'person_needed': False}
+                    ]
+                }
+
             results['analysis'] = product_analysis
-            print(f"   📦 Product: {product_analysis.get('product_type', 'unknown')}")
-            
-            # Step 2: Generate 3 Real Life Shots
-            print("📷 Step 2: Generating Real Life Shots...")
-            
-            contexts = product_analysis.get('lifestyle_contexts', [])
-            
-            # Ensure we have contexts
-            if not contexts:
-                contexts = [{'scene':'Default product showcase'}]
-            
-            # Force 3 shots
-            target_shot_count = 3
-            context_count = len(contexts)
-            
-            for i in range(target_shot_count):
+
+            # Step 2: Generate 3 Real Life Shots using GEMINI (can see the product!)
+            print("📷 Step 2: Generating Real Life Shots (Gemini - can see product)...")
+
+            for i in range(3):
                 shot_key = f'shot{i+1}'
-                
-                # Cycle through contexts if we have fewer than target shots
-                context_idx = i % context_count
-                
-                # Build hyper-realistic prompt
-                prompt = build_reallife_prompt(product_analysis, context_idx)
-                
-                if not prompt:
-                    print(f"   ⚠️ {shot_key}: Failed to build prompt")
-                    continue
-                
-                # Generate with Imagen 3
-                shot_image = generate_reallife_shot(
-                    image_bytes=image_bytes,
-                    prompt=prompt
-                )
-                
-                if shot_image:
-                    results[shot_key] = shot_image
-                    print(f"   ✅ {shot_key} complete")
-                else:
+                print(f"   📷 Generating {shot_key}...")
+
+                # Build preservation-focused prompt
+                prompt = build_reallife_prompt(product_analysis, None, i)
+
+                # Use Gemini as PRIMARY - it can SEE the reference image!
+                print(f"      🔍 Using Gemini (can see reference image)...")
+
+                for attempt in range(2):
+                    print(f"      🎨 Attempt {attempt+1}/2...")
+                    shot_image = call_gemini_image_generation(prompt, image_bytes)
+
+                    if shot_image:
+                        results[shot_key] = shot_image
+                        print(f"   ✅ {shot_key} complete")
+                        break
+
+                    if attempt < 1:
+                        time.sleep(1)
+
+                if not results[shot_key]:
                     print(f"   ⚠️ {shot_key} failed")
-            
+
             # Check success
             if results['shot1'] or results['shot2'] or results['shot3']:
                 results['success'] = True
@@ -575,16 +506,19 @@ class handler(BaseHTTPRequestHandler):
             else:
                 results['error'] = 'All shots failed'
                 print("❌ All shots failed")
-            
+
         except Exception as e:
             results['error'] = str(e)
             print(f"❌ Error: {e}")
             import traceback
             traceback.print_exc()
-        
+
         # Send response
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(results).encode())
+
+
+print("✅ Real Life Generator - Product Preservation Mode ready")
