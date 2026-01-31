@@ -145,10 +145,8 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
-            # Always include aspect ratio
-            if aspect_ratio:
+            if aspect_ratio and aspect_ratio != '1:1':
                 gen_config["aspectRatio"] = aspect_ratio
-                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{
@@ -265,16 +263,15 @@ STAGING_MAP = {
 
 SCENE_ANALYSIS_PROMPT = """You are an expert scene analyst for product photography.
 
-Analyze this product image and describe the scene/environment:
+Analyze this Real Life / Lifestyle product image and describe the scene:
 
 Respond ONLY with JSON:
 {
-    "is_studio": true if clean white/beige/gray studio background with minimal elements, false if real-world environment,
     "scene_type": "indoor" or "outdoor",
-    "location": "Brief location description (studio, living room, office, garden, cafe, etc.)",
+    "location": "Brief location description (living room, office, garden, cafe, etc.)",
     "lighting": "Lighting type (natural daylight, warm indoor, golden hour, professional studio)",
     "atmosphere": "Color mood (warm, cool, neutral, vibrant)",
-    "key_elements": "Main environmental elements visible (furniture, plants, architecture, nature, or 'none' for studio)"
+    "key_elements": "Main environmental elements visible (furniture, plants, architecture, nature)"
 }"""
 
 
@@ -511,23 +508,12 @@ class handler(BaseHTTPRequestHandler):
             print(f"   🎯 Category: {category}")
             print(f"   🎄 Is Hanging Product: {is_hanging_product}")
 
-            # Step 1b: Analyze scene for LIFE or AUTO context
+            # Step 1b: Analyze scene if LIFE context
             scene_info = None
-            if source_context in ['LIFE', 'AUTO']:
-                print("🏞️ Analyzing scene environment...")
+            if source_context == 'LIFE':
+                print("🏞️ Analyzing Real Life scene...")
                 scene_info = analyze_scene(image_bytes)
                 print(f"   🌍 Scene: {scene_info.get('location', 'Unknown')}")
-
-                # AUTO mode: detect if studio or lifestyle based on analysis
-                if source_context == 'AUTO':
-                    is_studio = scene_info.get('is_studio', False)
-                    if is_studio:
-                        print("   📷 AUTO detected: STUDIO environment")
-                        source_context = 'STUDIO'
-                        scene_info = None  # Don't use scene info for studio
-                    else:
-                        print("   🌿 AUTO detected: LIFE environment")
-                        source_context = 'LIFE'
 
             # Get staging config
             config = STAGING_MAP.get(category, STAGING_MAP['STANDARD_GROUND'])

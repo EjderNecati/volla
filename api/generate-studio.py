@@ -33,19 +33,19 @@ try:
     if GOOGLE_CREDENTIALS_JSON:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-
+        
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         project_id = creds_dict.get("project_id", "")
-
+        
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-
+        
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
-
+        
         print(f"✅ OAuth2 token obtained for project: {project_id}")
     else:
         print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
@@ -56,20 +56,20 @@ except Exception as e:
 def get_fresh_token():
     """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
     global oauth2_token
-
+    
     if not GOOGLE_CREDENTIALS_JSON:
         return None
-
+    
     try:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-
+        
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-
+        
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
@@ -123,14 +123,14 @@ def call_gemini_flash(prompt, image_bytes):
     if not GOOGLE_API_KEY:
         print("⚠️ GOOGLE_API_KEY not set for Gemini call")
         return None
-
+        
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
-
+    
     headers = { "Content-Type": "application/json" }
-
+    
     # Encode image
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-
+    
     payload = {
         "contents": [{
             "parts": [
@@ -140,14 +140,14 @@ def call_gemini_flash(prompt, image_bytes):
         }],
         "generationConfig": { "temperature": 0.5, "maxOutputTokens": 4096 }
     }
-
+    
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=60)
-
+        
         if response.status_code != 200:
             print(f"   ⚠️ Gemini Error {response.status_code}: {response.text[:200]}")
             return None
-
+            
         data = response.json()
         return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
     except Exception as e:
@@ -157,18 +157,18 @@ def call_gemini_flash(prompt, image_bytes):
 
 def analyze_product_for_studio(image_data):
     """Analyze product to enhance studio prompt"""
-
+    
     # Clean base64
     base64_clean = image_data
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
-
+    
     try:
         image_bytes = base64.b64decode(base64_clean)
-
+        
         # Try Gemini via REST
         text = call_gemini_flash(STUDIO_ANALYSIS_PROMPT, image_bytes)
-
+        
         if text:
             try:
                 # Clean possible markdown
@@ -176,14 +176,14 @@ def analyze_product_for_studio(image_data):
                     text = text.split('```json')[1].split('```')[0]
                 elif '```' in text:
                     text = text.split('```')[1].split('```')[0]
-
+                
                 return json.loads(text.strip())
             except Exception as e:
                 print(f"   ⚠️ Studio analysis JSON parse failed: {e}")
-
+                
     except Exception as e:
         print(f"   ⚠️ Validation error: {e}")
-
+        
     return {
         "product_type": "product",
         "is_hanging": False,
@@ -200,7 +200,7 @@ def analyze_product_for_studio(image_data):
 
 def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis=None):
     """Generate prompt dynamically based on product and angle"""
-
+    
     base_prompt = """Professional e-commerce product photography studio.
 BACKGROUND:
 - Clean, warm beige studio backdrop (#E8DDD0)
@@ -256,7 +256,7 @@ CAMERA PERSPECTIVE: FROM BELOW (LOOKING UP)
 - Appropriate for hanging items
 """
     }
-
+    
     placement_instructions = {
         "HANGING": """
 PRODUCT STAGING: HANGING/SUSPENDED ITEM
@@ -330,7 +330,7 @@ PRODUCT STAGING: WALL MOUNTED
 
     angle_inst = angle_instructions.get(camera_angle, angle_instructions["FRONT"])
     placement_inst = placement_instructions.get(product_placement, placement_instructions["ON_SURFACE"])
-
+    
     full_prompt = base_prompt + angle_inst + placement_inst + text_rules
     return full_prompt
 
@@ -349,19 +349,71 @@ FALLBACK_URLS = {
 }
 
 
-def generate_with_imagen3_bgswap(image_data, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
-    """
-    PRIMARY METHOD: Generate studio image using Imagen 3 BGSWAP via Vertex AI
-    This method SEES the product and preserves it 100%!
-    """
+def generate_with_gemini_fallback(image_data):
+    """Fallback to Gemini chat model for image generation"""
+    if not GOOGLE_API_KEY:
+        return None
+        
+    print("      Trying Gemini fallback (REST)...")
+    
+    # Clean base64
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+        
+    image_bytes = base64.b64decode(base64_clean)
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    # Simple prompt for fallback
+    fallback_prompt = "Professional product photography on clean warm beige studio background. High resolution."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={GOOGLE_API_KEY}"
+    headers = { "Content-Type": "application/json" }
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": fallback_prompt},
+                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+            ]
+        }],
+        "generationConfig": { "response_modalities": ["IMAGE"] } 
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            data = response.json()
+            candidates = data.get('candidates', [])
+            if candidates:
+                parts = candidates[0].get('content', {}).get('parts', [])
+                for part in parts:
+                    # JSON key is usually 'inlineData' or 'inline_data' depending on API version
+                    # Checking both to be safe
+                    inline_data = part.get('inline_data') or part.get('inlineData')
+                    if inline_data:
+                        img_data = inline_data.get('data')
+                        mime_type = inline_data.get('mime_type', 'image/png')
+                        if img_data:
+                            print("      ✅ Got image from Gemini fallback")
+                            return f"data:{mime_type};base64,{img_data}"
+    except Exception as e:
+        print(f"      ⚠️ Gemini fallback failed: {e}")
+        
+    return None
+
+
+def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
+    """Generate studio image(s) using Imagen 3 via OAuth2 REST API"""
+
     token = get_fresh_token()
     if not token or not project_id:
         print("   ⚠️ No OAuth2 token or project_id available")
         return None
 
-    print(f"   🎨 Using Imagen 3 BGSWAP (count={output_count}, ratio={aspect_ratio})...")
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
 
-    # Clean base64
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
     else:
@@ -372,240 +424,62 @@ def generate_with_imagen3_bgswap(image_data, custom_prompt=None, output_count=1,
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
 
-    # Short prompt for BGSWAP - describes ONLY the new background
-    prompt = custom_prompt or """Clean warm beige studio background (#E8DDD0).
-Seamless cyclorama backdrop with soft diffused professional lighting.
-Natural contact shadow beneath the product on the floor."""
-
-    # Validate output_count
-    sample_count = max(1, min(4, int(output_count)))
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    generated_images = []
+    # Validate output_count (Imagen 3 supports 1-4)
+    sample_count = max(1, min(4, int(output_count)))
 
-    # Try capability-001 model with edit modes
-    models_to_try = [
-        'imagen-3.0-capability-001',
-        'imagen-3.0-generate-001'
-    ]
-
-    for model_name in models_to_try:
-        # Try BGSWAP mode first
-        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/{model_name}:predict"
-
-        # BGSWAP payload - sends the image as reference
-        payload = {
-            "instances": [{
-                "prompt": prompt,
-                "image": {
-                    "bytesBase64Encoded": base64_clean
-                }
-            }],
-            "parameters": {
-                "sampleCount": sample_count,
-                "aspectRatio": aspect_ratio,
-                "editConfig": {
-                    "editMode": "EDIT_MODE_BGSWAP"
-                }
-            }
+    payload = {
+        "instances": [{
+            "prompt": prompt_to_use
+        }],
+        "parameters": {
+            "sampleCount": sample_count,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
         }
+    }
 
-        try:
-            print(f"      🔄 Trying {model_name} with BGSWAP...")
-            response = requests.post(url, headers=headers, json=payload, timeout=120)
+    try:
+        print(f"   🎨 Calling Imagen 3 via REST API (count={sample_count}, ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
 
-            if response.status_code == 200:
-                result = response.json()
-                predictions = result.get("predictions", [])
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
 
-                if predictions:
-                    for pred in predictions:
-                        if pred.get("bytesBase64Encoded"):
-                            img_b64 = pred["bytesBase64Encoded"]
-                            generated_images.append(f"data:image/png;base64,{img_b64}")
+            if predictions:
+                # Return array of images
+                images = []
+                for pred in predictions:
+                    if pred.get("bytesBase64Encoded"):
+                        img_b64 = pred["bytesBase64Encoded"]
+                        images.append(f"data:image/png;base64,{img_b64}")
 
-                    if generated_images:
-                        print(f"   ✅ Imagen 3 BGSWAP success! ({len(generated_images)} images)")
-                        if len(generated_images) == 1:
-                            return generated_images[0]
-                        return generated_images
-            else:
-                error_text = response.text[:200] if response.text else "Unknown"
-                print(f"      ⚠️ {model_name} BGSWAP: {response.status_code} - {error_text}")
+                if images:
+                    print(f"   ✅ Imagen 3 success! Generated {len(images)} images")
+                    # Return single image for backward compatibility if only 1 requested
+                    if sample_count == 1:
+                        return images[0]
+                    return images
 
-        except Exception as e:
-            print(f"      ⚠️ {model_name} BGSWAP error: {str(e)[:100]}")
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
 
-        # Try INPAINT mode as fallback
-        payload["parameters"]["editConfig"] = {
-            "editMode": "EDIT_MODE_INPAINT_INSERTION"
-        }
-        # For INPAINT, we need maskMode in the instance
-        payload["instances"][0]["mask"] = {
-            "maskMode": "MASK_MODE_BACKGROUND"
-        }
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
 
-        try:
-            print(f"      🔄 Trying {model_name} with INPAINT + MASK_MODE_BACKGROUND...")
-            response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-            if response.status_code == 200:
-                result = response.json()
-                predictions = result.get("predictions", [])
-
-                if predictions:
-                    for pred in predictions:
-                        if pred.get("bytesBase64Encoded"):
-                            img_b64 = pred["bytesBase64Encoded"]
-                            generated_images.append(f"data:image/png;base64,{img_b64}")
-
-                    if generated_images:
-                        print(f"   ✅ Imagen 3 INPAINT success! ({len(generated_images)} images)")
-                        if len(generated_images) == 1:
-                            return generated_images[0]
-                        return generated_images
-            else:
-                error_text = response.text[:200] if response.text else "Unknown"
-                print(f"      ⚠️ {model_name} INPAINT: {response.status_code} - {error_text}")
-
-        except Exception as e:
-            print(f"      ⚠️ {model_name} INPAINT error: {str(e)[:100]}")
-
-    print("   ❌ All Imagen 3 edit modes failed")
-    return None
-
-
-def generate_with_gemini_fallback(image_data, product_analysis=None, custom_prompt='', output_count=1, aspect_ratio='1:1'):
-    """
-    FALLBACK: Generate studio image using Gemini 2.0 Flash
-    Used only if Imagen 3 BGSWAP fails
-    """
-    if not GOOGLE_API_KEY:
-        print("   ⚠️ GOOGLE_API_KEY not set")
-        return None
-
-    print(f"   🎨 Using Gemini Fallback (count={output_count}, ratio={aspect_ratio})...")
-
-    # Clean base64
-    if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
-    else:
-        base64_clean = image_data
-
-    image_bytes = base64.b64decode(base64_clean)
-    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-
-    # Build product preservation prompt
-    text_preservation = ""
-    if product_analysis and product_analysis.get('has_text'):
-        text_content = product_analysis.get('text_details', '')
-        text_preservation = f"""
-⚠️ CRITICAL - TEXT/LOGO PRESERVATION:
-The product has text/logo: "{text_content}"
-- This text MUST remain EXACTLY the same - every letter, every character
-- Text must be 100% SHARP and READABLE
-- DO NOT blur, distort, or change ANY text on the product
-"""
-
-    # Detailed prompt for product preservation
-    studio_prompt = f"""Look at this product image VERY CAREFULLY.
-
-YOUR TASK: Generate a NEW professional studio photograph of THIS EXACT PRODUCT.
-
-🎯 PRODUCT PRESERVATION (CRITICAL - DO NOT CHANGE):
-- The product must be IDENTICAL to the original - same shape, colors, materials
-- ALL text, labels, logos must be preserved EXACTLY as they appear
-- DO NOT add, remove, or modify ANY part of the product
-{text_preservation}
-
-📸 STUDIO SETUP:
-BACKGROUND: Clean, warm beige/cream studio backdrop (#E8DDD0 to #F5F0E8)
-- Seamless cyclorama style, NO patterns, NO textures
-LIGHTING: Soft, diffused professional lighting
-PRODUCT PLACEMENT: Product centered, natural contact shadow
-
-{f'ADDITIONAL INSTRUCTIONS: {custom_prompt}' if custom_prompt else ''}
-
-Generate a professional e-commerce product photo now."""
-
-    # Models to try (image generation capable)
-    models_to_try = [
-        'gemini-2.0-flash-preview-image-generation',
-        'gemini-2.0-flash-exp-image-generation',
-        'gemini-2.0-flash-exp',
-        'gemini-2.0-flash'
-    ]
-
-    headers = {"Content-Type": "application/json"}
-    generated_images = []
-
-    for model_name in models_to_try:
-        try:
-            print(f"      🔄 Trying {model_name}...")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
-
-            gen_config = {
-                "responseModalities": ["IMAGE", "TEXT"]
-            }
-            if aspect_ratio:
-                gen_config["aspectRatio"] = aspect_ratio
-
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": studio_prompt},
-                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
-                    ]
-                }],
-                "generationConfig": gen_config
-            }
-
-            for i in range(output_count):
-                print(f"      📷 Generating image {i+1}/{output_count}...")
-
-                response = requests.post(url, headers=headers, json=payload, timeout=90)
-
-                if response.status_code == 200:
-                    data = response.json()
-                    candidates = data.get('candidates', [])
-
-                    if candidates:
-                        parts = candidates[0].get('content', {}).get('parts', [])
-                        for part in parts:
-                            inline_data = part.get('inline_data') or part.get('inlineData')
-                            if inline_data:
-                                img_data = inline_data.get('data')
-                                mime_type = inline_data.get('mime_type', 'image/png')
-                                if img_data:
-                                    generated_images.append(f"data:{mime_type};base64,{img_data}")
-                                    print(f"      ✅ Image {len(generated_images)} generated!")
-                                    break
-                else:
-                    error_text = response.text[:100] if response.text else "Unknown"
-                    print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
-                    break
-
-            if generated_images:
-                print(f"   ✅ Gemini Fallback success! ({len(generated_images)} images)")
-                if len(generated_images) == 1:
-                    return generated_images[0]
-                return generated_images
-
-        except Exception as e:
-            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
-            continue
-
-    print("   ❌ All Gemini models failed")
     return None
 
 
 # HANDLER
 class handler(BaseHTTPRequestHandler):
-
+    
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -614,15 +488,15 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        print("\n📥 AI STUDIO REQUEST - Gemini Studio Mode")
-
+        print("\n📥 AI STUDIO REQUEST - Imagen 3")
+        
         category = 'Other'
-
+        
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body.decode('utf-8'))
-
+            
             category = data.get('category', 'Other')
             image_data = data.get('image', '')
             request_vertex_key = data.get('vertex_api_key', '')
@@ -645,7 +519,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"📦 Category: {category}")
             print(f"🖼️ Image: {len(image_data)} chars")
             print(f"📊 Output count: {output_count}, Aspect ratio: {aspect_ratio}")
-
+            
             # Analyze product for text/logo preservation
             product_analysis = None
             if image_data:
@@ -679,48 +553,33 @@ class handler(BaseHTTPRequestHandler):
             method_used = 'none'
             error_message = None
 
-            if image_data:
-                # PRIMARY: Use Imagen 3 BGSWAP (100% product preservation!)
-                print("🎨 PRIMARY: Imagen 3 BGSWAP (product preservation)...")
+            if image_data and active_vertex_key:
+                # Try Imagen 3 first
+                print("🎨 Trying Imagen 3...")
                 try:
-                    result = generate_with_imagen3_bgswap(
-                        image_data,
-                        dynamic_prompt,
-                        output_count,
-                        aspect_ratio
-                    )
+                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
                     if result:
-                        method_used = 'Imagen 3 BGSWAP'
+                        method_used = 'Imagen 3'
                         # Handle array or single result
                         if isinstance(result, list):
                             results_array = result
                             result = result[0] if result else None
                         else:
                             results_array = [result] if result else []
-                        print(f"✅ Imagen 3 BGSWAP Success! ({len(results_array)} images)")
+                        print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
                 except Exception as e:
-                    error_message = str(e)
-                    print(f"⚠️ Imagen 3 BGSWAP error: {error_message[:100]}")
-
-                # FALLBACK: Try Gemini if Imagen 3 failed
+                        error_message = str(e)
+                        print(f"⚠️ Imagen 3 error: {error_message[:100]}")
+                
+                # Fallback to old Gemini
                 if not result:
-                    print("🎨 FALLBACK: Gemini 2.0 Flash...")
+                    print("🎨 Falling back to Gemini...")
                     try:
-                        result = generate_with_gemini_fallback(
-                            image_data,
-                            product_analysis,
-                            custom_prompt_extra,
-                            output_count,
-                            aspect_ratio
-                        )
+                        result = generate_with_gemini_fallback(image_data)
                         if result:
                             method_used = 'Gemini Fallback'
-                            if isinstance(result, list):
-                                results_array = result
-                                result = result[0] if result else None
-                            else:
-                                results_array = [result] if result else []
-                            print(f"✅ Gemini Fallback Success! ({len(results_array)} images)")
+                            results_array = [result]
+                            print("✅ Gemini Fallback Success!")
                     except Exception as e:
                         error_message = str(e)
                         print(f"⚠️ Gemini fallback error: {error_message[:100]}")
@@ -739,7 +598,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             response = {
-                'success': method_used in ['Gemini Studio', 'Imagen 3'],
+                'success': method_used in ['Imagen 3', 'Gemini Fallback'],
                 'generated_image': result,
                 'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,
@@ -750,16 +609,16 @@ class handler(BaseHTTPRequestHandler):
                 'error_message': error_message
             }
             self.wfile.write(json.dumps(response).encode())
-
+            
         except Exception as e:
             print(f"❌ ERROR: {e}")
             traceback.print_exc()
-
+            
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-
+            
             self.wfile.write(json.dumps({
                 'success': False,
                 'generated_image': FALLBACK_URLS.get(category, FALLBACK_URLS['Other']),
@@ -767,6 +626,149 @@ class handler(BaseHTTPRequestHandler):
                 'error': str(e),
                 'method_used': 'Error Fallback'
             }).encode())
+
+
+    # Get fresh OAuth2 token
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available")
+        return None
+    
+    # Use custom prompt if provided
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
+    
+    # Clean base64
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+    
+    # Fix padding
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+    
+    # Use imagen-3.0-generate-002 for text-to-image generation
+    # This model is available on standard Vertex AI projects
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Simple text-to-image payload
+    # The product details are included in the prompt
+    payload = {
+        "instances": [{
+            "prompt": prompt_to_use
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": "1:1",
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+    
+    try:
+        print(f"   🎨 Calling Imagen 3 BGSWAP via REST API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 BGSWAP success!")
+                return f"data:image/png;base64,{img_b64}"
+        
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        
+        # Try INPAINT mode as fallback
+        print(f"   🔄 Trying INPAINT mode...")
+        payload["parameters"]["editMode"] = "EDIT_MODE_INPAINT_INSERTION"
+        payload["parameters"]["maskMode"] = "MASK_MODE_BACKGROUND"
+        
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 INPAINT success!")
+                return f"data:image/png;base64,{img_b64}"
+        
+        print(f"   ⚠️ INPAINT also failed: {response.status_code}")
+        
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
+    
+    return None
+
+
+def generate_with_gemini_fallback(image_data):
+    """Fallback to Gemini chat model for image generation"""
+    import time
+    
+    # Clean base64
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+        mime_type = 'image/jpeg'
+        if 'png' in image_data.lower():
+            mime_type = 'image/png'
+    else:
+        base64_clean = image_data
+        mime_type = 'image/jpeg'
+    
+    image_bytes = base64.b64decode(base64_clean)
+    
+    # Gemini fallback prompt - CLEAN format (no instructions/text that could appear in image)
+    fallback_prompt = """Professional product photography on clean warm beige studio background.
+Seamless cyclorama backdrop with soft diffused lighting.
+Product positioned naturally with realistic contact shadow beneath.
+Preserve all original product details, colors, text, and logos exactly.
+High quality e-commerce product photo, 8K resolution."""
+
+    models_to_try = [
+        'gemini-2.5-flash-preview-05-20',
+        'gemini-2.0-flash-exp',
+        'gemini-2.0-flash',
+    ]
+    
+    for model_name in models_to_try:
+        for attempt in range(2):
+            try:
+                model = genai_old.GenerativeModel(model_name)
+                
+                response = model.generate_content(
+                    [
+                        fallback_prompt,
+                        {"mime_type": mime_type, "data": image_bytes}
+                    ],
+                    generation_config={
+                        "response_modalities": ["IMAGE", "TEXT"],
+                    }
+                )
+                
+                # Extract image
+                if response.candidates:
+                    for candidate in response.candidates:
+                        if hasattr(candidate, 'content') and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                if hasattr(part, 'inline_data') and part.inline_data:
+                                    img_data = base64.b64encode(part.inline_data.data).decode('utf-8')
+                                    img_mime = part.inline_data.mime_type or 'image/png'
+                                    return f"data:{img_mime};base64,{img_data}"
+                
+            except Exception as e:
+                if attempt == 0:
+                    time.sleep(1)
+                continue
+    
+    return None
 
 
 print("✅ AI Studio - Imagen 3 Mode ready")
