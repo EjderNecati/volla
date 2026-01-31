@@ -120,236 +120,71 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def generate_with_vertex_rest(image_bytes, prompt, aspect_ratio='1:1'):
-    """
-    PRIMARY METHOD: Generate image using Vertex AI REST API with OAuth2
-    Uses SUBJECT reference to extract product and place in new scene.
-    """
-    global oauth2_token, project_id
-
-    token = get_fresh_token()
-    if not token or not project_id:
-        print("      ⚠️ No OAuth2 token or project_id - skipping Vertex REST")
+def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
+    """Call Gemini for image generation via REST API (can see reference image!)"""
+    if not GOOGLE_API_KEY:
+        print("      ⚠️ GOOGLE_API_KEY not set")
         return None
 
-    print(f"      🔑 Using Vertex AI REST API with OAuth2...")
+    # Models that support image generation
+    models_to_try = [
+        'gemini-2.0-flash-preview-image-generation',
+        'gemini-2.0-flash-exp-image-generation',
+        'gemini-2.0-flash'
+    ]
 
-    # Encode image
+    headers = {"Content-Type": "application/json"}
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    for model_name in models_to_try:
+        try:
+            print(f"      🎨 Trying {model_name}...")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
-    region = "us-central1"
+            # Build generation config with aspect ratio
+            gen_config = {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+            # Always include aspect ratio
+            if aspect_ratio:
+                gen_config["aspectRatio"] = aspect_ratio
+                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
-    # Use SUBJECT reference - extracts product and places in new scene
-    print(f"         📸 Trying SUBJECT reference (product extraction)...")
-
-    model_id = "imagen-3.0-generate-002"
-    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
-
-    payload = {
-        "instances": [{
-            "prompt": prompt,
-            "referenceImages": [{
-                "referenceType": "REFERENCE_TYPE_SUBJECT",
-                "referenceId": 1,
-                "referenceImage": {
-                    "bytesBase64Encoded": image_b64
-                }
-            }]
-        }],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": aspect_ratio if aspect_ratio != '1:1' else None,
-            "personGeneration": "allow_adult",
-            "safetyFilterLevel": "block_only_high"
-        }
-    }
-
-    # Remove None values
-    payload["parameters"] = {k: v for k, v in payload["parameters"].items() if v is not None}
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
-
-            if predictions:
-                for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        print(f"      ✅ Success with SUBJECT reference!")
-                        return f"data:image/png;base64,{img_b64_result}"
-
-            print(f"         ⚠️ No images in SUBJECT response")
-        else:
-            error_text = response.text[:300] if response.text else "Unknown"
-            print(f"         ⚠️ SUBJECT error {response.status_code}: {error_text}")
-
-    except Exception as e:
-        print(f"         ⚠️ SUBJECT error: {str(e)[:100]}")
-
-    # Fallback: Try STYLE reference
-    print(f"         📸 Trying STYLE reference (fallback)...")
-    payload["instances"][0]["referenceImages"][0]["referenceType"] = "REFERENCE_TYPE_STYLE"
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
-
-            if predictions:
-                for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        print(f"      ✅ Success with STYLE reference!")
-                        return f"data:image/png;base64,{img_b64_result}"
-
-        else:
-            error_text = response.text[:200] if response.text else "Unknown"
-            print(f"         ⚠️ STYLE error {response.status_code}: {error_text}")
-
-    except Exception as e:
-        print(f"         ⚠️ STYLE error: {str(e)[:100]}")
-
-    print("      ❌ Vertex REST API failed all strategies")
-    return None
-
-
-def generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio='1:1'):
-    """
-    Generate image using Imagen 3 edit_image API - PRESERVES PRODUCT!
-    Uses INPAINT/BGSWAP to keep product intact while changing background/scene.
-
-    Strategy:
-    1. Try Vertex AI REST API with OAuth2 (most reliable)
-    2. Fallback to genai.Client with API key
-    """
-
-    # METHOD 1: Try Vertex AI REST API with OAuth2 first
-    result = generate_with_vertex_rest(image_bytes, prompt, aspect_ratio)
-    if result:
-        return result
-
-    # METHOD 2: Fallback to genai.Client with Vertex AI
-    print(f"      🔄 Trying genai.Client with Vertex AI...")
-
-    try:
-        from google import genai
-        from google.genai import types
-
-        # Create Vertex AI client
-        if GOOGLE_CREDENTIALS_JSON:
-            import tempfile
-            import os as temp_os
-
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                f.write(GOOGLE_CREDENTIALS_JSON)
-                temp_creds_path = f.name
-
-            temp_os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
-            client = genai.Client(vertexai=True, project=project_id, location='us-central1')
-            print(f"      ✅ Created Vertex AI client for project: {project_id}")
-        else:
-            print("      ⚠️ No credentials for Vertex AI client")
-            return None
-
-    except Exception as e:
-        print(f"      ⚠️ Failed to create genai client: {e}")
-        return None
-
-    # Try Gemini 2.0 Flash with image generation
-    print(f"      📸 Trying Gemini 2.0 Flash image generation...")
-
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.0-flash-exp',
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part(text=f"""Look at this product image carefully. Generate a NEW professional photograph of THIS EXACT PRODUCT.
-
-{prompt}
-
-CRITICAL: The product must be IDENTICAL to the reference - same colors, textures, and all details preserved."""),
-                        types.Part(inline_data=types.Blob(mime_type='image/jpeg', data=image_bytes))
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": prompt},
+                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
                     ]
-                )
-            ],
-            config=types.GenerateContentConfig(
-                response_modalities=['IMAGE', 'TEXT']
-            )
-        )
+                }],
+                "generationConfig": gen_config
+            }
 
-        if response.candidates:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, 'inline_data') and part.inline_data:
-                    img_data = part.inline_data.data
-                    img_b64 = base64.b64encode(img_data).decode('utf-8')
-                    mime = part.inline_data.mime_type or 'image/png'
-                    print(f"      ✅ Success with Gemini 2.0 Flash!")
-                    return f"data:{mime};base64,{img_b64}"
+            response = requests.post(url, headers=headers, json=payload, timeout=90)
 
-        print(f"         ⚠️ No image in Gemini response")
+            if response.status_code == 200:
+                data = response.json()
+                candidates = data.get('candidates', [])
 
-    except Exception as gemini_error:
-        print(f"      ⚠️ Gemini failed: {str(gemini_error)[:150]}")
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    for part in parts:
+                        inline_data = part.get('inline_data') or part.get('inlineData')
+                        if inline_data:
+                            img_data = inline_data.get('data')
+                            mime_type = inline_data.get('mime_type', 'image/png')
+                            if img_data:
+                                print(f"      ✅ Got image from {model_name}")
+                                return f"data:{mime_type};base64,{img_data}"
 
-    print("      ❌ All generation methods failed")
-    return None
+                print(f"      ⚠️ {model_name}: No image in response")
+            else:
+                error_text = response.text[:100] if response.text else "Unknown error"
+                print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
 
-
-# Keep for backward compatibility but not used
-def generate_with_imagen3_text(prompt, aspect_ratio='1:1'):
-    """DEPRECATED - Use generate_with_imagen3_edit instead"""
-    token = get_fresh_token()
-    if not token or not project_id:
-        return None
-
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "instances": [{
-            "prompt": prompt
-        }],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": aspect_ratio,
-            "personGeneration": "allow_adult",
-            "safetyFilterLevel": "block_only_high"
-        }
-    }
-
-    try:
-        print(f"      🎨 Calling Imagen 3 (ratio={aspect_ratio})...")
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            result = response.json()
-            predictions = result.get("predictions", [])
-
-            if predictions and predictions[0].get("bytesBase64Encoded"):
-                img_b64 = predictions[0]["bytesBase64Encoded"]
-                print(f"      ✅ Imagen 3 success!")
-                return f"data:image/png;base64,{img_b64}"
-
-        error_text = response.text[:200] if response.text else "Unknown"
-        print(f"      ⚠️ Imagen 3: {response.status_code} - {error_text}")
-
-    except Exception as e:
-        print(f"      ❌ Imagen 3 error: {e}")
+        except Exception as e:
+            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+            continue
 
     return None
 
@@ -483,7 +318,7 @@ def analyze_scene(image_bytes):
 
 
 def generate_angle_shot(image_bytes, angle_description, staging, product_desc, api_key=None, is_hanging_product=False, source_context='STUDIO', scene_info=None, aspect_ratio='1:1'):
-    """Generate a single angle shot using Imagen 3 (reliable image generation!)"""
+    """Generate a single angle shot using Gemini (can see reference image!)"""
 
     # Special staging for hanging products
     hanging_instruction = ""
@@ -499,7 +334,7 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
 """
 
     # ═══════════════════════════════════════════════════════════════════
-    # CONTEXT-AWARE PROMPT BUILDING FOR IMAGEN 3
+    # CONTEXT-AWARE PROMPT BUILDING
     # ═══════════════════════════════════════════════════════════════════
 
     if source_context == 'LIFE' and scene_info:
@@ -510,48 +345,52 @@ def generate_angle_shot(image_bytes, angle_description, staging, product_desc, a
         atmosphere = scene_info.get('atmosphere', 'neutral')
         key_elements = scene_info.get('key_elements', 'environmental context')
 
-        prompt = f"""Professional product photography of {product_desc}.
+        prompt = f"""Look at the product in this image carefully.
 
-CAMERA ANGLE: {angle_description}
+Generate a NEW photo showing the EXACT SAME product from: {angle_description}
 
-SCENE: {location} ({scene_type})
+KEEP THE SAME SCENE: {location} ({scene_type})
 LIGHTING: {lighting}
 ATMOSPHERE: {atmosphere}
 BACKGROUND ELEMENTS: {key_elements}
 
-CRITICAL RULES:
-1. The product must be clearly visible and high quality
-2. Maintain professional product photography standards
-3. If it's clothing, show it naturally placed - NOT on a person/mannequin
-4. Camera angle: {angle_description}
+🚫 CRITICAL RULES:
+1. The product must be IDENTICAL - same colors, shape, materials, details
+2. DO NOT change ANYTHING about the product
+3. DO NOT add logos, text, or branding
+4. If it's clothing, show it the same way (flat/folded/placed) - NOT on a person/mannequin
+5. Only change the CAMERA ANGLE to: {angle_description}
 {hanging_instruction}
 
-Professional e-commerce product photo."""
+Generate the image now."""
 
     else:
         # STUDIO MODE - Different angles on clean background
-        prompt = f"""Professional studio product photography of {product_desc}.
+        prompt = f"""Look at the product in this image carefully.
 
-CAMERA ANGLE: {angle_description}
+Generate a NEW photo showing the EXACT SAME product from: {angle_description}
 
 STAGING: {staging}
-BACKGROUND: Clean beige/white studio gradient (#E8DDD0 to #F5F0E8)
+BACKGROUND: Clean beige/white studio gradient
 
-CRITICAL RULES:
-1. Professional e-commerce photography
-2. Clean studio background, seamless cyclorama style
-3. If it's clothing, show on hanger or flat lay - NOT on a person/mannequin
-4. Camera angle: {angle_description}
+🚫 CRITICAL RULES:
+1. The product must be IDENTICAL - same colors, shape, materials, details
+2. DO NOT change ANYTHING about the product
+3. DO NOT add logos, text, or branding
+4. If it's clothing, show it on hanger or flat lay - NOT on a person/mannequin
+5. Only change the CAMERA ANGLE to: {angle_description}
 {hanging_instruction}
 
-Soft studio lighting, no harsh shadows. Professional product photo."""
+PHOTO STYLE: Professional e-commerce photography, soft studio lighting, no harsh shadows.
 
-    # Use Imagen 3 edit_image API (preserves product!)
-    print(f"      🔍 Using Imagen 3 edit_image (product preservation)...")
+Generate the image now."""
+
+    # Use Gemini REST API for image generation (can see reference image!)
+    print(f"      🔍 Using Gemini REST API (can see reference image)...")
 
     for attempt in range(3):
         print(f"      🎨 Attempt {attempt+1}/3...")
-        result = generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio)
+        result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
         if result:
             print(f"      ✅ Angle shot success!")

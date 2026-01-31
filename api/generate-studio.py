@@ -33,19 +33,19 @@ try:
     if GOOGLE_CREDENTIALS_JSON:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-        
+
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         project_id = creds_dict.get("project_id", "")
-        
+
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-        
+
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
-        
+
         print(f"✅ OAuth2 token obtained for project: {project_id}")
     else:
         print("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found")
@@ -56,20 +56,20 @@ except Exception as e:
 def get_fresh_token():
     """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
     global oauth2_token
-    
+
     if not GOOGLE_CREDENTIALS_JSON:
         return None
-    
+
     try:
         from google.oauth2 import service_account
         import google.auth.transport.requests
-        
+
         creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-        
+
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
         oauth2_token = credentials.token
@@ -123,14 +123,14 @@ def call_gemini_flash(prompt, image_bytes):
     if not GOOGLE_API_KEY:
         print("⚠️ GOOGLE_API_KEY not set for Gemini call")
         return None
-        
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
-    
+
     headers = { "Content-Type": "application/json" }
-    
+
     # Encode image
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-    
+
     payload = {
         "contents": [{
             "parts": [
@@ -140,14 +140,14 @@ def call_gemini_flash(prompt, image_bytes):
         }],
         "generationConfig": { "temperature": 0.5, "maxOutputTokens": 4096 }
     }
-    
+
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=60)
-        
+
         if response.status_code != 200:
             print(f"   ⚠️ Gemini Error {response.status_code}: {response.text[:200]}")
             return None
-            
+
         data = response.json()
         return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
     except Exception as e:
@@ -157,18 +157,18 @@ def call_gemini_flash(prompt, image_bytes):
 
 def analyze_product_for_studio(image_data):
     """Analyze product to enhance studio prompt"""
-    
+
     # Clean base64
     base64_clean = image_data
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
-    
+
     try:
         image_bytes = base64.b64decode(base64_clean)
-        
+
         # Try Gemini via REST
         text = call_gemini_flash(STUDIO_ANALYSIS_PROMPT, image_bytes)
-        
+
         if text:
             try:
                 # Clean possible markdown
@@ -176,14 +176,14 @@ def analyze_product_for_studio(image_data):
                     text = text.split('```json')[1].split('```')[0]
                 elif '```' in text:
                     text = text.split('```')[1].split('```')[0]
-                
+
                 return json.loads(text.strip())
             except Exception as e:
                 print(f"   ⚠️ Studio analysis JSON parse failed: {e}")
-                
+
     except Exception as e:
         print(f"   ⚠️ Validation error: {e}")
-        
+
     return {
         "product_type": "product",
         "is_hanging": False,
@@ -200,7 +200,7 @@ def analyze_product_for_studio(image_data):
 
 def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis=None):
     """Generate prompt dynamically based on product and angle"""
-    
+
     base_prompt = """Professional e-commerce product photography studio.
 BACKGROUND:
 - Clean, warm beige studio backdrop (#E8DDD0)
@@ -256,7 +256,7 @@ CAMERA PERSPECTIVE: FROM BELOW (LOOKING UP)
 - Appropriate for hanging items
 """
     }
-    
+
     placement_instructions = {
         "HANGING": """
 PRODUCT STAGING: HANGING/SUSPENDED ITEM
@@ -330,7 +330,7 @@ PRODUCT STAGING: WALL MOUNTED
 
     angle_inst = angle_instructions.get(camera_angle, angle_instructions["FRONT"])
     placement_inst = placement_instructions.get(product_placement, placement_instructions["ON_SURFACE"])
-    
+
     full_prompt = base_prompt + angle_inst + placement_inst + text_rules
     return full_prompt
 
@@ -456,9 +456,10 @@ Generate a professional e-commerce product photo now."""
             gen_config = {
                 "responseModalities": ["IMAGE", "TEXT"]
             }
-            # Add aspect ratio if supported (some models may not support it)
-            if aspect_ratio and aspect_ratio != '1:1':
+            # Add aspect ratio to generation config
+            if aspect_ratio:
                 gen_config["aspectRatio"] = aspect_ratio
+                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{
@@ -511,237 +512,82 @@ Generate a professional e-commerce product photo now."""
     return None
 
 
-def generate_with_vertex_rest_studio(image_bytes, prompt, output_count=1, aspect_ratio='1:1'):
-    """
-    PRIMARY METHOD: Generate studio image using Vertex AI REST API with OAuth2
-    Uses SUBJECT reference to extract product and place on studio background.
-    """
-    global oauth2_token, project_id
+def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
+    """Generate studio image(s) using Imagen 3 via OAuth2 REST API"""
 
     token = get_fresh_token()
     if not token or not project_id:
-        print("   ⚠️ No OAuth2 token or project_id - skipping Vertex REST")
+        print("   ⚠️ No OAuth2 token or project_id available")
         return None
 
-    print(f"   🔑 Using Vertex AI REST API with OAuth2 (count={output_count})...")
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
 
-    # Encode image
-    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    region = "us-central1"
+    # Validate output_count (Imagen 3 supports 1-4)
     sample_count = max(1, min(4, int(output_count)))
-
-    # Use SUBJECT reference - extracts product and places on studio background
-    print(f"      📸 Trying SUBJECT reference (product extraction)...")
-
-    model_id = "imagen-3.0-generate-002"
-    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
 
     payload = {
         "instances": [{
-            "prompt": prompt,
-            "referenceImages": [{
-                "referenceType": "REFERENCE_TYPE_SUBJECT",
-                "referenceId": 1,
-                "referenceImage": {
-                    "bytesBase64Encoded": image_b64
-                }
-            }]
+            "prompt": prompt_to_use
         }],
         "parameters": {
             "sampleCount": sample_count,
-            "aspectRatio": aspect_ratio if aspect_ratio != '1:1' else None,
+            "aspectRatio": aspect_ratio,
             "personGeneration": "allow_adult",
             "safetyFilterLevel": "block_only_high"
         }
     }
 
-    # Remove None values
-    payload["parameters"] = {k: v for k, v in payload["parameters"].items() if v is not None}
-
     try:
+        print(f"   🎨 Calling Imagen 3 via REST API (count={sample_count}, ratio={aspect_ratio})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
 
         if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
+            result = response.json()
+            predictions = result.get("predictions", [])
 
             if predictions:
-                generated_images = []
+                # Return array of images
+                images = []
                 for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        generated_images.append(f"data:image/png;base64,{img_b64_result}")
+                    if pred.get("bytesBase64Encoded"):
+                        img_b64 = pred["bytesBase64Encoded"]
+                        images.append(f"data:image/png;base64,{img_b64}")
 
-                if generated_images:
-                    print(f"   ✅ Success with SUBJECT reference! Generated {len(generated_images)} images")
-                    if len(generated_images) == 1:
-                        return generated_images[0]
-                    return generated_images
+                if images:
+                    print(f"   ✅ Imagen 3 success! Generated {len(images)} images")
+                    # Return single image for backward compatibility if only 1 requested
+                    if sample_count == 1:
+                        return images[0]
+                    return images
 
-            print(f"      ⚠️ No images in SUBJECT response")
-        else:
-            error_text = response.text[:300] if response.text else "Unknown"
-            print(f"      ⚠️ SUBJECT error {response.status_code}: {error_text}")
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
 
     except Exception as e:
-        print(f"      ⚠️ SUBJECT error: {str(e)[:100]}")
+        print(f"   ❌ Imagen 3 REST API error: {e}")
 
-    # Fallback: Try STYLE reference
-    print(f"      📸 Trying STYLE reference (fallback)...")
-    payload["instances"][0]["referenceImages"][0]["referenceType"] = "REFERENCE_TYPE_STYLE"
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
-
-            if predictions:
-                generated_images = []
-                for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        generated_images.append(f"data:image/png;base64,{img_b64_result}")
-
-                if generated_images:
-                    print(f"   ✅ Success with STYLE reference! Generated {len(generated_images)} images")
-                    if len(generated_images) == 1:
-                        return generated_images[0]
-                    return generated_images
-
-        else:
-            error_text = response.text[:200] if response.text else "Unknown"
-            print(f"      ⚠️ STYLE error {response.status_code}: {error_text}")
-
-    except Exception as e:
-        print(f"      ⚠️ STYLE error: {str(e)[:100]}")
-
-    print("   ❌ Vertex REST API failed all strategies")
-    return None
-
-
-def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
-    """Generate studio image using Imagen 3 edit_image with BGSWAP/INPAINT - PRESERVES PRODUCT!
-
-    Strategy:
-    1. Try Vertex AI REST API with OAuth2 (most reliable)
-    2. Fallback to genai.Client with API key
-    """
-
-    prompt_to_use = custom_prompt or BGSWAP_PROMPT
-
-    # Clean base64
-    if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
-    else:
-        base64_clean = image_data
-
-    # Fix padding
-    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-    missing_padding = len(base64_clean) % 4
-    if missing_padding:
-        base64_clean += '=' * (4 - missing_padding)
-
-    image_bytes = base64.b64decode(base64_clean)
-
-    # METHOD 1: Try Vertex AI REST API with OAuth2 first
-    result = generate_with_vertex_rest_studio(image_bytes, prompt_to_use, output_count, aspect_ratio)
-    if result:
-        return result
-
-    # METHOD 2: Fallback to genai.Client with Vertex AI
-    print(f"   🔄 Trying genai.Client with Vertex AI...")
-
-    try:
-        from google import genai
-        from google.genai import types
-
-        # Create Vertex AI client
-        if GOOGLE_CREDENTIALS_JSON:
-            import tempfile
-            import os as temp_os
-
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                f.write(GOOGLE_CREDENTIALS_JSON)
-                temp_creds_path = f.name
-
-            temp_os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
-            client = genai.Client(vertexai=True, project=project_id, location='us-central1')
-            print(f"   ✅ Created Vertex AI client for project: {project_id}")
-        else:
-            print("   ⚠️ No credentials for Vertex AI client")
-            return None
-
-    except Exception as e:
-        print(f"   ⚠️ Failed to create genai client: {e}")
-        return None
-
-    # Validate output_count
-    sample_count = max(1, min(4, int(output_count)))
-
-    # Try Gemini 2.0 Flash with image generation
-    print(f"   📸 Trying Gemini 2.0 Flash image generation (count={sample_count})...")
-
-    generated_images = []
-
-    try:
-        for i in range(sample_count):
-            print(f"      📷 Generating image {i+1}/{sample_count}...")
-
-            response = client.models.generate_content(
-                model='gemini-2.0-flash-exp',
-                contents=[
-                    types.Content(
-                        parts=[
-                            types.Part(text=f"""Look at this product image carefully. Generate a NEW professional studio photograph of THIS EXACT PRODUCT.
-
-{prompt_to_use}
-
-CRITICAL: The product must be IDENTICAL to the reference - same colors, textures, and all details preserved. Only change the background to a clean studio setting."""),
-                            types.Part(inline_data=types.Blob(mime_type='image/jpeg', data=image_bytes))
-                        ]
-                    )
-                ],
-                config=types.GenerateContentConfig(
-                    response_modalities=['IMAGE', 'TEXT']
-                )
-            )
-
-            if response.candidates:
-                for part in response.candidates[0].content.parts:
-                    if hasattr(part, 'inline_data') and part.inline_data:
-                        img_data = part.inline_data.data
-                        img_b64 = base64.b64encode(img_data).decode('utf-8')
-                        mime = part.inline_data.mime_type or 'image/png'
-                        generated_images.append(f"data:{mime};base64,{img_b64}")
-                        print(f"      ✅ Image {i+1} generated!")
-                        break
-
-        if generated_images:
-            print(f"   ✅ Success with Gemini 2.0 Flash! Generated {len(generated_images)} images")
-            if len(generated_images) == 1:
-                return generated_images[0]
-            return generated_images
-
-        print(f"      ⚠️ No images generated")
-
-    except Exception as gemini_error:
-        print(f"   ⚠️ Gemini failed: {str(gemini_error)[:150]}")
-
-    print("   ❌ All generation methods failed")
     return None
 
 
 # HANDLER
 class handler(BaseHTTPRequestHandler):
-    
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -750,15 +596,15 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        print("\n📥 AI STUDIO REQUEST - Imagen 3 Mode")
+        print("\n📥 AI STUDIO REQUEST - Gemini Studio Mode")
 
         category = 'Other'
-        
+
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body.decode('utf-8'))
-            
+
             category = data.get('category', 'Other')
             image_data = data.get('image', '')
             request_vertex_key = data.get('vertex_api_key', '')
@@ -781,7 +627,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"📦 Category: {category}")
             print(f"🖼️ Image: {len(image_data)} chars")
             print(f"📊 Output count: {output_count}, Aspect ratio: {aspect_ratio}")
-            
+
             # Analyze product for text/logo preservation
             product_analysis = None
             if image_data:
@@ -815,26 +661,50 @@ class handler(BaseHTTPRequestHandler):
             method_used = 'none'
             error_message = None
 
-            if image_data and active_vertex_key:
-                # Use Imagen 3 with edit_image API (preserves product!)
-                print("🎨 Using Imagen 3 (edit_image - product preservation)...")
+            if image_data:
+                # PRIMARY: Use Gemini Studio Mode (can SEE and PRESERVE the product!)
+                print("🎨 Using Gemini Studio Mode (product preservation)...")
                 try:
-                    result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
+                    result = generate_with_gemini_studio(
+                        image_data,
+                        product_analysis,
+                        custom_prompt_extra,
+                        output_count,
+                        aspect_ratio
+                    )
                     if result:
-                        method_used = 'Imagen 3'
+                        method_used = 'Gemini Studio'
+                        # Handle array or single result
                         if isinstance(result, list):
                             results_array = result
                             result = result[0] if result else None
                         else:
                             results_array = [result] if result else []
-                        print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
+                        print(f"✅ Gemini Studio Success! ({len(results_array)} images)")
                 except Exception as e:
                     error_message = str(e)
-                    print(f"⚠️ Imagen 3 error: {error_message[:100]}")
-            else:
-                error_message = "No image or API key provided"
+                    print(f"⚠️ Gemini Studio error: {error_message[:100]}")
 
-            # Final fallback URL
+                # FALLBACK: Try Imagen 3 if Gemini failed (note: won't preserve product as well)
+                if not result and active_vertex_key:
+                    print("🎨 Fallback to Imagen 3...")
+                    try:
+                        result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
+                        if result:
+                            method_used = 'Imagen 3'
+                            if isinstance(result, list):
+                                results_array = result
+                                result = result[0] if result else None
+                            else:
+                                results_array = [result] if result else []
+                            print(f"✅ Imagen 3 Fallback Success! ({len(results_array)} images)")
+                    except Exception as e:
+                        error_message = str(e)
+                        print(f"⚠️ Imagen 3 fallback error: {error_message[:100]}")
+            else:
+                error_message = "No image provided"
+
+            # Final fallback
             if not result:
                 result = FALLBACK_URLS.get(category, FALLBACK_URLS['Other'])
                 results_array = [result]
@@ -846,7 +716,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             response = {
-                'success': method_used == 'Imagen 3',
+                'success': method_used in ['Gemini Studio', 'Imagen 3'],
                 'generated_image': result,
                 'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,
@@ -857,16 +727,16 @@ class handler(BaseHTTPRequestHandler):
                 'error_message': error_message
             }
             self.wfile.write(json.dumps(response).encode())
-            
+
         except Exception as e:
             print(f"❌ ERROR: {e}")
             traceback.print_exc()
-            
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
+
             self.wfile.write(json.dumps({
                 'success': False,
                 'generated_image': FALLBACK_URLS.get(category, FALLBACK_URLS['Other']),

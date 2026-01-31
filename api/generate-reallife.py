@@ -45,7 +45,7 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-print("✅ Using Imagen 3 for image generation, Gemini for analysis")
+print("✅ Using REST API for all calls (Gemini PRIMARY, Imagen 3 fallback)")
 
 
 def get_fresh_token():
@@ -113,199 +113,72 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def generate_with_vertex_rest(image_bytes, prompt, aspect_ratio='1:1'):
-    """
-    PRIMARY METHOD: Generate image using Vertex AI REST API with OAuth2
-    Uses SUBJECT reference to extract product and place in new scene.
-    This preserves the product while generating a new background/scene.
-    """
-    global oauth2_token, project_id
-
-    token = get_fresh_token()
-    if not token or not project_id:
-        print("      ⚠️ No OAuth2 token or project_id - skipping Vertex REST")
+def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
+    """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
+    if not GOOGLE_API_KEY:
+        print("      ⚠️ GOOGLE_API_KEY not set")
         return None
 
-    print(f"      🔑 Using Vertex AI REST API with OAuth2...")
+    # Models that support image generation
+    models_to_try = [
+        'gemini-2.0-flash-preview-image-generation',
+        'gemini-2.0-flash-exp-image-generation',
+        'gemini-2.0-flash'
+    ]
 
-    # Encode image
+    headers = {"Content-Type": "application/json"}
     image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    for model_name in models_to_try:
+        try:
+            print(f"      🎨 Trying {model_name}...")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GOOGLE_API_KEY}"
 
-    region = "us-central1"
+            # Build generation config with aspect ratio
+            gen_config = {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+            # Add aspect ratio to generation config
+            if aspect_ratio:
+                gen_config["aspectRatio"] = aspect_ratio
+                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
-    # Strategy 1: Use SUBJECT reference with generate model
-    # This extracts the product and places it in the scene described by prompt
-    print(f"         📸 Trying SUBJECT reference (product extraction)...")
-
-    model_id = "imagen-3.0-generate-002"
-    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
-
-    payload = {
-        "instances": [{
-            "prompt": prompt,
-            "referenceImages": [{
-                "referenceType": "REFERENCE_TYPE_SUBJECT",
-                "referenceId": 1,
-                "referenceImage": {
-                    "bytesBase64Encoded": image_b64
-                }
-            }]
-        }],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": aspect_ratio if aspect_ratio != '1:1' else None,
-            "personGeneration": "allow_adult",
-            "safetyFilterLevel": "block_only_high"
-        }
-    }
-
-    # Remove None values from parameters
-    payload["parameters"] = {k: v for k, v in payload["parameters"].items() if v is not None}
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
-
-            if predictions:
-                for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        print(f"      ✅ Success with SUBJECT reference!")
-                        return f"data:image/png;base64,{img_b64_result}"
-
-            print(f"         ⚠️ No images in SUBJECT response")
-        else:
-            error_text = response.text[:300] if response.text else "Unknown"
-            print(f"         ⚠️ SUBJECT error {response.status_code}: {error_text}")
-
-    except Exception as e:
-        print(f"         ⚠️ SUBJECT error: {str(e)[:100]}")
-
-    # Strategy 2: Try STYLE reference as fallback
-    print(f"         📸 Trying STYLE reference (fallback)...")
-
-    payload["instances"][0]["referenceImages"][0]["referenceType"] = "REFERENCE_TYPE_STYLE"
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            data = response.json()
-            predictions = data.get('predictions', [])
-
-            if predictions:
-                for pred in predictions:
-                    img_b64_result = pred.get('bytesBase64Encoded')
-                    if img_b64_result:
-                        print(f"      ✅ Success with STYLE reference!")
-                        return f"data:image/png;base64,{img_b64_result}"
-
-        else:
-            error_text = response.text[:200] if response.text else "Unknown"
-            print(f"         ⚠️ STYLE error {response.status_code}: {error_text}")
-
-    except Exception as e:
-        print(f"         ⚠️ STYLE error: {str(e)[:100]}")
-
-    print("      ❌ Vertex REST API failed all strategies")
-    return None
-
-
-def generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio='1:1'):
-    """
-    Generate image using Imagen 3 edit_image API - PRESERVES PRODUCT!
-    Uses INPAINT/BGSWAP to keep product intact while changing background/scene.
-
-    Strategy:
-    1. Try Vertex AI REST API with OAuth2 (most reliable)
-    2. Fallback to genai.Client with API key
-    """
-
-    # METHOD 1: Try Vertex AI REST API with OAuth2 first
-    result = generate_with_vertex_rest(image_bytes, prompt, aspect_ratio)
-    if result:
-        return result
-
-    # METHOD 2: Fallback to genai.Client with Vertex AI (not API key)
-    print(f"      🔄 Trying genai.Client with Vertex AI...")
-
-    try:
-        from google import genai
-        from google.genai import types
-
-        # Create Vertex AI client (not API key client)
-        if GOOGLE_CREDENTIALS_JSON:
-            import tempfile
-            import os as temp_os
-
-            # Write credentials to temp file for SDK
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                f.write(GOOGLE_CREDENTIALS_JSON)
-                temp_creds_path = f.name
-
-            # Set env var for SDK
-            temp_os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
-
-            client = genai.Client(vertexai=True, project=project_id, location='us-central1')
-            print(f"      ✅ Created Vertex AI client for project: {project_id}")
-        else:
-            print("      ⚠️ No credentials for Vertex AI client")
-            return None
-
-    except Exception as e:
-        print(f"      ⚠️ Failed to create genai client: {e}")
-        return None
-
-    # Try Gemini 2.0 Flash with image generation (can see reference and generate)
-    print(f"      📸 Trying Gemini 2.0 Flash image generation...")
-
-    try:
-        # Gemini can see the image and generate based on it
-        image_b64 = base64.b64encode(image_bytes).decode('utf-8')
-
-        response = client.models.generate_content(
-            model='gemini-2.0-flash-exp',
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part(text=f"""Look at this product image carefully. Generate a NEW professional photograph of THIS EXACT PRODUCT in a lifestyle scene.
-
-{prompt}
-
-CRITICAL: The product must be IDENTICAL to the reference - same colors, textures, and all details preserved. Only change the background/environment."""),
-                        types.Part(inline_data=types.Blob(mime_type='image/jpeg', data=image_bytes))
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": prompt},
+                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}
                     ]
-                )
-            ],
-            config=types.GenerateContentConfig(
-                response_modalities=['IMAGE', 'TEXT']
-            )
-        )
+                }],
+                "generationConfig": gen_config
+            }
 
-        # Extract generated image
-        if response.candidates:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, 'inline_data') and part.inline_data:
-                    img_data = part.inline_data.data
-                    img_b64 = base64.b64encode(img_data).decode('utf-8')
-                    mime = part.inline_data.mime_type or 'image/png'
-                    print(f"      ✅ Success with Gemini 2.0 Flash!")
-                    return f"data:{mime};base64,{img_b64}"
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
 
-        print(f"         ⚠️ No image in Gemini response")
+            if response.status_code == 200:
+                data = response.json()
+                candidates = data.get('candidates', [])
 
-    except Exception as gemini_error:
-        print(f"      ⚠️ Gemini failed: {str(gemini_error)[:150]}")
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    for part in parts:
+                        inline_data = part.get('inline_data') or part.get('inlineData')
+                        if inline_data:
+                            img_data = inline_data.get('data')
+                            mime_type = inline_data.get('mime_type', 'image/png')
+                            if img_data:
+                                print(f"      ✅ Got image from {model_name}")
+                                return f"data:{mime_type};base64,{img_data}"
 
-    print("      ❌ All generation methods failed")
+                print(f"      ⚠️ {model_name}: No image in response")
+            else:
+                error_text = response.text[:100] if response.text else "Unknown error"
+                print(f"      ⚠️ {model_name}: {response.status_code} - {error_text}")
+
+        except Exception as e:
+            print(f"      ⚠️ {model_name} error: {str(e)[:50]}")
+            continue
+
     return None
 
 
@@ -592,15 +465,11 @@ class handler(BaseHTTPRequestHandler):
 
             source_image = data.get('source_image', '')
             product_info = data.get('product_info', {})
-            request_vertex_key = data.get('vertex_api_key', '')
 
             # NEW: Configurable output count and aspect ratio
             output_count = data.get('output_count', 3)  # 1-4, default 3
             aspect_ratio = data.get('aspect_ratio', '1:1')  # Default 1:1
             custom_prompt = data.get('custom_prompt', '')  # Optional extra prompt
-
-            # Get API key
-            active_api_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
 
             # Validate output_count
             output_count = max(1, min(4, int(output_count)))
@@ -667,8 +536,8 @@ class handler(BaseHTTPRequestHandler):
 
             results['analysis'] = product_analysis
 
-            # Step 2: Generate Real Life Shots using Imagen 3 edit_image (PRESERVES PRODUCT!)
-            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Imagen 3 - product preservation)...")
+            # Step 2: Generate Real Life Shots using GEMINI (can see the product!)
+            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Gemini - can see product)...")
 
             generated_count = 0
             for i in range(output_count):
@@ -682,12 +551,12 @@ class handler(BaseHTTPRequestHandler):
                 if custom_prompt:
                     prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
 
-                # Use Imagen 3 edit_image - preserves product while changing background!
-                print(f"      🔍 Using Imagen 3 edit_image (product preservation)...")
+                # Use Gemini as PRIMARY - it can SEE the reference image!
+                print(f"      🔍 Using Gemini (can see reference image)...")
 
-                for attempt in range(3):
-                    print(f"      🎨 Attempt {attempt+1}/3...")
-                    shot_image = generate_with_imagen3_edit(image_bytes, prompt, active_api_key, aspect_ratio)
+                for attempt in range(2):
+                    print(f"      🎨 Attempt {attempt+1}/2...")
+                    shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
                     if shot_image:
                         results[shot_key] = shot_image
@@ -699,8 +568,8 @@ class handler(BaseHTTPRequestHandler):
                         print(f"   ✅ {shot_key} complete")
                         break
 
-                    if attempt < 2:
-                        time.sleep(2)
+                    if attempt < 1:
+                        time.sleep(1)
 
                 if not results.get(shot_key):
                     print(f"   ⚠️ {shot_key} failed")
