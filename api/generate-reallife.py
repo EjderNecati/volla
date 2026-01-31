@@ -45,7 +45,7 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-print("✅ Using REST API for all calls (Gemini PRIMARY, Imagen 3 fallback)")
+print("✅ Using REST API for all calls (Imagen 3 PRIMARY, Gemini fallback)")
 
 
 def get_fresh_token():
@@ -113,8 +113,101 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
+def generate_with_imagen3_lifestyle(image_bytes, prompt, aspect_ratio='1:1'):
+    """
+    PRIMARY: Generate lifestyle image using Imagen 3 with reference image
+    Imagen 3 can see and preserve the product!
+    """
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available")
+        return None
+
+    print(f"      🎨 Using Imagen 3 with reference image...")
+
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Try capability-001 model with edit modes
+    models_to_try = [
+        'imagen-3.0-capability-001',
+        'imagen-3.0-generate-001'
+    ]
+
+    for model_name in models_to_try:
+        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/{model_name}:predict"
+
+        # Try INPAINT mode - replaces background while preserving product
+        payload = {
+            "instances": [{
+                "prompt": prompt,
+                "image": {
+                    "bytesBase64Encoded": image_b64
+                },
+                "mask": {
+                    "maskMode": "MASK_MODE_BACKGROUND"
+                }
+            }],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": aspect_ratio,
+                "editConfig": {
+                    "editMode": "EDIT_MODE_INPAINT_INSERTION"
+                }
+            }
+        }
+
+        try:
+            print(f"      🔄 Trying {model_name} INPAINT...")
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+            if response.status_code == 200:
+                result = response.json()
+                predictions = result.get("predictions", [])
+
+                if predictions and predictions[0].get("bytesBase64Encoded"):
+                    img_b64 = predictions[0]["bytesBase64Encoded"]
+                    print(f"      ✅ Imagen 3 INPAINT success!")
+                    return f"data:image/png;base64,{img_b64}"
+            else:
+                error_text = response.text[:150] if response.text else "Unknown"
+                print(f"      ⚠️ {model_name} INPAINT: {response.status_code} - {error_text}")
+
+        except Exception as e:
+            print(f"      ⚠️ {model_name} error: {str(e)[:80]}")
+
+        # Try BGSWAP as alternative
+        payload["parameters"]["editConfig"] = {"editMode": "EDIT_MODE_BGSWAP"}
+        del payload["instances"][0]["mask"]
+
+        try:
+            print(f"      🔄 Trying {model_name} BGSWAP...")
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+            if response.status_code == 200:
+                result = response.json()
+                predictions = result.get("predictions", [])
+
+                if predictions and predictions[0].get("bytesBase64Encoded"):
+                    img_b64 = predictions[0]["bytesBase64Encoded"]
+                    print(f"      ✅ Imagen 3 BGSWAP success!")
+                    return f"data:image/png;base64,{img_b64}"
+            else:
+                error_text = response.text[:150] if response.text else "Unknown"
+                print(f"      ⚠️ {model_name} BGSWAP: {response.status_code} - {error_text}")
+
+        except Exception as e:
+            print(f"      ⚠️ {model_name} BGSWAP error: {str(e)[:80]}")
+
+    return None
+
+
 def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
-    """Call Gemini for image generation - CAN SEE THE REFERENCE IMAGE!"""
+    """FALLBACK: Call Gemini for image generation"""
     if not GOOGLE_API_KEY:
         print("      ⚠️ GOOGLE_API_KEY not set")
         return None
@@ -141,7 +234,6 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             # Add aspect ratio to generation config
             if aspect_ratio:
                 gen_config["aspectRatio"] = aspect_ratio
-                print(f"      📐 Using aspect ratio: {aspect_ratio}")
 
             payload = {
                 "contents": [{
@@ -536,8 +628,8 @@ class handler(BaseHTTPRequestHandler):
 
             results['analysis'] = product_analysis
 
-            # Step 2: Generate Real Life Shots using GEMINI (can see the product!)
-            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Gemini - can see product)...")
+            # Step 2: Generate Real Life Shots - Imagen 3 PRIMARY, Gemini FALLBACK
+            print(f"📷 Step 2: Generating {output_count} Real Life Shots (Imagen 3 PRIMARY)...")
 
             generated_count = 0
             for i in range(output_count):
@@ -551,27 +643,34 @@ class handler(BaseHTTPRequestHandler):
                 if custom_prompt:
                     prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
 
-                # Use Gemini as PRIMARY - it can SEE the reference image!
-                print(f"      🔍 Using Gemini (can see reference image)...")
+                shot_image = None
 
-                for attempt in range(2):
-                    print(f"      🎨 Attempt {attempt+1}/2...")
-                    shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
+                # PRIMARY: Try Imagen 3 with reference image (100% product preservation)
+                print(f"      🎯 PRIMARY: Imagen 3 with reference...")
+                shot_image = generate_with_imagen3_lifestyle(image_bytes, prompt, aspect_ratio)
 
-                    if shot_image:
-                        results[shot_key] = shot_image
-                        results['shots'].append({
-                            'image': shot_image,
-                            'label': f'Lifestyle {i+1}'
-                        })
-                        generated_count += 1
-                        print(f"   ✅ {shot_key} complete")
-                        break
+                # FALLBACK: Use Gemini if Imagen 3 failed
+                if not shot_image:
+                    print(f"      🔄 FALLBACK: Gemini (can see reference image)...")
+                    for attempt in range(2):
+                        print(f"      🎨 Gemini attempt {attempt+1}/2...")
+                        shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
-                    if attempt < 1:
-                        time.sleep(1)
+                        if shot_image:
+                            break
 
-                if not results.get(shot_key):
+                        if attempt < 1:
+                            time.sleep(1)
+
+                if shot_image:
+                    results[shot_key] = shot_image
+                    results['shots'].append({
+                        'image': shot_image,
+                        'label': f'Lifestyle {i+1}'
+                    })
+                    generated_count += 1
+                    print(f"   ✅ {shot_key} complete")
+                else:
                     print(f"   ⚠️ {shot_key} failed")
 
             results['output_count'] = generated_count
