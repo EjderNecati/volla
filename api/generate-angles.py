@@ -429,6 +429,9 @@ class handler(BaseHTTPRequestHandler):
             source_context = data.get('source_context', 'STUDIO')
             # NEW: Aspect ratio support
             aspect_ratio = data.get('aspect_ratio', '1:1')
+            # NEW: Output count support (1-4, default 3)
+            output_count = data.get('output_count', 3)
+            output_count = max(1, min(4, int(output_count)))
 
             # Use request key or fall back to env var
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
@@ -437,6 +440,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"📦 Product: {product_desc[:50]}...")
             print(f"🎬 Source Context: {source_context}")
             print(f"📐 Aspect Ratio: {aspect_ratio}")
+            print(f"📊 Output Count: {output_count}")
             print(f"🔑 API Key: {'from request' if request_vertex_key else 'from env'}")
 
             results = {
@@ -444,11 +448,14 @@ class handler(BaseHTTPRequestHandler):
                 'shot1': None,
                 'shot2': None,
                 'shot3': None,
+                'shot4': None,
                 'shot_names': {
                     'shot1': 'Front View',
                     'shot2': 'Side View',
-                    'shot3': 'Back View'
+                    'shot3': 'Back View',
+                    'shot4': 'Detail View'
                 },
+                'output_count': output_count,
                 'physics_category': None,
                 'error': None
             }
@@ -510,18 +517,23 @@ class handler(BaseHTTPRequestHandler):
 
             # Get staging config
             config = STAGING_MAP.get(category, STAGING_MAP['STANDARD_GROUND'])
-            angles = config['angles']
+            all_angles = config['angles']
             staging = config['staging']
 
-            # Update shot names
-            results['shot_names'] = {
-                'shot1': angles[0][:30],
-                'shot2': angles[1][:30],
-                'shot3': angles[2][:30]
-            }
+            # Extend angles list if we need 4 shots
+            if len(all_angles) < 4:
+                all_angles = all_angles + ['Detail/Close-up view showing texture and quality']
+
+            # Limit to output_count
+            angles = all_angles[:output_count]
+
+            # Update shot names based on output_count
+            results['shot_names'] = {}
+            for i, angle in enumerate(angles):
+                results['shot_names'][f'shot{i+1}'] = angle[:30]
 
             # Step 2: Generate shots
-            print("📷 Generating multi-angle shots...")
+            print(f"📷 Generating {output_count} multi-angle shots...")
 
             for i, angle in enumerate(angles):
                 shot_key = f'shot{i+1}'
@@ -545,10 +557,12 @@ class handler(BaseHTTPRequestHandler):
                 else:
                     print(f"   ⚠️ {shot_key} failed")
 
-            # Check success
-            if results['shot1'] or results['shot2'] or results['shot3']:
+            # Check success - at least one shot generated
+            generated = sum(1 for i in range(1, 5) if results.get(f'shot{i}'))
+            if generated > 0:
                 results['success'] = True
-                print("✅ Multi-angle generation complete!")
+                results['generated_count'] = generated
+                print(f"✅ Multi-angle generation complete! ({generated}/{output_count} shots)")
             else:
                 results['error'] = 'All shots failed'
 

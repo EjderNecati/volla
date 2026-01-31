@@ -316,11 +316,14 @@
         "lifestyle3": "Lifestyle 3"
     },
     "marketplace": {
+        "title": "Marketplace",
         "etsy": "Etsy",
         "amazon": "Amazon",
-        "shopify": "Shopify"
+        "shopify": "Shopify",
+        "none": "None"
     },
     "results": {
+        "seoResults": "SEO Results",
         "seoTitle": "SEO Title",
         "productTitle": "Product Title",
         "productDescription": "Product Description",

@@ -902,10 +902,11 @@ export const generateStudioImage = async (category, imageBase64 = null, productI
 // Analyzes input angle, generates OPPOSITE angles
 // =====================================================
 
-export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO', aspectRatio = '1:1') => {
+export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO', aspectRatio = '1:1', outputCount = 3) => {
   log('🎬 Multi-Angle Generator v3.0 (Dynamic Detection): Starting...');
   log(`   Source Context: ${sourceContext}`);
   log(`   Aspect Ratio: ${aspectRatio}`);
+  log(`   Output Count: ${outputCount}`);
 
   if (!sourceImage) {
     throw new Error('No source image provided');
@@ -931,7 +932,8 @@ export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO
         source_image: compressedImage,
         source_context: sourceContext, // 'STUDIO' or 'LIFE' - tells backend to preserve scene
         vertex_api_key: vertexApiKey, // Send Vertex API key for Imagen 3
-        aspect_ratio: aspectRatio // NEW: Aspect ratio support
+        aspect_ratio: aspectRatio, // Aspect ratio support
+        output_count: outputCount // Output count support (1-4)
       })
     });
 
@@ -954,21 +956,24 @@ export const generateProductAngles = async (sourceImage, sourceContext = 'STUDIO
     if (data.success) {
       log('✅ Dynamic multi-angle generation complete!');
 
-      // v3.0 returns shot1/2/3 with dynamic labels
+      // v3.0 returns shot1/2/3/4 with dynamic labels
       return {
         success: true,
         // Map shots to display format
         shot1: data.shot1,
         shot2: data.shot2,
         shot3: data.shot3,
+        shot4: data.shot4,
         // Dynamic labels based on detected angle
         labels: data.shot_names || {
           shot1: 'Rotation',
           shot2: 'Context',
-          shot3: 'Detail'
+          shot3: 'Detail',
+          shot4: 'Close-up'
         },
         detectedAngle: data.detected_angle,
-        baseDescription: data.base_description
+        baseDescription: data.base_description,
+        generatedCount: data.generated_count || outputCount
       };
     } else {
       throw new Error('Generation failed');

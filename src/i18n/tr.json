@@ -308,11 +308,14 @@
         "lifestyle3": "Yaşam Tarzı 3"
     },
     "marketplace": {
+        "title": "Pazar Yeri",
         "etsy": "Etsy",
         "amazon": "Amazon",
-        "shopify": "Shopify"
+        "shopify": "Shopify",
+        "none": "Seçilmedi"
     },
     "results": {
+        "seoResults": "SEO Sonuçları",
         "seoTitle": "SEO Başlığı",
         "productTitle": "Ürün Başlığı",
         "productDescription": "Ürün Açıklaması",

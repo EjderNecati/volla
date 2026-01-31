@@ -462,15 +462,23 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                 }
             } else if (photoType === 'shots') {
                 setAnglesLoading(true);
-                console.log(`📷 Generating Shots from: ${activeAsset.type}`);
+                console.log(`📷 Generating ${outputCount} Shots from: ${activeAsset.type}`);
 
                 const sourceContext = activeAsset.type === 'REALLIFE' ? 'LIFE' : 'STUDIO';
-                const anglesResult = await generateProductAngles(activeAsset.url, sourceContext, aspectRatio);
+                const anglesResult = await generateProductAngles(activeAsset.url, sourceContext, aspectRatio, outputCount);
 
                 if (anglesResult.success) {
-                    if (anglesResult.shot1) addAssetToSession(anglesResult.shot1, 'SHOT', activeAsset.id, anglesResult.labels?.shot1 || 'Angle 1');
-                    if (anglesResult.shot2) addAssetToSession(anglesResult.shot2, 'SHOT', activeAsset.id, anglesResult.labels?.shot2 || 'Angle 2');
-                    if (anglesResult.shot3) addAssetToSession(anglesResult.shot3, 'SHOT', activeAsset.id, anglesResult.labels?.shot3 || 'Angle 3');
+                    // Add generated shots based on outputCount
+                    for (let i = 1; i <= 4; i++) {
+                        if (anglesResult[`shot${i}`]) {
+                            addAssetToSession(
+                                anglesResult[`shot${i}`],
+                                'SHOT',
+                                activeAsset.id,
+                                anglesResult.labels?.[`shot${i}`] || `Angle ${i}`
+                            );
+                        }
+                    }
                 }
             } else if (photoType === 'studio') {
                 setStudioLoading(true);
@@ -520,70 +528,47 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     );
 
     // ═══════════════════════════════════════════════════════════════════
-    // RENDER: Platform Selector (compact, for changes only)
+    // RENDER: Platform Selector (grid layout matching other selectors)
     // ═══════════════════════════════════════════════════════════════════
     const renderPlatformSelector = () => {
-        // If marketplace already selected, show compact version
-        if (marketplace && !showWelcome) {
-            return (
-                <div className="flex justify-center mb-4">
-                    <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1">
-                        {Object.entries(MARKETPLACE_COLORS).map(([key, colors]) => {
-                            const Icon = colors.icon;
-                            const isActive = marketplace === key;
-                            return (
-                                <button
-                                    key={key}
-                                    onClick={() => handlePlatformSelect(key)}
-                                    className="px-3 py-2 rounded-lg font-medium text-xs transition-all flex items-center gap-1.5"
-                                    style={{
-                                        backgroundColor: isActive ? colors.primary : 'transparent',
-                                        color: isActive ? colors.text : '#5C5C5C'
-                                    }}
-                                >
-                                    <Icon size={14} />
-                                    <span>{key.toUpperCase()}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        }
-
-        // Full welcome selector with glow
-        // LOCKED when session has active assets (user must click X to clear first)
-        const isLocked = sessionAssets.length > 0;
+        const marketplaces = [
+            { id: null, label: t('marketplace.none') || 'None', icon: null, colors: { primary: '#E8E7E4', text: '#5C5C5C' } },
+            ...Object.entries(MARKETPLACE_COLORS).map(([key, colors]) => ({
+                id: key,
+                label: key.toUpperCase(),
+                icon: colors.icon,
+                colors
+            }))
+        ];
 
         return (
-            <div className={`flex justify-center mb-6 ${showWelcome ? 'relative z-50' : ''}`}>
-                <div className={`inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1 shadow-sm ${showWelcome ? 'platform-glow' : ''} ${isLocked ? 'opacity-60' : ''}`}>
-                    {Object.entries(MARKETPLACE_COLORS).map(([key, colors]) => {
-                        const Icon = colors.icon;
-                        const isActive = marketplace === key;
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => !isLocked && handlePlatformSelect(key)}
-                                disabled={isLocked && !isActive}
-                                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${isLocked && !isActive ? 'cursor-not-allowed' : ''}`}
-                                style={{
-                                    backgroundColor: isActive ? colors.primary : 'transparent',
-                                    color: isActive ? colors.text : '#5C5C5C'
-                                }}
-                                title={isLocked && !isActive ? 'Clear current product (X) to switch marketplace' : ''}
-                            >
-                                <Icon size={16} />
-                                <span>{key.toUpperCase()}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-                {isLocked && (
-                    <div className="absolute -bottom-5 text-xs text-[#8C8C8C]">
-                        Clear product to switch
-                    </div>
-                )}
+            <div className="grid grid-cols-4 gap-2">
+                {marketplaces.map(mp => {
+                    const isActive = marketplace === mp.id;
+                    const Icon = mp.icon;
+                    return (
+                        <button
+                            key={mp.id || 'none'}
+                            onClick={() => {
+                                setLocalMarketplace(mp.id);
+                                if (onMarketplaceSelect) onMarketplaceSelect(mp.id);
+                            }}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                                isActive
+                                    ? mp.id ? '' : 'bg-[#5C5C5C] text-white border-[#5C5C5C]'
+                                    : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#5C5C5C]'
+                            }`}
+                            style={isActive && mp.id ? {
+                                backgroundColor: mp.colors.primary,
+                                borderColor: mp.colors.primary,
+                                color: mp.colors.text
+                            } : {}}
+                        >
+                            {Icon ? <Icon size={16} /> : <span className="text-lg">—</span>}
+                            <span className="text-[10px] font-medium">{mp.label}</span>
+                        </button>
+                    );
+                })}
             </div>
         );
     };
@@ -592,17 +577,17 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // RENDER: Upload Zone
     // ═══════════════════════════════════════════════════════════════════
     const renderUploadZone = () => {
-        if (!marketplace || sessionAssets.length > 0) return null;
+        // Show upload zone when no assets uploaded yet
+        if (sessionAssets.length > 0) return null;
 
         return (
-            <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-8">
                 <label
-                    className="w-64 h-48 flex flex-col items-center justify-center cursor-pointer bg-white border-2 border-dashed border-[#D4D3D0] rounded-2xl p-8 text-center transition-all hover:shadow-lg"
-                    style={{ borderColor: 'hover:' + getColor().primary }}
+                    className="w-full h-40 flex flex-col items-center justify-center cursor-pointer bg-[#FAF9F6] border-2 border-dashed border-[#D4D3D0] rounded-2xl p-6 text-center transition-all hover:border-[#E06847] hover:bg-[#FFF9F7]"
                 >
-                    <Upload className="w-12 h-12 text-[#8C8C8C] mb-3" />
-                    <span className="text-[#1A1A1A] font-medium">{t('studio.uploadPhoto')}</span>
-                    <span className="text-[#5C5C5C] text-sm mt-1">{t('common.dragOrClick')}</span>
+                    <Upload className="w-10 h-10 text-[#8C8C8C] mb-2" />
+                    <span className="text-[#1A1A1A] font-medium text-sm">{t('studio.uploadPhoto')}</span>
+                    <span className="text-[#8C8C8C] text-xs mt-1">{t('common.dragOrClick')}</span>
                     <input
                         type="file"
                         className="hidden"
@@ -610,9 +595,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         accept="image/*"
                     />
                 </label>
-                <p className="text-[#8C8C8C] text-sm mt-4 max-w-xs text-center">
-                    {t('studio.uploadDescription', { marketplace: marketplace?.toUpperCase() })}
-                </p>
             </div>
         );
     };
@@ -1033,44 +1015,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         )}
                     </div>
 
-                    {/* Action Buttons - Mobile responsive */}
-                    <div className="mt-4 flex items-center justify-center gap-2 sm:gap-4">
-                        <button
-                            onClick={handleGenerateStudio}
-                            disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-medium transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
-                            style={{ backgroundColor: color.primary, color: color.text }}
-                        >
-                            <div className="flex items-center gap-1 sm:gap-2">
-                                <Sparkles size={14} className="sm:w-[18px] sm:h-[18px]" />
-                                <span className="text-xs sm:text-base">{t('studio.title')}</span>
-                            </div>
-                            <span className="text-[8px] sm:text-[10px] opacity-60">5 {t('credits.creditsUnit')}</span>
-                        </button>
-                        <button
-                            onClick={handleGenerateShots}
-                            disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 bg-[#1A1A1A] text-white rounded-xl sm:rounded-2xl font-medium hover:bg-[#333] transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
-                        >
-                            <div className="flex items-center gap-1 sm:gap-2">
-                                <RotateCcw size={14} className="sm:w-[18px] sm:h-[18px]" />
-                                <span className="text-xs sm:text-base">{t('nav.shots')}</span>
-                            </div>
-                            <span className="text-[8px] sm:text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
-                        </button>
-                        <button
-                            onClick={handleGenerateRealLife}
-                            disabled={anyLoading}
-                            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 sm:px-6 sm:py-3 bg-emerald-600 text-white rounded-xl sm:rounded-2xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 min-w-[80px] sm:min-w-[120px]"
-                        >
-                            <div className="flex items-center gap-1 sm:gap-2">
-                                <Users size={14} className="sm:w-[18px] sm:h-[18px]" />
-                                <span className="text-xs sm:text-base">{t('nav.realLife')}</span>
-                            </div>
-                            <span className="text-[8px] sm:text-[10px] text-white/50">5 {t('credits.creditsUnit')}</span>
-                        </button>
-                    </div>
-
                     {/* Film Strip */}
                     {sessionAssets.length > 1 && (
                         <div className="mt-4">
@@ -1084,25 +1028,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 activeAssetId={activeAssetId}
                                 onAssetClick={setActiveAssetId}
                             />
-                        </div>
-                    )}
-                </div>
-
-                {/* Right: SEO Results */}
-                <div className="lg:w-96">
-                    {loading ? (
-                        <div className="bg-white border border-[#E8E7E4] rounded-2xl p-8 text-center">
-                            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" style={{ color: color.primary }} />
-                            <p className="text-[#5C5C5C] text-sm">{loadingStep || t('studio.analyzing')}</p>
-                        </div>
-                    ) : results ? (
-                        renderSEOResults()
-                    ) : (
-                        <div className="bg-white border border-[#E8E7E4] rounded-2xl p-8 text-center">
-                            <Search className="w-8 h-8 text-[#8C8C8C] mx-auto mb-3" />
-                            <p className="text-[#5C5C5C] text-sm">
-                                {t('studio.uploadForAnalysis')}
-                            </p>
                         </div>
                     )}
                 </div>
@@ -1245,11 +1170,10 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 </div>
                             </div>
 
-                            {/* Aspect Ratio Selector - Optional */}
+                            {/* Aspect Ratio Selector */}
                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide flex items-center gap-2">
+                                <label className="text-xs font-semibold text-[#5C5C5C] uppercase tracking-wide">
                                     {t('studioRedesign.aspectRatio.title') || 'Aspect Ratio'}
-                                    <span className="text-[10px] font-normal text-[#8C8C8C] normal-case">({t('common.optional') || 'Optional'})</span>
                                 </label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {ASPECT_RATIOS.map(ratio => (
