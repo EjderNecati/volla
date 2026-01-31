@@ -1,78 +1,51 @@
-import { useState } from 'react';
-import { ScanSearch, Clock, Settings, Sparkles } from 'lucide-react';
+import { Home, BarChart2, Clock, Settings, Sparkles } from 'lucide-react';
 
 export default function BottomNav({ activeTab, onTabChange }) {
     const leftItems = [
-        { id: 'home', icon: ScanSearch, label: 'Scan' },
-        { id: 'history', icon: Clock, label: 'History' },
+        { id: 'home', icon: Home, label: 'Home' },
+        { id: 'analysis', icon: BarChart2, label: 'Analysis' },
     ];
 
     const rightItems = [
+        { id: 'history', icon: Clock, label: 'History' },
         { id: 'settings', icon: Settings, label: 'Settings' },
     ];
 
     return (
-        <nav className="sticky bottom-0 z-50 bg-[#FAF9F6]/80 backdrop-blur-lg border-t border-white">
-            <div className="flex items-center justify-around px-4 py-2">
+        <nav className="sticky bottom-0 z-50 bg-[#FAF9F6] border-t border-gray-200">
+            <div className="flex items-end justify-around px-2 py-2">
                 {/* Left items */}
                 {leftItems.map(({ id, icon: Icon, label }) => (
                     <button
                         key={id}
                         onClick={() => onTabChange(id)}
-                        className="flex flex-col items-center gap-1 min-w-[3.5rem] group"
+                        className="flex flex-col items-center gap-0.5 min-w-[50px]"
                     >
-                        <div className={`
-                            p-2 rounded-xl transition-all duration-300
-                            ${activeTab === id
-                                ? 'bg-violet-500 shadow-lg shadow-violet-500/50'
-                                : 'bg-transparent group-hover:bg-white'
-                            }
-                        `}>
-                            <Icon
-                                className={`
-                                    w-5 h-5 transition-colors duration-300
-                                    ${activeTab === id
-                                        ? 'text-white'
-                                        : 'text-[#5C5C5C] group-hover:text-violet-500'
-                                    }
-                                `}
-                            />
-                        </div>
-                        <span className={`
-                            text-[10px] font-medium transition-colors duration-300
-                            ${activeTab === id
-                                ? 'text-violet-400'
-                                : 'text-[#8C8C8C] group-hover:text-[#5C5C5C]'
-                            }
-                        `}>
+                        <Icon
+                            className={`w-5 h-5 ${activeTab === id ? 'text-orange-500' : 'text-gray-400'
+                                }`}
+                        />
+                        <span className={`text-[10px] ${activeTab === id ? 'text-orange-500' : 'text-gray-400'
+                            }`}>
                             {label}
                         </span>
                     </button>
                 ))}
 
-                {/* Center AI Studio button - raised and circular */}
+                {/* Center AI Studio button - large orange circle */}
                 <button
                     onClick={() => onTabChange('studio')}
-                    className="relative -mt-6 flex flex-col items-center"
+                    className="relative -mt-4 flex flex-col items-center"
                 >
                     <div className={`
                         w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300
                         ${activeTab === 'studio'
-                            ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-violet-500/50'
-                            : 'bg-gradient-to-br from-violet-400 to-purple-500 hover:from-violet-500 hover:to-purple-600'
+                            ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/40'
+                            : 'bg-gradient-to-br from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600'
                         }
                     `}>
                         <Sparkles className="w-6 h-6 text-white" />
                     </div>
-                    <span className={`
-                        text-[10px] font-medium mt-1 transition-colors duration-300
-                        ${activeTab === 'studio'
-                            ? 'text-violet-500'
-                            : 'text-[#8C8C8C]'
-                        }
-                    `}>
-                        AI Studio
-                    </span>
                 </button>
 
                 {/* Right items */}
@@ -80,32 +53,14 @@ export default function BottomNav({ activeTab, onTabChange }) {
                     <button
                         key={id}
                         onClick={() => onTabChange(id)}
-                        className="flex flex-col items-center gap-1 min-w-[3.5rem] group"
+                        className="flex flex-col items-center gap-0.5 min-w-[50px]"
                     >
-                        <div className={`
-                            p-2 rounded-xl transition-all duration-300
-                            ${activeTab === id
-                                ? 'bg-violet-500 shadow-lg shadow-violet-500/50'
-                                : 'bg-transparent group-hover:bg-white'
-                            }
-                        `}>
-                            <Icon
-                                className={`
-                                    w-5 h-5 transition-colors duration-300
-                                    ${activeTab === id
-                                        ? 'text-white'
-                                        : 'text-[#5C5C5C] group-hover:text-violet-500'
-                                    }
-                                `}
-                            />
-                        </div>
-                        <span className={`
-                            text-[10px] font-medium transition-colors duration-300
-                            ${activeTab === id
-                                ? 'text-violet-400'
-                                : 'text-[#8C8C8C] group-hover:text-[#5C5C5C]'
-                            }
-                        `}>
+                        <Icon
+                            className={`w-5 h-5 ${activeTab === id ? 'text-orange-500' : 'text-gray-400'
+                                }`}
+                        />
+                        <span className={`text-[10px] ${activeTab === id ? 'text-orange-500' : 'text-gray-400'
+                            }`}>
                             {label}
                         </span>
                     </button>

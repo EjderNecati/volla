@@ -42,7 +42,7 @@ const MARKETPLACE_COLORS = {
  * - SEO Results display (Title, Tags, Description, Price)
  * - Generate Shots, Real Life from any active asset
  */
-export default function AIStudioView({ initialAsset = null, initialProject = null, marketplace: propMarketplace, onMarketplaceSelect, onBack, onNavigate }) {
+export default function AIStudioView({ initialAsset = null, initialProject = null, marketplace: propMarketplace, onMarketplaceSelect, onClearLoaded, onBack, onNavigate }) {
     // ═══════════════════════════════════════════════════════════════════
     // LOCAL MARKETPLACE STATE (falls back to prop)
     // ═══════════════════════════════════════════════════════════════════
@@ -453,21 +453,26 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
         }
 
         // Full welcome selector with glow
+        // LOCKED when session has active assets (user must click X to clear first)
+        const isLocked = sessionAssets.length > 0;
+
         return (
             <div className={`flex justify-center mb-6 ${showWelcome ? 'relative z-50' : ''}`}>
-                <div className={`inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1 shadow-sm ${showWelcome ? 'platform-glow' : ''}`}>
+                <div className={`inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-1 gap-1 shadow-sm ${showWelcome ? 'platform-glow' : ''} ${isLocked ? 'opacity-60' : ''}`}>
                     {Object.entries(MARKETPLACE_COLORS).map(([key, colors]) => {
                         const Icon = colors.icon;
                         const isActive = marketplace === key;
                         return (
                             <button
                                 key={key}
-                                onClick={() => handlePlatformSelect(key)}
-                                className="px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2"
+                                onClick={() => !isLocked && handlePlatformSelect(key)}
+                                disabled={isLocked && !isActive}
+                                className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${isLocked && !isActive ? 'cursor-not-allowed' : ''}`}
                                 style={{
                                     backgroundColor: isActive ? colors.primary : 'transparent',
                                     color: isActive ? colors.text : '#5C5C5C'
                                 }}
+                                title={isLocked && !isActive ? 'Clear current product (X) to switch marketplace' : ''}
                             >
                                 <Icon size={16} />
                                 <span>{key.toUpperCase()}</span>
@@ -475,6 +480,11 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         );
                     })}
                 </div>
+                {isLocked && (
+                    <div className="absolute -bottom-5 text-xs text-[#8C8C8C]">
+                        Clear product to switch
+                    </div>
+                )}
             </div>
         );
     };
@@ -872,17 +882,27 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                             />
                         </div>
 
-                        {/* Asset Type Badge */}
-                        <div
-                            className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium shadow-lg"
-                            style={{
-                                backgroundColor: activeAsset.type === 'REALLIFE' ? '#059669' :
-                                    activeAsset.type === 'SHOT' ? '#6B7280' : color.primary,
-                                color: 'white'
+                        {/* Clear Button - Top Left */}
+                        <button
+                            onClick={() => {
+                                // Clear all assets and results
+                                setSessionAssets([]);
+                                setActiveAssetId(null);
+                                setResults(null);
+                                setProductInfo(null);
+                                setError(null);
+                                setCurrentProjectId(null);
+                                // Clear cached project/asset in parent (App.jsx)
+                                if (onClearLoaded) onClearLoaded();
                             }}
+                            className="absolute top-4 left-4 p-2 bg-red-500 hover:bg-red-600 rounded-full shadow-lg transition-all hover:scale-105"
+                            title="Clear and upload new product"
                         >
-                            {activeAsset.label}
-                        </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
 
                         {/* Download Button - Top Right */}
                         <button

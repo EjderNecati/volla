@@ -640,7 +640,7 @@ export const callGeminiAPI = async (base64ImageDataUrl, marketplace, apiKey) => 
   try {
     // Compress image to avoid 413 Payload Too Large error
     let compressedImage = base64ImageDataUrl;
-    if (base64ImageDataUrl && base64ImageDataUrl.length > 500000) {
+    if (base64ImageDataUrl && base64ImageDataUrl.length > 200000) {
       log('🗜️ Compressing image for SEO analysis...');
       compressedImage = await compressImageForAPI(base64ImageDataUrl);
       log(`📦 Compressed: ${Math.round(compressedImage.length / 1024)}KB`);
@@ -983,11 +983,12 @@ export const generateRealLifePhotos = async (sourceImage, productInfo = {}) => {
   }
 
   try {
-    // Compress source image if needed
+    // Compress source image if needed (Always compress if > 200KB)
     let compressedImage = sourceImage;
-    if (sourceImage.length > 500000) {
+    if (sourceImage.length > 200000) {
       log('🗜️ Compressing source image...');
       compressedImage = await compressImageForAPI(sourceImage);
+      log(`📦 Compressed: ${Math.round(compressedImage.length / 1024)}KB`);
     }
 
     log('📡 Calling Real Life backend...');

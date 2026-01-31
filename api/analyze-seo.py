@@ -6,22 +6,52 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import base64
+import requests
 
 # API Key from Vercel environment
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 
-# Initialize Gemini
-genai = None
-try:
-    import google.generativeai as genai_module
-    if GOOGLE_API_KEY:
-        genai_module.configure(api_key=GOOGLE_API_KEY)
-        genai = genai_module
-        print(f"✅ Gemini configured with API key")
-    else:
-        print("⚠️ GOOGLE_API_KEY not set")
-except Exception as e:
-    print(f"⚠️ Gemini init error: {e}")
+def call_gemini_flash(prompt, image_bytes):
+    """Call Gemini 2.0 Flash via REST API"""
+    if not GOOGLE_API_KEY:
+        raise ValueError("GOOGLE_API_KEY not set")
+        
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    # Encode image
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {
+                    "inline_data": {
+                        "mime_type": "image/jpeg",
+                        "data": image_b64
+                    }
+                }
+            ]
+        }],
+        "generationConfig": {
+            "temperature": 0.5,
+            "maxOutputTokens": 4096
+        }
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        if response.status_code != 200:
+            return f"Error: {response.status_code} - {response.text}"
+            
+        data = response.json()
+        return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 class handler(BaseHTTPRequestHandler):
@@ -35,34 +65,31 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
+            
+            # Read body safely
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+            else:
+                data = {}
             
             image_data = data.get('image', '')
             marketplace = data.get('marketplace', 'etsy')
             
             print(f"\n{'='*50}")
-            print(f"📊 SEO ANALYSIS REQUEST")
+            print(f"📊 SEO ANALYSIS REQUEST (REST API)")
             print(f"   Marketplace: {marketplace}")
             print(f"   Image: {len(image_data)} chars")
-            print(f"   Gemini: {'Ready' if genai else 'Not available'}")
             print(f"{'='*50}")
             
             if not image_data:
                 raise ValueError("No image provided")
             
-            if not genai:
-                raise ValueError("Gemini API not configured - check GOOGLE_API_KEY")
-            
             # Clean base64
             if 'base64,' in image_data:
                 base64_clean = image_data.split('base64,')[1]
-                mime_type = 'image/jpeg'
-                if 'png' in image_data.lower():
-                    mime_type = 'image/png'
             else:
                 base64_clean = image_data
-                mime_type = 'image/jpeg'
             
             image_bytes = base64.b64decode(base64_clean)
             
@@ -116,16 +143,9 @@ Return a JSON object with:
 
 Focus on Google SEO best practices."""
             
-            # Call Gemini
-            print("   🤖 Calling Gemini...")
-            model = genai.GenerativeModel('gemini-2.0-flash')
-            
-            response = model.generate_content([
-                prompt,
-                {"mime_type": mime_type, "data": image_bytes}
-            ])
-            
-            response_text = response.text
+            # Call Gemini via REST
+            print("   🤖 Calling Gemini via REST...")
+            response_text = call_gemini_flash(prompt, image_bytes)
             print(f"   ✅ Gemini response: {len(response_text)} chars")
             
             # Try to parse JSON from response

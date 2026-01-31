@@ -13,6 +13,7 @@ import base64
 import json
 import traceback
 import requests
+import time
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
@@ -51,17 +52,6 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-# Fallback to old SDK for Gemini
-genai_old = None
-try:
-    import google.generativeai as genai_module
-    genai_old = genai_module
-    if GOOGLE_API_KEY:
-        genai_old.configure(api_key=GOOGLE_API_KEY)
-        print("✅ google-generativeai (fallback) configured")
-except ImportError as e:
-    print(f"⚠️ google-generativeai not available: {e}")
-
 
 def get_fresh_token():
     """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
@@ -98,145 +88,129 @@ THINK STEP-BY-STEP before analyzing:
 
 ═══════════════════════════════════════════════════════════════════════════════
 STEP 1: IDENTIFY THE PRODUCT
-═══════════════════════════════════════════════════════════════════════════════
-- What EXACTLY is this product?
-- What materials is it made of?
-- Is it transparent/translucent?
+- What is it exactly?
+- Does it look like a HANGING object? (ornament, keychain, pendant)
+- Does it look like a LEANING object? (mirror, ladder, poster)
+- Does it look like a FLAT object? (paper, card, cloth)
+- Does it look like a STANDARD object? (bottle, box, shoe, electronic)
 
-═══════════════════════════════════════════════════════════════════════════════
-STEP 2: TEXT/LOGO ANALYSIS (CRITICAL FOR PRESERVATION)
-═══════════════════════════════════════════════════════════════════════════════
-- Does it have ANY text, logos, labels, or printed designs?
-- Document EXACT location and content
-- Identify BLANK areas that must stay blank
+STEP 2: DETECT TEXT & LOGOS (CRITICAL)
+- Is there any visible text, label, or logo?
+- Where is it located?
+- What does it say?
 
+STEP 3: TRANSPARENCY
+- Is the object glass, plastic, or transparent liquid?
 ═══════════════════════════════════════════════════════════════════════════════
-STEP 3: NATURAL STAGING
-═══════════════════════════════════════════════════════════════════════════════
-- How should this product be displayed in a studio?
-- On surface, on hanger, on stand, suspended?
 
-Respond ONLY with JSON:
+Return JSON:
 {
-    "product_type": "Specific product description",
-    "materials": ["list of materials"],
+    "product_type": "precise name",
+    "is_hanging": true/false,
     "is_transparent": true/false,
     "has_text": true/false,
-    "text_details": {
-        "has_visible_text": true/false,
-        "text_content": "exact text or null",
-        "text_location": "location or null",
-        "areas_without_text": ["blank areas"]
-    },
-    "staging_recommendation": "how to display in studio"
+    "text_details": "description of text/logo content and location",
+    "staging": "how to stage it (standing, leaning, hanging, flat lay)"
 }"""
 
 
-def analyze_product_for_studio(image_bytes):
-    """Analyze product for text/logo preservation in studio mode"""
+# ===============================================
+# HELPER FUNCTIONS (Gemini via REST)
+# ===============================================
+
+def call_gemini_flash(prompt, image_bytes):
+    """Call Gemini 2.0 Flash via REST API (No SDK)"""
+    if not GOOGLE_API_KEY:
+        print("⚠️ GOOGLE_API_KEY not set for Gemini call")
+        return None
+        
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
+    
+    headers = { "Content-Type": "application/json" }
+    
+    # Encode image
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+            ]
+        }],
+        "generationConfig": { "temperature": 0.5, "maxOutputTokens": 4096 }
+    }
+    
     try:
-        if genai_old:
-            model = genai_old.GenerativeModel('gemini-2.0-flash')
-            response = model.generate_content([
-                STUDIO_ANALYSIS_PROMPT,
-                {"mime_type": "image/jpeg", "data": image_bytes}
-            ])
-
-            if response.text:
-                text = response.text.strip()
-                if '{' in text and '}' in text:
-                    start = text.index('{')
-                    end = text.rindex('}') + 1
-                    return json.loads(text[start:end])
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        
+        if response.status_code != 200:
+            print(f"   ⚠️ Gemini Error {response.status_code}: {response.text[:200]}")
+            return None
+            
+        data = response.json()
+        return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
     except Exception as e:
-        print(f"   ⚠️ Studio analysis failed: {e}")
+        print(f"   ⚠️ Gemini Request Error: {e}")
+        return None
 
+
+def analyze_product_for_studio(image_data):
+    """Analyze product to enhance studio prompt"""
+    
+    # Clean base64
+    base64_clean = image_data
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    
+    try:
+        image_bytes = base64.b64decode(base64_clean)
+        
+        # Try Gemini via REST
+        text = call_gemini_flash(STUDIO_ANALYSIS_PROMPT, image_bytes)
+        
+        if text:
+            try:
+                # Clean possible markdown
+                if '```json' in text:
+                    text = text.split('```json')[1].split('```')[0]
+                elif '```' in text:
+                    text = text.split('```')[1].split('```')[0]
+                
+                return json.loads(text.strip())
+            except Exception as e:
+                print(f"   ⚠️ Studio analysis JSON parse failed: {e}")
+                
+    except Exception as e:
+        print(f"   ⚠️ Validation error: {e}")
+        
     return {
-        'product_type': 'product',
-        'has_text': False,
-        'text_details': {'has_visible_text': False}
+        "product_type": "product",
+        "is_hanging": False,
+        "is_transparent": False,
+        "has_text": False,
+        "text_details": "",
+        "staging": "standard"
     }
 
 
 # ===============================================
-# DYNAMIC PROMPT GENERATOR (Camera Angle Aware + Text Preservation)
+# PROMPT GENERATOR
 # ===============================================
 
 def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis=None):
-    """Generate prompt for Imagen 3 with text preservation rules"""
-
-    # Extract text info if available
-    text_rules = ""
-    if product_analysis:
-        text_details = product_analysis.get('text_details', {})
-        has_text = text_details.get('has_visible_text', False) or product_analysis.get('has_text', False)
-        text_content = text_details.get('text_content', '')
-        text_location = text_details.get('text_location', '')
-        areas_without_text = text_details.get('areas_without_text', [])
-        blank_areas = ", ".join(areas_without_text) if areas_without_text else ""
-
-        if has_text and text_content:
-            text_rules = f"""
-⚠️ TEXT/LOGO PRESERVATION:
-- Text "{text_content}" at {text_location} must remain EXACTLY the same
-- Text must be 100% SHARP and READABLE
-- DO NOT move, change, or distort the text
-- Areas without text ({blank_areas}) must stay BLANK - no added logos
-"""
-        elif not has_text:
-            text_rules = """
-🚫 NO TEXT ON PRODUCT:
-- This product has NO text/logos
-- DO NOT add ANY text or branding
-- Keep surfaces CLEAN and PLAIN
-"""
-
-    # Staging decision based on product type
-    product_lower = (product_type or "").lower()
-    staging_phrase = ""
-
-    # Smart staging detection
-    if any(k in product_lower for k in ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'dress', 'blouse']):
-        staging_phrase = "Product displayed on a minimal wooden clothes hanger."
-    elif any(k in product_lower for k in ['necklace', 'pendant', 'chain', 'bracelet']):
-        staging_phrase = "Jewelry on elegant black display stand."
-    elif any(k in product_lower for k in ['ring', 'earring']):
-        staging_phrase = "Jewelry on velvet display pad."
-    elif any(k in product_lower for k in ['ornament', 'keychain', 'decoration']) or is_hanging_product:
-        staging_phrase = "Hanging from elegant display hook - NOT floating."
-    elif any(k in product_lower for k in ['gate', 'door', 'barrier']):
-        staging_phrase = "Product shown installed/standing in natural position."
-    else:
-        staging_phrase = "Product placed naturally on surface with contact shadow."
-
-    # BGSWAP MODE: Background description + text preservation
-    prompt = f"""Clean warm beige studio background (#E8DDD0).
-Seamless cyclorama backdrop with soft diffused lighting.
-Professional product photography studio setup.
-Natural contact shadow beneath product.
-{staging_phrase}
-{text_rules}
-CRITICAL: Preserve EVERY detail of the product - colors, materials, shape, and ALL text/logos exactly as they appear."""
-
-    return prompt
-
-
-# Legacy static prompt (fallback)
-    """Generate prompt based on detected camera angle and product type"""
+    """Generate prompt dynamically based on product and angle"""
     
     base_prompt = """Professional e-commerce product photography studio.
-
 BACKGROUND:
 - Clean, warm beige studio backdrop (#E8DDD0)
 - Completely solid, no patterns or textures
 - Seamless cyclorama style
-
 LIGHTING:
 - Soft, diffused studio lighting
 - Professional product photography setup
 """
 
-    # Camera angle specific instructions
     angle_instructions = {
         "OVERHEAD": """
 CAMERA PERSPECTIVE: OVERHEAD / BIRD'S EYE VIEW
@@ -279,11 +253,10 @@ CAMERA PERSPECTIVE: SIDE PROFILE VIEW
 CAMERA PERSPECTIVE: FROM BELOW (LOOKING UP)
 - Camera looking upward at product
 - Product appears above camera level
-- Appropriate for suspended/hanging items
+- Appropriate for hanging items
 """
     }
     
-    # Product placement specific instructions
     placement_instructions = {
         "HANGING": """
 PRODUCT STAGING: HANGING/SUSPENDED ITEM
@@ -334,179 +307,35 @@ PRODUCT STAGING: WALL MOUNTED
 - This is how jewelry is photographed in professional studios
 """
     }
-    
-    # Get appropriate instructions
+
+    # Extract text info if available
+    text_rules = ""
+    text_content = ""
+    if product_analysis:
+        text_content = product_analysis.get('text_details', '')
+        if product_analysis.get('has_text'):
+            text_rules = f"""
+⚠️ TEXT/LOGO PRESERVATION:
+- Text/Logo "{text_content}" must remain EXACTLY the same
+- Text must be 100% SHARP and READABLE
+- DO NOT move, change, or distort the text
+"""
+        else:
+            text_rules = """
+🚫 NO TEXT ON PRODUCT:
+- This product has NO text/logos
+- DO NOT add ANY text or branding
+- Keep surfaces CLEAN and PLAIN
+"""
+
     angle_inst = angle_instructions.get(camera_angle, angle_instructions["FRONT"])
     placement_inst = placement_instructions.get(product_placement, placement_instructions["ON_SURFACE"])
     
-    # SMART PRODUCT-TYPE DETECTION for staging
-    product_type_lower = (product_type or "").lower()
-    product_staging_override = ""
-    
-    # Clothing/Apparel detection
-    apparel_keywords = ['shirt', 't-shirt', 'tshirt', 'hoodie', 'jacket', 'sweater', 'blouse', 'dress', 'coat', 'vest', 'polo']
-    if any(keyword in product_type_lower for keyword in apparel_keywords):
-        product_staging_override = placement_instructions["APPAREL_HANGER"]
-        print(f"   👕 Detected APPAREL - Using hanger staging")
-    
-    # Jewelry detection
-    jewelry_keywords = ['necklace', 'pendant', 'chain', 'choker', 'collar']
-    if any(keyword in product_type_lower for keyword in jewelry_keywords):
-        product_staging_override = placement_instructions["JEWELRY_STAND"]
-        print(f"   💎 Detected JEWELRY - Using stand staging")
-    
-    # Special handling for hanging products
-    hanging_override = ""
-    if is_hanging_product:
-        hanging_override = """
-🎄 SPECIAL: HANGING PRODUCT DETECTED
-- This is a hanging item (like Christmas ornament, decoration, keychain)
-- MUST be shown on a display stand, hook, or ornament hanger
-- The hanging loop/hook should be at TOP of product
-- Product hangs DOWN naturally with gravity
-- Use elegant display: jewelry bust, ornament stand, decorative hook
-- NEVER show this product floating in air without support
-"""
-    
-    # Anti-floating rules (ABSOLUTE)
-    anti_floating = """
-🚫 ABSOLUTE ANTI-FLOATING RULES (NEVER VIOLATE):
-- Product must NEVER appear floating in mid-air
-- Product must ALWAYS have visible contact with a surface OR visible hanging support
-- If product has a hanging loop: show it on a STAND or HOOK
-- If product sits: show contact shadow where it touches surface
-- The image must look like a REAL PHOTOGRAPH, not CGI
-- Professional product photography - customer must believe this is real
-"""
-    
-    # COMPREHENSIVE PRODUCT PRESERVATION - ALL MATERIALS, COMPONENTS, TEXTURES
-    preservation = """
-═══════════════════════════════════════════════════════════════════════════════════
-⚠️⚠️⚠️ COMPLETE PRODUCT PRESERVATION - ABSOLUTE ZERO-TOLERANCE RULES ⚠️⚠️⚠️
-═══════════════════════════════════════════════════════════════════════════════════
-
-🔬 CRITICAL PRE-ANALYSIS (MANDATORY):
-Before generating, analyze the reference image component-by-component:
-1. What MATERIALS are present? (plastic, wood, metal, glass, fabric, acrylic, plexiglass, ceramic, leather, etc.)
-2. What COMPONENTS exist? (hinges, locks, screws, buttons, zippers, handles, latches, etc.)
-3. What TEXTURES are visible? (smooth, rough, woven, knit, brushed, matte, glossy, transparent, etc.)
-4. Any TEXT, LOGOS, PRINTS? (exact position, font, color, size)
-5. Multiple materials combined? (wood+glass, metal+plastic, fabric+leather, etc.)
-
-═══════════════════════════════════════════════════════════════════════════════════
-🧱 MATERIAL PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-TRANSPARENT/CLEAR MATERIALS (CRITICAL - DO NOT DELETE):
-- Glass, plexiglass, acrylic, clear plastic → MUST remain TRANSPARENT/CLEAR
-- You can see THROUGH these - this property MUST be preserved
-- Transparent panels reveal what's behind them - show this correctly
-- NEVER turn transparent into opaque, NEVER delete clear components
-
-WOOD → Stays wood (grain pattern, warm color, natural texture)
-METAL → Stays metal (shiny, brushed, or matte metallic surface)
-PLASTIC → Stays plastic (smooth, uniform, synthetic look)
-FABRIC → Stays fabric (woven texture, drape, folds)
-LEATHER → Stays leather (grain, slight sheen, natural creases)
-CERAMIC → Stays ceramic (smooth, glazed or matte finish)
-RUBBER → Stays rubber (matte, flexible appearance)
-
-🚫 MATERIAL TRANSFORMATION FORBIDDEN:
-- Knit fabric → NEVER becomes plastic
-- Plastic → NEVER becomes knit/woven
-- Wood → NEVER becomes metal
-- Glass/Plexiglass → NEVER becomes opaque/solid
-- Metal hardware → NEVER becomes plastic
-- Leather → NEVER becomes synthetic
-
-═══════════════════════════════════════════════════════════════════════════════════
-🔧 HARDWARE & COMPONENT PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-ALL FUNCTIONAL COMPONENTS MUST BE PRESERVED EXACTLY:
-- Hinges → Exact same position, size, color, type
-- Locks/Latches → Exact same mechanism, text on them preserved
-- Screws/Bolts → Exact count, position, color
-- Handles/Knobs → Exact shape, material, position
-- Zippers → Exact style, color, pull tab design
-- Buttons → Exact count, color, size, spacing
-- Buckles/Clasps → Exact mechanism, material
-- Wheels/Casters → Exact type, color, position
-- Vents/Openings → Exact size, pattern, position
-- Labels/Tags → Exact position, text, color
-
-TEXT ON HARDWARE: If a lock has "LOCK" written on it, that text stays.
-SMALL DETAAILS MATTER: If there are 4 screws, output has 4 screws.
-
-═══════════════════════════════════════════════════════════════════════════════════
-🎨 TEXTURE & PATTERN PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-TEXTURES MUST REMAIN IDENTICAL:
-- Woven patterns → Same weave style and density
-- Knit patterns → Same stitch type and size
-- Wood grain → Same grain direction and pattern
-- Brushed metal → Same brush direction
-- Matte surfaces → Stay matte
-- Glossy surfaces → Stay glossy
-
-PATTERNS:
-- Stripes → Same width, color, direction
-- Prints → Exact same design placement
-- Colorblock → Same color boundaries
-- Geometric patterns → Same angles and proportions
-
-═══════════════════════════════════════════════════════════════════════════════════
-✏️ TEXT/LOGO PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-🚫 FORBIDDEN:
-- NEVER move text/logo position
-- NEVER change font
-- NEVER change text color
-- NEVER add text that doesn't exist
-- NEVER delete text that exists
-- NEVER alter what the text says
-
-✅ REQUIRED:
-- Collar logo → Stays on collar only
-- Chest logo → Stays on chest only
-- Plain product → Stays plain, NO additions
-- Hardware labels → Preserved exactly
-
-═══════════════════════════════════════════════════════════════════════════════════
-🎯 COLOR PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-- Every color must match EXACTLY
-- Multi-color products: each color zone preserved
-- Color gradients preserved exactly
-- No color shifts or tint changes
-- White stays white (not cream)
-- Black stays black (not gray)
-
-═══════════════════════════════════════════════════════════════════════════════════
-📐 STRUCTURE & PROPORTION PRESERVATION (100% MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════════
-
-- Same overall size/proportions
-- Same component positions
-- Same angles between parts
-- Same gaps/spacing
-- Assembly structure unchanged
-- If product has specific geometry → preserved exactly
-
-═══════════════════════════════════════════════════════════════════════════════════
-"""
-
-    
-    # Combine all parts with priority order
-    full_prompt = base_prompt + angle_inst + placement_inst + product_staging_override + hanging_override + anti_floating + preservation
-    
+    full_prompt = base_prompt + angle_inst + placement_inst + text_rules
     return full_prompt
 
 
-# Legacy static prompt (fallback)
+# Legacy prompt
 BGSWAP_PROMPT = get_angle_aware_prompt("FRONT", "ON_SURFACE", False, "")
 
 # ===============================================
@@ -520,6 +349,121 @@ FALLBACK_URLS = {
 }
 
 
+def generate_with_gemini_fallback(image_data):
+    """Fallback to Gemini chat model for image generation"""
+    if not GOOGLE_API_KEY:
+        return None
+        
+    print("      Trying Gemini fallback (REST)...")
+    
+    # Clean base64
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+        
+    image_bytes = base64.b64decode(base64_clean)
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    # Simple prompt for fallback
+    fallback_prompt = "Professional product photography on clean warm beige studio background. High resolution."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={GOOGLE_API_KEY}"
+    headers = { "Content-Type": "application/json" }
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": fallback_prompt},
+                { "inline_data": { "mime_type": "image/jpeg", "data": image_b64 } }
+            ]
+        }],
+        "generationConfig": { "response_modalities": ["IMAGE"] } 
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            data = response.json()
+            candidates = data.get('candidates', [])
+            if candidates:
+                parts = candidates[0].get('content', {}).get('parts', [])
+                for part in parts:
+                    # JSON key is usually 'inlineData' or 'inline_data' depending on API version
+                    # Checking both to be safe
+                    inline_data = part.get('inline_data') or part.get('inlineData')
+                    if inline_data:
+                        img_data = inline_data.get('data')
+                        mime_type = inline_data.get('mime_type', 'image/png')
+                        if img_data:
+                            print("      ✅ Got image from Gemini fallback")
+                            return f"data:{mime_type};base64,{img_data}"
+    except Exception as e:
+        print(f"      ⚠️ Gemini fallback failed: {e}")
+        
+    return None
+
+
+def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
+    """Generate studio image using Imagen 3 via OAuth2 REST API"""
+    
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available")
+        return None
+    
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
+    
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+    
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+    
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "instances": [{
+            "prompt": prompt_to_use
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": "1:1",
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+    
+    try:
+        print(f"   🎨 Calling Imagen 3 via REST API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+        
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
+    
+    return None
+
+
+# HANDLER
 class handler(BaseHTTPRequestHandler):
     
     def do_OPTIONS(self):
@@ -543,22 +487,16 @@ class handler(BaseHTTPRequestHandler):
             image_data = data.get('image', '')
             request_vertex_key = data.get('vertex_api_key', '')
             
-            # NEW: Camera angle detection info
             camera_angle = data.get('camera_angle', 'FRONT')
             product_placement = data.get('product_placement', 'ON_SURFACE')
             is_hanging_product = data.get('is_hanging_product', False)
             product_type = data.get('product_type', '')
             
-            # Use request key or fall back to env var
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
             
             print(f"📦 Category: {category}")
             print(f"🖼️ Image: {len(image_data)} chars")
-            print(f"📐 Camera Angle: {camera_angle}")
-            print(f"📍 Placement: {product_placement}")
-            print(f"🎄 Is Hanging: {is_hanging_product}")
-            print(f"🔑 Vertex Key: {'from request' if request_vertex_key else 'from env'}")
-
+            
             # Analyze product for text/logo preservation
             product_analysis = None
             if image_data:
@@ -575,14 +513,10 @@ class handler(BaseHTTPRequestHandler):
                         analysis_base64 += '=' * (4 - missing_padding)
                     analysis_bytes = base64.b64decode(analysis_base64)
                     product_analysis = analyze_product_for_studio(analysis_bytes)
-                    if product_analysis.get('has_text'):
-                        print(f"   📝 Text detected: {product_analysis.get('text_details', {}).get('text_content', 'N/A')}")
-                    else:
-                        print("   ✅ No text on product - will keep surfaces clean")
                 except Exception as e:
                     print(f"   ⚠️ Analysis skipped: {e}")
 
-            # Generate dynamic prompt based on detected angle + text preservation
+            # Generate dynamic prompt
             dynamic_prompt = get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis)
             print(f"📝 Using angle-aware prompt for: {camera_angle}")
             
@@ -592,18 +526,18 @@ class handler(BaseHTTPRequestHandler):
             
             if image_data and active_vertex_key:
                 # Try Imagen 3 first
-                print("🎨 Trying Imagen 3 BGSWAP...")
+                print("🎨 Trying Imagen 3...")
                 try:
                     result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt)
                     if result:
-                        method_used = 'Imagen 3 BGSWAP'
+                        method_used = 'Imagen 3'
                         print("✅ Imagen 3 Success!")
                 except Exception as e:
                         error_message = str(e)
                         print(f"⚠️ Imagen 3 error: {error_message[:100]}")
                 
                 # Fallback to old Gemini
-                if not result and genai_old:
+                if not result:
                     print("🎨 Falling back to Gemini...")
                     try:
                         result = generate_with_gemini_fallback(image_data)
@@ -627,7 +561,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             
             response = {
-                'success': method_used in ['Imagen 3 BGSWAP', 'Gemini Fallback'],
+                'success': method_used in ['Imagen 3', 'Gemini Fallback'],
                 'generated_image': result,
                 'image_url': result,
                 'background_url': FALLBACK_URLS.get(category, FALLBACK_URLS['Other']),
@@ -655,9 +589,6 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
 
 
-def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None):
-    """Generate studio image using Imagen 3 via OAuth2 REST API"""
-    
     # Get fresh OAuth2 token
     token = get_fresh_token()
     if not token or not project_id:

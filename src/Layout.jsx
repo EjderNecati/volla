@@ -48,7 +48,7 @@ export default function Layout({ children, activeTab, onNavigate, marketplace })
 
             {/* Mobile Bottom Nav - now with marketplace colors */}
             {isMobile && (
-                <BottomNav activeTab={activeTab} onNavigate={onNavigate} marketplace={marketplace} />
+                <BottomNav activeTab={activeTab} onTabChange={onNavigate} marketplace={marketplace} />
             )}
         </div>
     );
