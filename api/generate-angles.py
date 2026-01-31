@@ -120,10 +120,10 @@ def call_gemini_flash(prompt, image_bytes):
         return None
 
 
-def generate_with_vertex_rest(image_bytes, prompt):
+def generate_with_vertex_rest(image_bytes, prompt, aspect_ratio='1:1'):
     """
     PRIMARY METHOD: Generate image using Vertex AI REST API with OAuth2
-    This is the most reliable method for Imagen 3 edit operations.
+    Uses SUBJECT reference to extract product and place in new scene.
     """
     global oauth2_token, project_id
 
@@ -134,70 +134,92 @@ def generate_with_vertex_rest(image_bytes, prompt):
 
     print(f"      🔑 Using Vertex AI REST API with OAuth2...")
 
-    # Vertex AI endpoint for Imagen 3 edit
-    region = "us-central1"
-    model_id = "imagen-3.0-capability-001"
-    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
+    # Encode image
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    # Encode image
-    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    region = "us-central1"
 
-    # Try INPAINT_INSERTION first (better for lifestyle scenes)
-    edit_modes = [
-        {"editMode": "EDIT_MODE_INPAINT_INSERTION", "maskMode": "MASK_MODE_BACKGROUND"},
-        {"editMode": "EDIT_MODE_BGSWAP"}
-    ]
+    # Use SUBJECT reference - extracts product and places in new scene
+    print(f"         📸 Trying SUBJECT reference (product extraction)...")
 
-    for mode_config in edit_modes:
-        try:
-            mode_name = mode_config.get("editMode", "UNKNOWN")
-            print(f"         📸 Trying {mode_name}...")
+    model_id = "imagen-3.0-generate-002"
+    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
 
-            payload = {
-                "instances": [{
-                    "prompt": prompt,
-                    "referenceImages": [{
-                        "referenceType": "REFERENCE_TYPE_RAW",
-                        "referenceId": 1,
-                        "referenceImage": {
-                            "bytesBase64Encoded": image_b64
-                        }
-                    }]
-                }],
-                "parameters": {
-                    "sampleCount": 1,
-                    **mode_config
+    payload = {
+        "instances": [{
+            "prompt": prompt,
+            "referenceImages": [{
+                "referenceType": "REFERENCE_TYPE_SUBJECT",
+                "referenceId": 1,
+                "referenceImage": {
+                    "bytesBase64Encoded": image_b64
                 }
-            }
+            }]
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio if aspect_ratio != '1:1' else None,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
 
-            response = requests.post(url, headers=headers, json=payload, timeout=120)
+    # Remove None values
+    payload["parameters"] = {k: v for k, v in payload["parameters"].items() if v is not None}
 
-            if response.status_code == 200:
-                data = response.json()
-                predictions = data.get('predictions', [])
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
 
-                if predictions:
-                    for pred in predictions:
-                        img_b64_result = pred.get('bytesBase64Encoded')
-                        if img_b64_result:
-                            print(f"      ✅ Success with Vertex REST ({mode_name})!")
-                            return f"data:image/png;base64,{img_b64_result}"
+        if response.status_code == 200:
+            data = response.json()
+            predictions = data.get('predictions', [])
 
-                print(f"         ⚠️ No images in response, trying next mode...")
-            else:
-                error_text = response.text[:200] if response.text else "Unknown"
-                print(f"         ⚠️ Vertex API error {response.status_code}: {error_text}")
+            if predictions:
+                for pred in predictions:
+                    img_b64_result = pred.get('bytesBase64Encoded')
+                    if img_b64_result:
+                        print(f"      ✅ Success with SUBJECT reference!")
+                        return f"data:image/png;base64,{img_b64_result}"
 
-        except Exception as e:
-            print(f"         ⚠️ {mode_name} error: {str(e)[:100]}")
-            continue
+            print(f"         ⚠️ No images in SUBJECT response")
+        else:
+            error_text = response.text[:300] if response.text else "Unknown"
+            print(f"         ⚠️ SUBJECT error {response.status_code}: {error_text}")
 
-    print("      ❌ Vertex REST API failed all modes")
+    except Exception as e:
+        print(f"         ⚠️ SUBJECT error: {str(e)[:100]}")
+
+    # Fallback: Try STYLE reference
+    print(f"         📸 Trying STYLE reference (fallback)...")
+    payload["instances"][0]["referenceImages"][0]["referenceType"] = "REFERENCE_TYPE_STYLE"
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            data = response.json()
+            predictions = data.get('predictions', [])
+
+            if predictions:
+                for pred in predictions:
+                    img_b64_result = pred.get('bytesBase64Encoded')
+                    if img_b64_result:
+                        print(f"      ✅ Success with STYLE reference!")
+                        return f"data:image/png;base64,{img_b64_result}"
+
+        else:
+            error_text = response.text[:200] if response.text else "Unknown"
+            print(f"         ⚠️ STYLE error {response.status_code}: {error_text}")
+
+    except Exception as e:
+        print(f"         ⚠️ STYLE error: {str(e)[:100]}")
+
+    print("      ❌ Vertex REST API failed all strategies")
     return None
 
 
@@ -212,7 +234,7 @@ def generate_with_imagen3_edit(image_bytes, prompt, api_key, aspect_ratio='1:1')
     """
 
     # METHOD 1: Try Vertex AI REST API with OAuth2 first
-    result = generate_with_vertex_rest(image_bytes, prompt)
+    result = generate_with_vertex_rest(image_bytes, prompt, aspect_ratio)
     if result:
         return result
 
