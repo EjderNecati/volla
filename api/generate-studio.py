@@ -511,19 +511,105 @@ Generate a professional e-commerce product photo now."""
     return None
 
 
+def generate_with_vertex_rest_studio(image_bytes, prompt, output_count=1, aspect_ratio='1:1'):
+    """
+    PRIMARY METHOD: Generate studio image using Vertex AI REST API with OAuth2
+    This is the most reliable method for Imagen 3 edit operations.
+    """
+    global oauth2_token, project_id
+
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id - skipping Vertex REST")
+        return None
+
+    print(f"   🔑 Using Vertex AI REST API with OAuth2 (count={output_count})...")
+
+    # Vertex AI endpoint for Imagen 3 edit
+    region = "us-central1"
+    model_id = "imagen-3.0-capability-001"
+    url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models/{model_id}:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Encode image
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+
+    # Validate output_count
+    sample_count = max(1, min(4, int(output_count)))
+
+    # Try BGSWAP first for studio (cleaner backgrounds), then INPAINT
+    edit_modes = [
+        {"editMode": "EDIT_MODE_BGSWAP"},
+        {"editMode": "EDIT_MODE_INPAINT_INSERTION", "maskMode": "MASK_MODE_BACKGROUND"}
+    ]
+
+    for mode_config in edit_modes:
+        try:
+            mode_name = mode_config.get("editMode", "UNKNOWN")
+            print(f"      📸 Trying {mode_name}...")
+
+            payload = {
+                "instances": [{
+                    "prompt": prompt,
+                    "referenceImages": [{
+                        "referenceType": 1,
+                        "referenceId": 1,
+                        "referenceImage": {
+                            "bytesBase64Encoded": image_b64
+                        }
+                    }]
+                }],
+                "parameters": {
+                    "sampleCount": sample_count,
+                    **mode_config
+                }
+            }
+
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+            if response.status_code == 200:
+                data = response.json()
+                predictions = data.get('predictions', [])
+
+                if predictions:
+                    generated_images = []
+                    for pred in predictions:
+                        img_b64_result = pred.get('bytesBase64Encoded')
+                        if img_b64_result:
+                            generated_images.append(f"data:image/png;base64,{img_b64_result}")
+
+                    if generated_images:
+                        print(f"   ✅ Success with Vertex REST ({mode_name})! Generated {len(generated_images)} images")
+                        if len(generated_images) == 1:
+                            return generated_images[0]
+                        return generated_images
+
+                print(f"      ⚠️ No images in response, trying next mode...")
+            else:
+                error_text = response.text[:200] if response.text else "Unknown"
+                print(f"      ⚠️ Vertex API error {response.status_code}: {error_text}")
+
+        except Exception as e:
+            print(f"      ⚠️ {mode_name} error: {str(e)[:100]}")
+            continue
+
+    print("   ❌ Vertex REST API failed all modes")
+    return None
+
+
 def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
-    """Generate studio image using Imagen 3 edit_image with BGSWAP/INPAINT - PRESERVES PRODUCT!"""
+    """Generate studio image using Imagen 3 edit_image with BGSWAP/INPAINT - PRESERVES PRODUCT!
+
+    Strategy:
+    1. Try Vertex AI REST API with OAuth2 (most reliable)
+    2. Fallback to genai.Client with API key
+    """
 
     prompt_to_use = custom_prompt or BGSWAP_PROMPT
-
-    # Create client with the provided API key
-    try:
-        from google import genai
-        from google.genai import types
-        client = genai.Client(api_key=api_key)
-    except Exception as e:
-        print(f"   ⚠️ Failed to create genai client: {e}")
-        return None
 
     # Clean base64
     if 'base64,' in image_data:
@@ -538,6 +624,26 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=
         base64_clean += '=' * (4 - missing_padding)
 
     image_bytes = base64.b64decode(base64_clean)
+
+    # METHOD 1: Try Vertex AI REST API with OAuth2 first
+    result = generate_with_vertex_rest_studio(image_bytes, prompt_to_use, output_count, aspect_ratio)
+    if result:
+        return result
+
+    # METHOD 2: Fallback to genai.Client with API key
+    if not api_key:
+        print("   ⚠️ No API key provided for genai.Client fallback")
+        return None
+
+    print(f"   🔄 Trying genai.Client with API key...")
+
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        print(f"   ⚠️ Failed to create genai client: {e}")
+        return None
 
     # Validate output_count (Imagen 3 supports 1-4)
     sample_count = max(1, min(4, int(output_count)))
@@ -585,9 +691,11 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=
                     if len(generated_images) == 1:
                         return generated_images[0]
                     return generated_images
+                else:
+                    print(f"      ⚠️ INPAINT returned no images")
 
             except Exception as inpaint_error:
-                print(f"      ⚠️ INPAINT failed: {str(inpaint_error)[:50]}, trying BGSWAP...")
+                print(f"      ⚠️ INPAINT failed: {str(inpaint_error)[:100]}, trying BGSWAP...")
 
             # Fallback to BGSWAP mode
             try:
@@ -611,15 +719,17 @@ def generate_with_imagen3(image_data, api_key, custom_prompt=None, output_count=
                     if len(generated_images) == 1:
                         return generated_images[0]
                     return generated_images
+                else:
+                    print(f"      ⚠️ BGSWAP returned no images")
 
             except Exception as bgswap_error:
-                print(f"      ⚠️ BGSWAP failed: {str(bgswap_error)[:50]}")
+                print(f"      ⚠️ BGSWAP failed: {str(bgswap_error)[:100]}")
 
         except Exception as e:
-            print(f"   ⚠️ {model_name} failed: {str(e)[:80]}")
+            print(f"   ⚠️ {model_name} failed: {str(e)[:150]}")
             continue
 
-    print("   ❌ All Imagen 3 models failed")
+    print("   ❌ All Imagen 3 methods failed")
     return None
 
 
