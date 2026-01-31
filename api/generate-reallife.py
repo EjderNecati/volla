@@ -182,6 +182,7 @@ def call_gemini_image_generation(prompt, image_bytes):
 PRODUCT_ANALYSIS_PROMPT = """You are an Expert Product Photographer analyzing a product for lifestyle photography.
 
 CRITICAL: Your analysis will be used to PRESERVE every detail of this product when placing it in a scene.
+This is a UNIQUE product - it may differ from typical products in its category!
 
 Analyze this product image and return JSON:
 {
@@ -190,7 +191,7 @@ Analyze this product image and return JSON:
 
     "texture_details": {
         "surface_type": "smooth/textured/patterned/knitted/woven/glossy/matte/etc.",
-        "texture_description": "Detailed texture description (e.g., 'ribbed cotton fabric', 'dotted rubber surface', 'brushed metal')",
+        "texture_description": "Detailed texture description",
         "must_preserve": ["list of texture details that MUST be preserved exactly"]
     },
 
@@ -207,14 +208,22 @@ Analyze this product image and return JSON:
     "colors": {
         "primary": "main color",
         "secondary": ["other colors"],
-        "exact_shades": "describe exact color shades (e.g., 'light sky blue', 'deep navy')"
+        "exact_shades": "describe exact color shades"
     },
 
     "structural_details": {
-        "components": ["list all visible parts/components"],
+        "components": ["list ALL visible parts - ONLY what you see"],
         "transparent_parts": ["any transparent/translucent areas"],
-        "special_features": ["buttons, zippers, handles, hinges, etc."]
+        "special_features": ["ONLY features that are VISIBLE in the image"]
     },
+
+    "NOT_in_this_product": {
+        "missing_typical_features": ["features that TYPICAL products in this category have, but THIS product does NOT have"],
+        "simple_design_notes": "describe if this product is simpler/different than typical products",
+        "do_not_add": ["specific things that should NOT be added because they don't exist in original"]
+    },
+
+    "unique_characteristics": "What makes THIS product different from typical products in its category?",
 
     "is_wearable": true/false,
     "wear_on": "body part if wearable (torso, feet, head, etc.)",
@@ -224,7 +233,13 @@ Analyze this product image and return JSON:
         {"scene": "Another scene", "person_needed": true/false},
         {"scene": "Third scene", "person_needed": true/false}
     ]
-}"""
+}
+
+IMPORTANT: This product may be SIMPLER or DIFFERENT than typical products.
+- If a baby gate has NO mounting brackets → note that it has NO mounting brackets
+- If a t-shirt has NO logo → note that it has NO logo
+- If a door has NO hinges visible → note that hinges are NOT visible
+Capture what is MISSING compared to typical products!"""
 
 
 # ===============================================
@@ -262,6 +277,12 @@ def build_reallife_prompt(product_analysis, scene_info, scene_index):
     components = structure.get('components', [])
     transparent_parts = structure.get('transparent_parts', [])
     special_features = structure.get('special_features', [])
+
+    # NEW: What is NOT in this product (critical for preservation)
+    not_in_product = product_analysis.get('NOT_in_this_product', {})
+    missing_features = not_in_product.get('missing_typical_features', [])
+    do_not_add = not_in_product.get('do_not_add', [])
+    unique_chars = product_analysis.get('unique_characteristics', '')
 
     # Wearable info
     is_wearable = product_analysis.get('is_wearable', False)
@@ -311,8 +332,31 @@ NO TEXT/LOGO RULE (CRITICAL):
 STRUCTURAL PRESERVATION:
 - Components: {', '.join(components) if components else 'all visible parts'}
 - ALL components must appear in the final image
+- ONLY these components - nothing more, nothing less
 {f"- Transparent parts: {', '.join(transparent_parts)} - keep transparency!" if transparent_parts else ""}
 {f"- Special features: {', '.join(special_features)} - must be visible" if special_features else ""}
+"""
+
+    # NEW: Build "DO NOT ADD" rules - critical for unique products
+    do_not_add_rules = ""
+    if missing_features or do_not_add or unique_chars:
+        do_not_add_rules = f"""
+═══════════════════════════════════════════════════════════════════════════════
+🚫 DO NOT ADD TYPICAL FEATURES - THIS PRODUCT IS UNIQUE
+═══════════════════════════════════════════════════════════════════════════════
+This product is DIFFERENT from typical {product_type} products!
+
+{f"MISSING TYPICAL FEATURES (DO NOT ADD THESE!):" if missing_features else ""}
+{chr(10).join([f"- ❌ NO {feat} - do not add!" for feat in missing_features]) if missing_features else ""}
+
+{f"EXPLICITLY FORBIDDEN TO ADD:" if do_not_add else ""}
+{chr(10).join([f"- ❌ {item}" for item in do_not_add]) if do_not_add else ""}
+
+{f"UNIQUE CHARACTERISTICS: {unique_chars}" if unique_chars else ""}
+
+⚠️ DO NOT "IMPROVE" OR "MODERNIZE" THIS PRODUCT!
+⚠️ DO NOT MAKE IT LOOK LIKE AMAZON/TYPICAL PRODUCTS!
+⚠️ KEEP IT EXACTLY AS SHOWN IN THE ORIGINAL IMAGE!
 """
 
     # Build color rules
@@ -347,6 +391,7 @@ SCENE: {scene_desc}
 ═══════════════════════════════════════════════════════════════════════════════
 🚫🚫🚫 ABSOLUTE RULES - PRODUCT MUST BE IDENTICAL 🚫🚫🚫
 ═══════════════════════════════════════════════════════════════════════════════
+{do_not_add_rules}
 
 The product in your generated image MUST be a PERFECT COPY of the original.
 NOT similar. NOT inspired by. IDENTICAL. EXACT. PIXEL-PERFECT.
