@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
     Camera, Upload, Copy, Check, Sparkles, Loader2, Download,
-    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2
+    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3
 } from 'lucide-react';
 import { analyzeProductForHandsfree, generateHandsfreeImage } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
@@ -11,7 +11,7 @@ import InsufficientCreditsModal from './InsufficientCreditsModal';
 
 /**
  * HandsfreeMode - Professional Prompt Architect
- * Redesigned to match site's light theme
+ * Redesigned: 40% left panel (prompt generation) + 60% right canvas (image generation/edit)
  */
 
 // ═══════════════════════════════════════════════════════════════════
@@ -26,11 +26,7 @@ const ASPECT_RATIOS = [
     { id: '16:9', label: '16:9' },
     { id: '3:4', label: '3:4' },
     { id: '2:3', label: '2:3' },
-    { id: '9:16', label: '9:16' },
-    { id: '21:9', label: '21:9' },
-    { id: '5:4', label: '5:4' },
-    { id: '4:5', label: '4:5' },
-    { id: '2.35:1', label: '2.35:1' }
+    { id: '9:16', label: '9:16' }
 ];
 
 const CAMERA_ANGLES = [
@@ -39,12 +35,10 @@ const CAMERA_ANGLES = [
     { id: 'waist', label: 'Waist', en: 'Waist Level' },
     { id: 'knee', label: 'Knee', en: 'Knee Level' },
     { id: 'ground', label: 'Ground', en: 'Ground Level' },
-    { id: 'worm', label: 'Worm Eye', en: 'Worm\'s Eye View' },
     { id: 'low', label: 'Low Angle', en: 'Low Angle' },
     { id: 'high', label: 'High Angle', en: 'High Angle' },
     { id: 'bird', label: 'Bird Eye', en: 'Bird\'s Eye View' },
     { id: 'drone', label: 'Drone', en: 'Drone Shot' },
-    { id: 'satellite', label: 'Satellite', en: 'Satellite View' },
     { id: 'dutch', label: 'Dutch', en: 'Dutch Angle' }
 ];
 
@@ -53,48 +47,40 @@ const SHOT_SCALES = [
     { id: 'close', label: 'Close-Up', en: 'Close-Up' },
     { id: 'medium_close', label: 'Medium Close', en: 'Medium Close-Up' },
     { id: 'medium', label: 'Medium', en: 'Medium Shot' },
-    { id: 'medium_full', label: 'Medium Full', en: 'Medium Full Shot' },
     { id: 'full', label: 'Full Shot', en: 'Full Shot' },
-    { id: 'wide', label: 'Wide', en: 'Wide Shot' },
-    { id: 'extreme_wide', label: 'Extreme Wide', en: 'Extreme Wide Shot' },
-    { id: 'cowboy', label: 'Cowboy Shot', en: 'Cowboy Shot - Mid-thigh framing' },
-    { id: 'choker', label: 'Choker', en: 'Choker - Tight face framing below chin' }
+    { id: 'wide', label: 'Wide', en: 'Wide Shot' }
 ];
 
 const LENS_OPTIONS = [
-    { id: '8mm', label: '8mm Fisheye', en: '8mm Fisheye - Extreme distortion' },
-    { id: '14mm', label: '14mm Ultra', en: '14mm Ultra Wide - Dramatic perspective' },
-    { id: '24mm', label: '24mm Wide', en: '24mm Wide - Environmental context' },
-    { id: '35mm', label: '35mm Classic', en: '35mm Classic - Natural documentary' },
-    { id: '50mm', label: '50mm Natural', en: '50mm Natural - Human eye perspective' },
-    { id: '85mm', label: '85mm Portrait', en: '85mm Portrait - Subject isolation' },
-    { id: '200mm', label: '200mm Tele', en: '200mm Telephoto - Compression effect' },
-    { id: 'anamorphic', label: 'Anamorphic', en: 'Anamorphic - Cinematic widescreen' },
-    { id: 'iphone17pro', label: 'iPhone 17 Pro', en: 'iPhone 17 Pro - Mobile computational photography' },
-    { id: 'retro', label: 'Retro', en: 'Retro - Vintage film aesthetic with grain' },
-    { id: 'phaseone', label: 'Phase One IQ4', en: 'Phase One IQ4 - Medium format ultra high resolution' },
-    { id: 'arri', label: 'ARRI Alexa 35', en: 'ARRI Alexa 35 - Cinema-grade color science' }
+    { id: '14mm', label: '14mm Ultra', en: '14mm Ultra Wide' },
+    { id: '24mm', label: '24mm Wide', en: '24mm Wide' },
+    { id: '35mm', label: '35mm Classic', en: '35mm Classic' },
+    { id: '50mm', label: '50mm Natural', en: '50mm Natural' },
+    { id: '85mm', label: '85mm Portrait', en: '85mm Portrait' },
+    { id: '200mm', label: '200mm Tele', en: '200mm Telephoto' },
+    { id: 'iphone17pro', label: 'iPhone 17 Pro', en: 'iPhone 17 Pro' },
+    { id: 'arri', label: 'ARRI Alexa', en: 'ARRI Alexa 35' }
 ];
 
 // ═══════════════════════════════════════════════════════════════════
-// SUB-COMPONENT: Option Button Group (Light Theme)
+// SUB-COMPONENT: Option Button Group (Compact)
 // ═══════════════════════════════════════════════════════════════════
-const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4, className = '' }) => {
+const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4 }) => {
     return (
-        <div className={`bg-white border border-[#E8E7E4] rounded-xl p-4 ${className}`}>
-            <div className="flex items-center gap-2 mb-3 text-[#8C8C8C] text-xs font-medium uppercase tracking-wider">
-                {Icon && <Icon size={14} />}
+        <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                {Icon && <Icon size={12} />}
                 {title}
             </div>
             <div
-                className="grid gap-2"
+                className="grid gap-1.5"
                 style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
             >
                 {options.map((opt) => (
                     <button
                         key={opt.id}
                         onClick={() => onSelect(opt.id)}
-                        className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-center border
+                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border
                             ${selected === opt.id
                                 ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                 : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
@@ -124,7 +110,6 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
     const [lens, setLens] = useState('50mm');
 
     const [generatedPrompt, setGeneratedPrompt] = useState(null);
-    const [generatedImage, setGeneratedImage] = useState(null);
     const [productAnalysis, setProductAnalysis] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -133,10 +118,34 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
     const [error, setError] = useState(null);
     const [showCreditsModal, setShowCreditsModal] = useState(false);
 
-    // Phase 2: Manual prompt for image generation
-    const [manualPrompt, setManualPrompt] = useState('');
+    // Canvas state - generated images
+    const [generatedImages, setGeneratedImages] = useState([]);
+    const [activeImageIndex, setActiveImageIndex] = useState(-1); // -1 = original, 0+ = generated
+
+    // Prompt input for image generation/edit
+    const [imagePrompt, setImagePrompt] = useState('');
 
     const fileInputRef = useRef(null);
+
+    // Get active image (source or generated)
+    // activeImageIndex: -1 = original source, 0+ = generated images
+    const getActiveImage = () => {
+        if (activeImageIndex >= 0 && activeImageIndex < generatedImages.length) {
+            return generatedImages[activeImageIndex];
+        }
+        return sourceImage;
+    };
+
+    // Check if we're in edit mode (only when a GENERATED image is selected, not original)
+    const isEditMode = activeImageIndex >= 0 && generatedImages.length > 0;
+
+    // Get label for active image
+    const getActiveImageLabel = () => {
+        if (activeImageIndex === -1 || generatedImages.length === 0) {
+            return 'Original';
+        }
+        return `Generated ${activeImageIndex + 1}`;
+    };
 
     // Handle image upload
     const handleImageUpload = async (e) => {
@@ -146,6 +155,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
         const reader = new FileReader();
         reader.onload = (event) => {
             setSourceImage(event.target.result);
+            setGeneratedImages([]);
+            setActiveImageIndex(-1); // Start with original selected
         };
         reader.readAsDataURL(file);
     };
@@ -161,95 +172,58 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
         if (aspectRatio !== 'original') {
             const [w, h] = aspectRatio.split(':').map(Number);
             if (w > h) {
-                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (horizontal/landscape format, width greater than height).`;
+                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (horizontal/landscape format).`;
             } else if (h > w) {
-                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (vertical/portrait format, height greater than width).`;
+                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (vertical/portrait format).`;
             } else {
-                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (square format, equal width and height).`;
+                aspectInstruction = `OUTPUT IMAGE MUST BE ${aspectRatio} ASPECT RATIO (square format).`;
             }
         } else {
             aspectInstruction = 'Maintain the original aspect ratio of the source image.';
         }
 
-        // Camera angle instruction - very specific
+        // Camera angle instruction
         const cameraInstructions = {
-            'eye_level': 'Position camera at EYE LEVEL (straight on, parallel to the ground, looking directly at the subject).',
-            'shoulder': 'Position camera at SHOULDER HEIGHT (slightly below eye level, about 140cm from ground).',
-            'waist': 'Position camera at WAIST HEIGHT (about 100cm from ground, looking slightly up at subject).',
-            'knee': 'Position camera at KNEE HEIGHT (about 50cm from ground, low angle looking up).',
-            'ground': 'Position camera at GROUND LEVEL (camera on the floor, worm\'s eye perspective looking up).',
-            'worm': 'Position camera BELOW GROUND looking UP (extreme low angle, dramatic upward perspective).',
-            'low': 'Position camera at LOW ANGLE (below eye level, looking up at the subject, makes subject appear powerful).',
-            'high': 'Position camera at HIGH ANGLE (above eye level, looking down at the subject, bird perspective).',
-            'bird': 'Position camera DIRECTLY ABOVE looking DOWN (90 degree top-down view, flat lay perspective).',
-            'drone': 'Position camera as DRONE SHOT (high aerial view, about 45 degree angle looking down).',
-            'satellite': 'Position camera as SATELLITE VIEW (extreme top-down, map-like perspective).',
-            'dutch': 'Position camera at DUTCH ANGLE (tilted 15-30 degrees, diagonal horizon line for dramatic effect).'
+            'eye_level': 'Position camera at EYE LEVEL (straight on, parallel to the ground).',
+            'shoulder': 'Position camera at SHOULDER HEIGHT (slightly below eye level).',
+            'waist': 'Position camera at WAIST HEIGHT (looking slightly up at subject).',
+            'knee': 'Position camera at KNEE HEIGHT (low angle looking up).',
+            'ground': 'Position camera at GROUND LEVEL (worm\'s eye perspective).',
+            'low': 'Position camera at LOW ANGLE (below eye level, looking up).',
+            'high': 'Position camera at HIGH ANGLE (above eye level, looking down).',
+            'bird': 'Position camera DIRECTLY ABOVE looking DOWN (top-down view).',
+            'drone': 'Position camera as DRONE SHOT (high aerial view, 45 degree angle).',
+            'dutch': 'Position camera at DUTCH ANGLE (tilted 15-30 degrees).'
         };
 
-        // Shot scale instruction - very specific
+        // Shot scale instruction
         const scaleInstructions = {
-            'extreme_close': 'Frame as EXTREME CLOSE-UP (only a small detail of the product fills the entire frame, macro shot).',
-            'close': 'Frame as CLOSE-UP (product fills 80-90% of the frame, minimal background visible).',
-            'medium_close': 'Frame as MEDIUM CLOSE-UP (product fills 60-70% of the frame, some context visible).',
-            'medium': 'Frame as MEDIUM SHOT (product fills 40-50% of the frame, significant environment visible).',
-            'medium_full': 'Frame as MEDIUM FULL SHOT (full product visible with some breathing room around it).',
-            'full': 'Frame as FULL SHOT (entire product visible with comfortable margins, standard product photography).',
-            'wide': 'Frame as WIDE SHOT (product appears smaller in frame, environment is prominent).',
-            'extreme_wide': 'Frame as EXTREME WIDE SHOT (product is small in the frame, vast environment dominates).',
-            'cowboy': 'Frame as COWBOY SHOT (mid-thigh framing, classic Western cinema style, shows product with context).',
-            'choker': 'Frame as CHOKER SHOT (very tight framing, just below the chin level, intimate close-up).'
+            'extreme_close': 'Frame as EXTREME CLOSE-UP (detail fills the entire frame).',
+            'close': 'Frame as CLOSE-UP (product fills 80-90% of the frame).',
+            'medium_close': 'Frame as MEDIUM CLOSE-UP (product fills 60-70% of the frame).',
+            'medium': 'Frame as MEDIUM SHOT (product fills 40-50% of the frame).',
+            'full': 'Frame as FULL SHOT (entire product visible with comfortable margins).',
+            'wide': 'Frame as WIDE SHOT (product appears smaller, environment prominent).'
         };
 
-        // Lens instruction - specific optical effects
+        // Lens instruction
         const lensInstructions = {
-            '8mm': 'Apply 8MM FISHEYE LENS effect (extreme barrel distortion, curved edges, 180 degree field of view).',
-            '14mm': 'Apply 14MM ULTRA WIDE LENS effect (dramatic perspective stretching, exaggerated foreground, architectural distortion).',
-            '24mm': 'Apply 24MM WIDE ANGLE LENS effect (slight perspective distortion, environmental context, dynamic feel).',
-            '35mm': 'Apply 35MM CLASSIC LENS effect (natural perspective, minimal distortion, documentary style).',
-            '50mm': 'Apply 50MM NATURAL LENS effect (human eye perspective, no distortion, true-to-life rendering).',
-            '85mm': 'Apply 85MM PORTRAIT LENS effect (beautiful background blur, slight compression, subject isolation).',
-            '200mm': 'Apply 200MM TELEPHOTO LENS effect (strong background compression, flat perspective, subject pops from background).',
-            'anamorphic': 'Apply ANAMORPHIC LENS effect (cinematic widescreen look, horizontal lens flares, oval bokeh).',
-            'iphone17pro': 'Apply IPHONE 17 PRO camera style (computational photography, HDR processing, natural smartphone aesthetic, sharp details).',
-            'retro': 'Apply RETRO FILM AESTHETIC (vintage color grading, film grain, slightly faded colors, nostalgic warmth).',
-            'phaseone': 'Apply PHASE ONE IQ4 MEDIUM FORMAT look (ultra high resolution, exceptional detail, smooth tonal gradations, professional studio quality).',
-            'arri': 'Apply ARRI ALEXA 35 CINEMA look (Hollywood-grade color science, filmic skin tones, rich shadows, cinematic depth).'
+            '14mm': 'Apply 14MM ULTRA WIDE LENS effect (dramatic perspective).',
+            '24mm': 'Apply 24MM WIDE ANGLE LENS effect (environmental context).',
+            '35mm': 'Apply 35MM CLASSIC LENS effect (natural perspective).',
+            '50mm': 'Apply 50MM NATURAL LENS effect (human eye perspective).',
+            '85mm': 'Apply 85MM PORTRAIT LENS effect (beautiful background blur).',
+            '200mm': 'Apply 200MM TELEPHOTO LENS effect (background compression).',
+            'iphone17pro': 'Apply IPHONE 17 PRO camera style (computational photography, HDR).',
+            'arri': 'Apply ARRI ALEXA 35 CINEMA look (Hollywood-grade color science).'
         };
 
         // Build custom directive as PRIORITY
         let priorityText = '';
         if (manualDirective && manualDirective.trim()) {
-            // Parse common Turkish directives to English
-            const directiveMap = {
-                'arka açı': 'show back view',
-                'arka': 'show back view',
-                'yan açı': 'show side view',
-                'yan': 'show side view',
-                'üst açı': 'show top view',
-                'üst': 'show top view',
-                'alt açı': 'show bottom view',
-                'alt': 'show bottom view',
-                'yatay': 'horizontal position',
-                'dikey': 'vertical position',
-                '45 derece': '45 degree angle',
-                'çapraz': 'diagonal angle'
-            };
-
-            let enhancedDirective = manualDirective.toLowerCase();
-            for (const [turkish, english] of Object.entries(directiveMap)) {
-                if (enhancedDirective.includes(turkish)) {
-                    enhancedDirective = english;
-                    break;
-                }
-            }
-            if (enhancedDirective === manualDirective.toLowerCase()) {
-                enhancedDirective = manualDirective;
-            }
-            priorityText = `PRIORITY: ${enhancedDirective}. `;
+            priorityText = `PRIORITY: ${manualDirective}. `;
         }
 
-        // Build clean prompt string
         const cameraText = cameraInstructions[cameraAngle] || 'Eye level camera';
         const scaleText = scaleInstructions[shotScale] || 'Full shot';
         const lensText = lensInstructions[lens] || '50mm lens';
@@ -260,7 +234,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
         return { prompt, aspect_ratio_value: aspectRatio };
     };
 
-    // Phase 1: Generate PROMPT only
+    // Phase 1: Generate PROMPT only (2 credits)
     const handleGeneratePrompt = async () => {
         if (!sourceImage) return;
 
@@ -294,9 +268,9 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
         }
     };
 
-    // Phase 2: Generate IMAGE with manual prompt + source image
-    const handleGenerateImage = async () => {
-        if (!sourceImage || !manualPrompt.trim()) return;
+    // Generate/Edit IMAGE with Gemini (6 credits)
+    const handleGenerateOrEditImage = async () => {
+        if (!sourceImage || !imagePrompt.trim()) return;
 
         // Check credits before generating
         const creditResult = useCreditsHook('handsfree');
@@ -307,21 +281,124 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
 
         setIsGeneratingImage(true);
         setError(null);
-        setGeneratedImage(null);
 
         try {
+            // Determine which image to use as source
+            const activeImg = getActiveImage();
+
+            // CRITICAL: Ultra-strict product preservation rules
+            const productPreservationRules = `
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ CRITICAL WARNING - PRODUCT PRESERVATION IS MANDATORY ⚠️
+═══════════════════════════════════════════════════════════════════════════════
+
+You are looking at a SOURCE IMAGE containing a PRODUCT. This product MUST be preserved with ABSOLUTE PERFECTION. Any deviation is UNACCEPTABLE.
+
+🔴 ZERO TOLERANCE RULES - THE PRODUCT IS UNTOUCHABLE:
+
+1. TEXT PRESERVATION (CRITICAL):
+   - Every single letter MUST remain pixel-perfect identical
+   - Every number, digit MUST be exactly the same
+   - Every symbol, punctuation mark MUST NOT change
+   - Font style, font size, font weight MUST be preserved
+   - Text positioning, spacing, kerning MUST NOT shift even 1 pixel
+   - If there's "ABC123" on the product, output MUST show "ABC123" - not "ABC 123" or "ABC1Z3"
+
+2. LOGO & BRANDING PRESERVATION:
+   - Logos MUST be copied exactly as they appear
+   - Brand names, trademarks MUST remain identical
+   - Logo colors MUST NOT shift even 1% in hue/saturation
+   - Logo proportions MUST NOT change
+
+3. TEXTURE & MATERIAL PRESERVATION:
+   - Every thread, every stitch MUST be visible if it was visible
+   - Fabric weave patterns MUST be identical
+   - Surface textures (matte, glossy, rough, smooth) MUST be preserved
+   - Material appearance (leather, metal, plastic, wood, fabric) MUST NOT change
+   - Scratches, imperfections, wear marks MUST remain
+
+4. COLOR PRESERVATION:
+   - Exact RGB values MUST be maintained
+   - No color correction, no white balance changes on the product
+   - Shadows on the product MUST match the original lighting direction
+   - Highlights on the product MUST be in the same positions
+
+5. SHAPE & GEOMETRY PRESERVATION:
+   - Dimensions, proportions MUST be exactly the same
+   - Angles, curves, edges MUST NOT be altered
+   - No stretching, no warping, no perspective changes on the product
+   - If product has a dent or bend, it MUST remain
+
+6. DETAIL PRESERVATION:
+   - Buttons, zippers, clasps, buckles MUST be identical
+   - Stitching patterns MUST match exactly
+   - Labels, tags, barcodes MUST be preserved
+   - Even dust particles or minor imperfections MUST remain
+
+🔴 WHAT YOU CAN CHANGE:
+- Background ONLY
+- Environment ONLY
+- Lighting on background ONLY
+- Camera angle/perspective of the SCENE (but product appearance stays same)
+
+🔴 WHAT YOU CANNOT CHANGE:
+- ANYTHING on the product itself
+- The product is a PHOTOGRAPH that you are compositing into a new scene
+- Treat it as if you're doing a professional product photography composite
+`;
+
+            // Edit mode: only when a GENERATED image is selected (not original)
+            let finalPrompt;
+            if (isEditMode) {
+                // EDIT: Modify the generated image while preserving the product
+                finalPrompt = `${productPreservationRules}
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 EDIT MODE - MODIFY BACKGROUND/ENVIRONMENT ONLY
+═══════════════════════════════════════════════════════════════════════════════
+
+USER'S EDIT REQUEST: "${imagePrompt}"
+
+INSTRUCTIONS:
+1. Look at the current generated image
+2. Apply the user's requested edit to the BACKGROUND/ENVIRONMENT only
+3. The PRODUCT must remain 100% IDENTICAL - copy it pixel by pixel
+4. If user asks to "remove car" - remove it from background, NOT from product
+5. If user asks to "change lighting" - change environmental lighting, product lighting stays consistent
+6. Output should look like the same product photographed in the modified environment`;
+            } else {
+                // GENERATE: Create new image from original, preserving product perfectly
+                finalPrompt = `${productPreservationRules}
+
+═══════════════════════════════════════════════════════════════════════════════
+🎨 GENERATION MODE - CREATE NEW SCENE WITH PRESERVED PRODUCT
+═══════════════════════════════════════════════════════════════════════════════
+
+USER'S GENERATION REQUEST: "${imagePrompt}"
+
+INSTRUCTIONS:
+1. Extract the PRODUCT from the source image mentally
+2. Create a new background/environment based on user's prompt
+3. Place the EXACT SAME PRODUCT (pixel-perfect copy) into the new scene
+4. The product appearance, colors, text, logos, textures MUST be IDENTICAL to source
+5. Only the background/environment should reflect the user's prompt
+6. This is like professional product photography - same product, different backdrop`;
+            }
+
             const promptSchema = {
-                final_technical_prompt: manualPrompt,
+                final_technical_prompt: finalPrompt,
                 aspect_ratio_value: aspectRatio
             };
 
-            const result = await generateHandsfreeImage(sourceImage, promptSchema);
-            // Backend returns generated_image or image_url (snake_case)
+            const result = await generateHandsfreeImage(activeImg, promptSchema);
             const imageUrl = result.imageUrl || result.image_url || result.generated_image;
-            if (result.success && imageUrl) {
-                setGeneratedImage(imageUrl);
 
-                // Save to history/recent projects
+            if (result.success && imageUrl) {
+                // Add to generated images array
+                setGeneratedImages(prev => [...prev, imageUrl]);
+                setActiveImageIndex(generatedImages.length); // Select the new image
+
+                // Save to history
                 try {
                     const handsfreeName = manualDirective
                         ? `Handsfree: ${manualDirective.substring(0, 30)}${manualDirective.length > 30 ? '...' : ''}`
@@ -337,21 +414,23 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                             url: imageUrl,
                             createdAt: Date.now()
                         }],
-                        null, // no SEO results
+                        null,
                         {
                             cameraAngle,
                             shotScale,
                             lens,
                             aspectRatio,
                             directive: manualDirective,
-                            prompt: manualPrompt
+                            prompt: imagePrompt
                         }
                     );
                     await saveProject(project);
-                    console.log('✅ Handsfree project saved to history:', project.id);
                 } catch (saveErr) {
                     console.warn('Failed to save handsfree to history:', saveErr);
                 }
+
+                // Clear prompt after success
+                setImagePrompt('');
             } else {
                 throw new Error('Image generation failed');
             }
@@ -364,308 +443,360 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
         }
     };
 
-    // Copy prompt to clipboard (full JSON)
+    // Copy prompt to clipboard
     const handleCopyPrompt = () => {
         if (!generatedPrompt) return;
-        navigator.clipboard.writeText(JSON.stringify(generatedPrompt, null, 2));
+        navigator.clipboard.writeText(generatedPrompt.prompt);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
+    // Use generated prompt in image prompt area
+    const handleUseGeneratedPrompt = () => {
+        if (generatedPrompt?.prompt) {
+            setImagePrompt(generatedPrompt.prompt);
+        }
+    };
+
+    // Clear everything
+    const handleClear = () => {
+        setSourceImage(null);
+        setGeneratedPrompt(null);
+        setGeneratedImages([]);
+        setActiveImageIndex(-1);
+        setImagePrompt('');
+        setManualDirective('');
+        setError(null);
+    };
+
     return (
         <>
-            <div className="flex-1 py-6 px-4 bg-[#FAF9F6]">
-                <div className="max-w-6xl mx-auto">
-                    {/* Page Title */}
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-[#1A1A1A]">{t('handsfree.title')}</h2>
-                        <p className="text-sm text-[#5C5C5C] mt-1">
-                            {t('handsfree.subtitle')}
-                        </p>
-                    </div>
+            <div className="flex-1 flex min-h-0 bg-[#FAF9F6]">
+                {/* ════════════════════════════════════════════════════════════
+                LEFT PANEL - 40% - Prompt Generation
+                ════════════════════════════════════════════════════════════ */}
+                <aside className="w-[40%] min-w-[360px] max-w-[480px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
+                    <div className="p-5 space-y-4">
+                        {/* Source Image Upload */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                <Camera size={12} />
+                                {t('handsfree.sourceImage')}
+                            </div>
+                            {sourceImage ? (
+                                <div className="relative">
+                                    <img
+                                        src={sourceImage}
+                                        alt="Source"
+                                        className="w-full h-32 object-contain bg-[#F5F4F1] rounded-xl border border-[#E8E7E4]"
+                                    />
+                                    <button
+                                        onClick={handleClear}
+                                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 rounded-full shadow-md transition-colors"
+                                    >
+                                        <X size={12} className="text-white" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full h-32 border-2 border-dashed border-[#E8E7E4] rounded-xl hover:border-[#1A1A1A] transition-colors flex flex-col items-center justify-center gap-2 bg-[#F5F4F1]"
+                                >
+                                    <Upload size={24} className="text-[#8C8C8C]" />
+                                    <span className="text-xs text-[#5C5C5C]">{t('handsfree.uploadImage')}</span>
+                                </button>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
+                        </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                        {/* ════════════════════════════════════════════════════════════
-                        LEFT COLUMN: Image Upload & Controls
-                        ════════════════════════════════════════════════════════════ */}
-                        <div className="lg:col-span-1 flex flex-col gap-4">
-                            {/* Image Upload Card - with flex-grow to align with other columns */}
-                            <div className="flex-grow">
-                                <div className="bg-white border border-[#E8E7E4] rounded-2xl p-5 h-full">
-                                    <div className="flex items-center gap-2 mb-4 text-[#1A1A1A] text-sm font-semibold">
-                                        <Camera size={18} />
-                                        {t('handsfree.sourceImage')}
+                        {/* Custom Directive */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                <Move size={12} />
+                                {t('handsfree.customDirective')}
+                            </div>
+                            <input
+                                type="text"
+                                value={manualDirective}
+                                onChange={(e) => setManualDirective(e.target.value)}
+                                placeholder={t('handsfree.customDirectivePlaceholder')}
+                                className="w-full px-3 py-2 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1A1A] transition-colors text-sm"
+                            />
+                        </div>
+
+                        {/* Camera Angle */}
+                        <OptionGroup
+                            title={t('camera.title')}
+                            icon={Eye}
+                            options={CAMERA_ANGLES}
+                            selected={cameraAngle}
+                            onSelect={setCameraAngle}
+                            columns={5}
+                        />
+
+                        {/* Shot Scale */}
+                        <OptionGroup
+                            title={t('shotScale.title')}
+                            icon={Focus}
+                            options={SHOT_SCALES}
+                            selected={shotScale}
+                            onSelect={setShotScale}
+                            columns={3}
+                        />
+
+                        {/* Lens */}
+                        <OptionGroup
+                            title={t('lens.title')}
+                            icon={Aperture}
+                            options={LENS_OPTIONS}
+                            selected={lens}
+                            onSelect={setLens}
+                            columns={4}
+                        />
+
+                        {/* Aspect Ratio */}
+                        <OptionGroup
+                            title={t('aspectRatio.title')}
+                            icon={ImageIcon}
+                            options={ASPECT_RATIOS}
+                            selected={aspectRatio}
+                            onSelect={setAspectRatio}
+                            columns={4}
+                        />
+
+                        {/* Generate Prompt Button */}
+                        <button
+                            onClick={handleGeneratePrompt}
+                            disabled={!sourceImage || isGenerating}
+                            className="w-full py-3 bg-[#1A1A1A] rounded-xl font-semibold text-white hover:bg-[#333] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span className="text-sm">{generatingStep || t('common.generating')}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Wand2 size={16} />
+                                    <span className="text-sm">{t('handsfree.generatePrompt')}</span>
+                                    <span className="absolute right-3 text-[10px] text-white/60">2 {t('credits.creditsUnit')}</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* Generated Prompt Display */}
+                        {generatedPrompt && (
+                            <div className="bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-semibold text-[#1A1A1A]">{t('handsfree.generatedPrompt')}</span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleUseGeneratedPrompt}
+                                            className="flex items-center gap-1 px-2 py-1 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-[10px] font-medium text-white transition-colors"
+                                        >
+                                            <Sparkles size={10} />
+                                            Use
+                                        </button>
+                                        <button
+                                            onClick={handleCopyPrompt}
+                                            className="flex items-center gap-1 px-2 py-1 bg-[#E8E7E4] hover:bg-[#D4D3D0] rounded-lg text-[10px] font-medium transition-colors"
+                                        >
+                                            {copied ? <Check size={10} className="text-emerald-500" /> : <Copy size={10} />}
+                                            {copied ? 'Copied' : 'Copy'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-[#5C5C5C] leading-relaxed max-h-24 overflow-y-auto">
+                                    {generatedPrompt.prompt}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Error Display */}
+                        {error && (
+                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">
+                                <AlertCircle size={14} />
+                                {error}
+                            </div>
+                        )}
+                    </div>
+                </aside>
+
+                {/* ════════════════════════════════════════════════════════════
+                RIGHT PANEL - 60% - Canvas + Generation
+                ════════════════════════════════════════════════════════════ */}
+                <section className="flex-1 flex flex-col p-6 overflow-y-auto">
+                    {/* Canvas Area - Fixed height for harmony with left panel */}
+                    <div className="flex flex-col">
+                        {/* Main Canvas - Reduced height */}
+                        <div
+                            className="relative rounded-2xl overflow-hidden"
+                            style={{ height: '320px' }}
+                        >
+                            {sourceImage ? (
+                                <>
+                                    {/* Frosted Glass Background */}
+                                    <div
+                                        className="absolute inset-0"
+                                        style={{
+                                            backgroundImage: `url(${getActiveImage()})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            filter: 'blur(30px) brightness(0.7)',
+                                            transform: 'scale(1.2)'
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-black/20" />
+
+                                    {/* Main Image */}
+                                    <div className="relative h-full w-full flex items-center justify-center p-4">
+                                        <img
+                                            src={getActiveImage()}
+                                            alt={getActiveImageLabel()}
+                                            className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+                                        />
+                                        {/* Image Label */}
+                                        <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
+                                            {getActiveImageLabel()}
+                                        </div>
                                     </div>
 
-                                    {sourceImage ? (
-                                        <div className="relative">
-                                            <img
-                                                src={sourceImage}
-                                                alt="Source"
-                                                className="w-full h-56 object-contain bg-[#F5F4F1] rounded-xl"
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    setSourceImage(null);
-                                                    setGeneratedPrompt(null);
-                                                    setGeneratedImage(null);
-                                                    setManualPrompt('');
-                                                }}
-                                                className="absolute top-2 right-2 p-2 bg-white hover:bg-red-50 rounded-full shadow-md transition-colors border border-[#E8E7E4]"
-                                            >
-                                                <RotateCcw size={14} className="text-[#5C5C5C]" />
-                                            </button>
+                                    {/* Download Button */}
+                                    <button
+                                        onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = getActiveImage();
+                                            link.download = `volla_handsfree_${Date.now()}.png`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        }}
+                                        className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-105"
+                                        title="Download Image"
+                                    >
+                                        <Download size={18} className="text-[#1A1A1A]" />
+                                    </button>
+
+                                    {/* Loading Overlay */}
+                                    {isGeneratingImage && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                                            <div className="text-center text-white">
+                                                <Loader2 className="w-10 h-10 animate-spin mx-auto mb-2" />
+                                                <span className="text-sm">{t('handsfree.generatingImage')}</span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="w-full h-56 border-2 border-dashed border-[#E8E7E4] rounded-xl hover:border-[#1A1A1A] transition-colors flex flex-col items-center justify-center gap-3 bg-[#F5F4F1]"
-                                        >
-                                            <Upload size={32} className="text-[#8C8C8C]" />
-                                            <span className="text-sm text-[#5C5C5C]">{t('handsfree.uploadImage')}</span>
-                                        </button>
                                     )}
-
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Manual Directive */}
-                            <div className="bg-white border border-[#E8E7E4] rounded-2xl p-5">
-                                <div className="flex items-center gap-2 mb-3 text-[#1A1A1A] text-sm font-semibold">
-                                    <Move size={16} />
-                                    {t('handsfree.customDirective')}
-                                </div>
-                                <input
-                                    type="text"
-                                    value={manualDirective}
-                                    onChange={(e) => setManualDirective(e.target.value)}
-                                    placeholder={t('handsfree.customDirectivePlaceholder')}
-                                    className="w-full px-4 py-3 bg-[#F5F4F1] border border-[#E8E7E4] rounded-xl text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1A1A] transition-colors text-sm"
-                                />
-                            </div>
-
-                            {/* Generate Prompt Button */}
-                            <div className="relative">
-                                <button
-                                    onClick={handleGeneratePrompt}
-                                    disabled={!sourceImage || isGenerating}
-                                    className="w-full py-4 bg-[#1A1A1A] rounded-xl font-semibold text-white hover:bg-[#333] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Loader2 size={18} className="animate-spin" />
-                                            {generatingStep || t('common.generating')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Wand2 size={18} />
-                                            {t('handsfree.generatePrompt')}
-                                        </>
-                                    )}
-                                </button>
-                                {!isGenerating && (
-                                    <span className="absolute bottom-1 right-2 text-[10px] text-white/60">
-                                        2 {t('credits.creditsUnit')}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Error Display */}
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                                    <AlertCircle size={16} />
-                                    {error}
+                                </>
+                            ) : (
+                                <div className="h-full flex items-center justify-center bg-[#F5F4F1] rounded-2xl border-2 border-dashed border-[#E8E7E4]">
+                                    <div className="text-center text-[#8C8C8C]">
+                                        <ImageIcon size={48} className="mx-auto mb-4 opacity-30" />
+                                        <p className="text-sm">{t('studio.uploadFirst') || 'Upload an image to get started'}</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* ════════════════════════════════════════════════════════════
-                        MIDDLE COLUMN: Camera Options
-                        ════════════════════════════════════════════════════════════ */}
-                        <div className="lg:col-span-1 flex flex-col gap-4">
-                            <OptionGroup
-                                title={t('camera.title')}
-                                icon={Eye}
-                                options={CAMERA_ANGLES}
-                                selected={cameraAngle}
-                                onSelect={setCameraAngle}
-                                columns={3}
-                            />
+                        {/* Film Strip - Always show when there are generated images */}
+                        {sourceImage && generatedImages.length > 0 && (
+                            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+                                {/* Original Source - Always first */}
+                                <button
+                                    onClick={() => setActiveImageIndex(-1)}
+                                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                                        activeImageIndex === -1 ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                    }`}
+                                >
+                                    <img src={sourceImage} alt="Original" className="w-full h-full object-cover" />
+                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
+                                        Original
+                                    </div>
+                                </button>
 
-                            <div className="flex-grow">
-                                <OptionGroup
-                                    title={t('shotScale.title')}
-                                    icon={Focus}
-                                    options={SHOT_SCALES}
-                                    selected={shotScale}
-                                    onSelect={setShotScale}
-                                    columns={2}
-                                    className="lg:pb-16"
-                                />
+                                {/* Generated Images */}
+                                {generatedImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setActiveImageIndex(idx)}
+                                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                                            activeImageIndex === idx ? 'border-cyan-500 ring-2 ring-cyan-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                        }`}
+                                    >
+                                        <img src={img} alt={`Generated ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
+                                            #{idx + 1}
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                        </div>
-
-                        {/* ════════════════════════════════════════════════════════════
-                        RIGHT COLUMN: Lens & Aspect Ratio + Image Generation
-                        ════════════════════════════════════════════════════════════ */}
-                        <div className="lg:col-span-1 flex flex-col gap-4">
-                            <OptionGroup
-                                title={t('lens.title')}
-                                icon={Aperture}
-                                options={LENS_OPTIONS}
-                                selected={lens}
-                                onSelect={setLens}
-                                columns={2}
-                            />
-
-                            <div className="flex-grow">
-                                <OptionGroup
-                                    title={t('aspectRatio.title')}
-                                    icon={ImageIcon}
-                                    options={ASPECT_RATIOS}
-                                    selected={aspectRatio}
-                                    onSelect={setAspectRatio}
-                                    columns={4}
-                                    className="lg:pb-16"
-                                />
-                            </div>
-                        </div>
+                        )}
                     </div>
 
-                    {/* ════════════════════════════════════════════════════════════
-                    PHASE 2: Image Generation - 3 Column Layout
-                    ════════════════════════════════════════════════════════════ */}
-                    {generatedPrompt && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                            {/* LEFT COLUMN: Generated Prompt */}
-                            <div className="lg:col-span-1">
-                                <div className="bg-white border border-[#E8E7E4] rounded-2xl p-5 h-80">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm font-semibold text-[#1A1A1A]">{t('handsfree.generatedPrompt')}</span>
-                                        <button
-                                            onClick={handleCopyPrompt}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F4F1] hover:bg-[#E8E7E4] rounded-lg text-xs font-medium transition-colors"
-                                        >
-                                            {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                                            {copied ? t('common.copied') : t('handsfree.copyAll')}
-                                        </button>
+                    {/* Prompt Input + Generate Button */}
+                    {sourceImage && (
+                        <div className="mt-4 space-y-3">
+                            {/* Prompt Textarea */}
+                            <div className="relative">
+                                <textarea
+                                    value={imagePrompt}
+                                    onChange={(e) => setImagePrompt(e.target.value)}
+                                    placeholder={isEditMode
+                                        ? "Edit this image: e.g., 'remove the car in the background', 'change the lighting to sunset'..."
+                                        : "Paste your generated prompt here or write your own prompt to generate a new image..."
+                                    }
+                                    className={`w-full h-24 px-4 py-3 bg-white border-2 rounded-xl text-[#1A1A1A] text-sm placeholder-[#8C8C8C] focus:outline-none transition-colors resize-none ${
+                                        isEditMode ? 'border-amber-300 focus:border-amber-500' : 'border-[#E8E7E4] focus:border-cyan-500'
+                                    }`}
+                                />
+                                {isEditMode && (
+                                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-medium">
+                                        <Edit3 size={10} />
+                                        Edit Mode
                                     </div>
-                                    <div className="space-y-3 h-[calc(100%-40px)] overflow-y-auto">
-                                        {Object.entries(generatedPrompt).map(([key, value]) => (
-                                            <div key={key} className="bg-[#F5F4F1] rounded-lg p-3">
-                                                <div className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider mb-1">
-                                                    {key.replace(/_/g, ' ')}
-                                                </div>
-                                                <p className="text-xs text-[#1A1A1A] leading-relaxed">
-                                                    {value}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
-                            {/* MIDDLE COLUMN: Prompt Input + Generate Button */}
-                            <div className="lg:col-span-1 flex flex-col gap-4">
-                                <div className="bg-white border-2 border-emerald-200 rounded-2xl p-5 flex-grow flex flex-col">
-                                    <div className="flex items-center gap-2 mb-4 text-emerald-600 text-sm font-semibold">
-                                        <Sparkles size={18} />
-                                        {t('handsfree.generateImage')}
-                                    </div>
-
-                                    <div className="flex gap-3 mb-4 flex-grow items-stretch">
-                                        <div className="w-24 flex-shrink-0 bg-[#F5F4F1] rounded-lg border border-[#E8E7E4] overflow-hidden flex items-center justify-center">
-                                            <img
-                                                src={sourceImage}
-                                                alt="Source"
-                                                className="max-w-full max-h-full object-contain"
-                                            />
-                                        </div>
-                                        <div className="flex-1 flex flex-col">
-                                            <textarea
-                                                value={manualPrompt}
-                                                onChange={(e) => setManualPrompt(e.target.value)}
-                                                placeholder="Paste or type your prompt here..."
-                                                className="w-full h-full px-3 py-2 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg text-[#1A1A1A] text-sm placeholder-[#8C8C8C] focus:outline-none focus:border-emerald-400 transition-colors resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Generate Image Button - aligned with other columns */}
-                                <div className="relative">
-                                    <button
-                                        onClick={handleGenerateImage}
-                                        disabled={!manualPrompt.trim() || isGeneratingImage}
-                                        className="w-full py-4 bg-emerald-500 rounded-xl font-semibold text-white hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isGeneratingImage ? (
+                            {/* Generate/Edit Button */}
+                            <button
+                                onClick={handleGenerateOrEditImage}
+                                disabled={!imagePrompt.trim() || isGeneratingImage}
+                                className={`w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative ${
+                                    isEditMode
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                                        : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600'
+                                }`}
+                            >
+                                {isGeneratingImage ? (
+                                    <>
+                                        <Loader2 size={18} className="animate-spin" />
+                                        <span>{isEditMode ? 'Editing...' : 'Generating...'}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {isEditMode ? (
                                             <>
-                                                <Loader2 size={18} className="animate-spin" />
-                                                {t('handsfree.generatingImage')}
+                                                <Edit3 size={18} />
+                                                <span>Edit Selected Image</span>
                                             </>
                                         ) : (
                                             <>
-                                                <ImageIcon size={18} />
-                                                {t('handsfree.generateImageGemini')}
+                                                <Sparkles size={18} />
+                                                <span>Generate New Image</span>
                                             </>
                                         )}
-                                    </button>
-                                    {!isGeneratingImage && (
-                                        <span className="absolute bottom-1 right-2 text-[10px] text-white/60">
-                                            8 {t('credits.creditsUnit')}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* RIGHT COLUMN: Generated Image */}
-                            <div className="lg:col-span-1">
-                                <div className="bg-white border border-[#E8E7E4] rounded-2xl p-5 h-80">
-                                    <div className="flex items-center gap-2 mb-4 text-[#1A1A1A] text-sm font-semibold">
-                                        <ImageIcon size={18} />
-                                        {t('handsfree.generatedImage')}
-                                    </div>
-
-                                    {generatedImage ? (
-                                        <div className="relative h-[calc(100%-40px)]">
-                                            <img
-                                                src={generatedImage}
-                                                alt="Generated"
-                                                className="w-full h-full object-contain bg-[#F5F4F1] rounded-xl"
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    const link = document.createElement('a');
-                                                    link.href = generatedImage;
-                                                    link.download = `volla_handsfree_${Date.now()}.png`;
-                                                    document.body.appendChild(link);
-                                                    link.click();
-                                                    document.body.removeChild(link);
-                                                }}
-                                                className="absolute top-2 right-2 p-2 bg-[#1A1A1A] hover:bg-[#333] rounded-full shadow-md transition-colors"
-                                            >
-                                                <Download size={14} className="text-white" />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-[calc(100%-40px)] border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center gap-3 bg-[#F5F4F1]">
-                                            <ImageIcon size={32} className="text-[#8C8C8C]" />
-                                            <span className="text-sm text-[#5C5C5C]">{t('handsfree.imageWillAppear')}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                        <span className="absolute right-4 text-xs text-white/70">6 {t('credits.creditsUnit')}</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     )}
-                </div>
+                </section>
             </div>
 
             {/* Insufficient Credits Modal */}
