@@ -632,34 +632,28 @@ class handler(BaseHTTPRequestHandler):
             error_message = None
 
             if image_data:
-                # FIRST: Try Gemini Studio (can see reference image for proper background swap)
-                print("🎨 Trying Gemini Studio (with reference image)...")
-                try:
-                    result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
-                    if result:
-                        method_used = 'Gemini Studio'
-                        results_array = [result]
-                        print("✅ Gemini Studio Success!")
-                except Exception as e:
-                    error_message = str(e)
-                    print(f"⚠️ Gemini Studio error: {error_message[:100]}")
+                # ALWAYS use Gemini Studio - it can see the reference image and preserve the product
+                # For multiple outputs, call Gemini multiple times
+                print(f"🎨 Generating {output_count} studio image(s) with Gemini...")
 
-                # SECOND: Fallback to Imagen 3 (text-to-image, no reference)
-                if not result and active_vertex_key:
-                    print("🎨 Falling back to Imagen 3...")
+                for i in range(output_count):
                     try:
-                        result = generate_with_imagen3(image_data, active_vertex_key, dynamic_prompt, output_count, aspect_ratio)
-                        if result:
-                            method_used = 'Imagen 3'
-                            if isinstance(result, list):
-                                results_array = result
-                                result = result[0] if result else None
-                            else:
-                                results_array = [result] if result else []
-                            print(f"✅ Imagen 3 Success! ({len(results_array)} images)")
+                        print(f"   📸 Generating image {i+1}/{output_count}...")
+                        img_result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
+                        if img_result:
+                            results_array.append(img_result)
+                            if not result:
+                                result = img_result  # First successful result
+                            print(f"   ✅ Image {i+1} generated successfully")
+                        else:
+                            print(f"   ⚠️ Image {i+1} failed")
                     except Exception as e:
                         error_message = str(e)
-                        print(f"⚠️ Imagen 3 error: {error_message[:100]}")
+                        print(f"   ⚠️ Image {i+1} error: {str(e)[:50]}")
+
+                if results_array:
+                    method_used = 'Gemini Studio'
+                    print(f"✅ Gemini Studio Success! Generated {len(results_array)}/{output_count} images")
             else:
                 error_message = "No image provided"
 

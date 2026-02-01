@@ -1329,9 +1329,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     </section>
 
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    {/* RIGHT PANEL - 20% - SEO Results */}
+                    {/* RIGHT PANEL - 30% - SEO Results (same width as left panel for alignment) */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <aside className="w-[20%] min-w-[280px] max-w-[320px] bg-white border-l border-[#E8E7E4] flex flex-col">
+                    <aside className="w-[30%] min-w-[320px] max-w-[400px] bg-white border-l border-[#E8E7E4] flex flex-col">
                         <div className="p-5 flex-1 flex flex-col overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2">
