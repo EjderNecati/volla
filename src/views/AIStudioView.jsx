@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Camera, Sparkles, Users, RotateCcw, Upload, ArrowLeft,
     Store, ShoppingBag, ShoppingCart, Type, Image as ImageIcon,
-    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X
+    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X, Video
 } from 'lucide-react';
 import { useCredits } from '../contexts/CreditContext';
 import {
@@ -25,6 +25,7 @@ import AssetFilmStrip from '../components/AssetFilmStrip';
 import WelcomeOverlay from '../components/WelcomeOverlay';
 import MascotAnimation from '../components/MascotAnimation';
 import HandsfreeMode from '../components/HandsfreeMode';
+import MotionMode from '../components/MotionMode';
 import { useTranslation } from '../i18n';
 
 // Marketplace color configuration
@@ -72,9 +73,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     const [selectedPlatformForAnimation, setSelectedPlatformForAnimation] = useState(null);
 
     // ═══════════════════════════════════════════════════════════════════
-    // HANDSFREE MODE STATE
+    // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion'
     // ═══════════════════════════════════════════════════════════════════
-    const [isHandsfreeMode, setIsHandsfreeMode] = useState(false);
+    const [studioMode, setStudioMode] = useState('standard');
 
     // ═══════════════════════════════════════════════════════════════════
     // NEW: GENERATION CONFIGURATION STATE (for 3-panel layout)
@@ -1122,8 +1123,8 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         {/* Mode Switch */}
                         <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg p-0.5">
                             <button
-                                onClick={() => setIsHandsfreeMode(false)}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${!isHandsfreeMode
+                                onClick={() => setStudioMode('standard')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${studioMode === 'standard'
                                     ? 'bg-white shadow text-[#1A1A1A]'
                                     : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
                                     }`}
@@ -1131,14 +1132,24 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 {t('studio.normal')}
                             </button>
                             <button
-                                onClick={() => setIsHandsfreeMode(true)}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${isHandsfreeMode
+                                onClick={() => setStudioMode('handsfree')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'handsfree'
                                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow'
                                     : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
                                     }`}
                             >
                                 <Zap size={12} />
                                 {t('studio.handsfree')}
+                            </button>
+                            <button
+                                onClick={() => setStudioMode('motion')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'motion'
+                                    ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow'
+                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
+                                    }`}
+                            >
+                                <Video size={12} />
+                                {t('studio.motion') || 'Motion'}
                             </button>
                         </div>
                     </div>
@@ -1166,10 +1177,15 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             </header>
 
             {/* Main Content */}
-            {isHandsfreeMode ? (
+            {studioMode === 'handsfree' ? (
                 <HandsfreeMode
                     marketplace={marketplace}
-                    onBack={() => setIsHandsfreeMode(false)}
+                    onBack={() => setStudioMode('standard')}
+                    onNavigate={onNavigate}
+                />
+            ) : studioMode === 'motion' ? (
+                <MotionMode
+                    marketplace={marketplace}
                     onNavigate={onNavigate}
                 />
             ) : (

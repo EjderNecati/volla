@@ -15,7 +15,6 @@ import SettingsView from './views/SettingsView';
 import PricingView from './views/PricingView';
 import PrivacyPage from './views/PrivacyPage';
 import TermsPage from './views/TermsPage';
-import MotionMode from './components/MotionMode';
 
 import './index.css';
 
@@ -31,7 +30,6 @@ function getInitialRoute() {
     if (path === '/analysis') return 'analysis';
     if (path === '/history') return 'history';
     if (path === '/settings') return 'settings';
-    if (path === '/motion') return 'motion';
     return 'landing';
 }
 
@@ -143,13 +141,6 @@ function AppContent() {
                 );
             case 'settings':
                 return <SettingsView />;
-            case 'motion':
-                return (
-                    <MotionMode
-                        marketplace={marketplace}
-                        onNavigate={handleNavigate}
-                    />
-                );
             default:
                 return (
                     <HomeView
