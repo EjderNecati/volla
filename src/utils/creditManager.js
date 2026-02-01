@@ -68,7 +68,11 @@ export const CREDIT_COSTS = {
     seo_content: 2,
     studio_shot: 5,           // Deprecated - use photo_generation * count
     real_life: 5,             // Deprecated - use photo_generation * count
-    handsfree: 8              // Keep existing handsfree cost
+    handsfree: 8,             // Keep existing handsfree cost
+
+    // Motion (Video Generation) costs
+    motion_fast: 10,          // 10 credits for Fast mode (veo-3.1-fast-generate-001)
+    motion_pro: 20            // 20 credits for Pro mode (veo-3.1-generate-001)
 };
 
 // NEW: Calculate generation cost dynamically
@@ -154,7 +158,9 @@ export const FEATURE_NAMES = {
     seo_content: 'SEO Content Generation',
     studio_shot: 'Studio Shot',
     real_life: 'Real Life Shot',
-    handsfree: 'Handsfree Generation'
+    handsfree: 'Handsfree Generation',
+    motion_fast: 'Motion Video (Fast)',
+    motion_pro: 'Motion Video (Pro)'
 };
 
 // Retention offer (20% extra discount)

@@ -1404,3 +1404,87 @@ export const generateHandsfreeImage = async (imageBase64, analysisContext = {}, 
     throw error;
   }
 };
+
+
+// =====================================================
+// MOTION MODE - Video Generation with Veo 3.1
+// =====================================================
+
+/**
+ * Start video generation with Veo 3.1
+ * Returns operation name for polling
+ * @param {string} imageBase64 - Source image as base64
+ * @param {object} motionOptions - Motion settings
+ * @returns {Promise<{success: boolean, operation_name?: string, model_id?: string, error?: string}>}
+ */
+export const startMotionGeneration = async (imageBase64, motionOptions) => {
+  log('🎬 Motion: Starting video generation...');
+
+  try {
+    // Compress image to avoid 413 Payload Too Large
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'start',
+        image: compressedImage,
+        cameraMovement: motionOptions.cameraMovement || 'static',
+        speed: motionOptions.speed || 'normal',
+        duration: motionOptions.duration || 6,
+        qualityMode: motionOptions.qualityMode || 'fast',
+        aspectRatio: motionOptions.aspectRatio || '16:9',
+        customDirective: motionOptions.customDirective || ''
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Start failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎬 Motion: Generation started', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Motion start failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Poll for video generation completion
+ * @param {string} operationName - The operation name from startMotionGeneration
+ * @param {string} modelId - The model ID used for generation
+ * @returns {Promise<{success: boolean, status: string, progress?: number, video_url?: string, error?: string}>}
+ */
+export const pollMotionGeneration = async (operationName, modelId) => {
+  log('🎬 Motion: Polling for completion...');
+
+  try {
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'poll',
+        operationName: operationName,
+        modelId: modelId
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Poll failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎬 Motion: Poll result', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Motion poll failed:', error);
+    throw error;
+  }
+};
