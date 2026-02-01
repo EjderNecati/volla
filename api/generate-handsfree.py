@@ -217,29 +217,41 @@ def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_
     if aspect_ratio and aspect_ratio != 'original':
         aspect_instruction = f" Output aspect ratio: {aspect_ratio}."
     
-    # Simplified prompt for Gemini 3
+    # Ultra-photorealistic prompt for Gemini Image Generation
     generation_prompt = f"""{custom_prompt}{aspect_instruction}
 
-IMPORTANT REQUIREMENTS:
-1. IDENTITY: Keep the exact same face, body, hair, and clothing as the source image. Do not alter any facial features.
-2. QUALITY: Generate an ultra-photorealistic image with professional DSLR quality. Natural lighting, realistic shadows, sharp details.
-3. This is a view/angle change only. The subject must remain identical to the source.
+═══════════════════════════════════════════════════════════════════════════════
+🎯 PHOTOREALISTIC QUALITY REQUIREMENTS - THIS MUST LOOK LIKE A REAL PHOTOGRAPH
+═══════════════════════════════════════════════════════════════════════════════
 
-⛔ TEXT/LOGO RULES (CRITICAL):
-- If clothing/product HAS text/logos → PRESERVE exactly (pixel-perfect)
-- If clothing/product is PLAIN (no text/logos) → keep it COMPLETELY PLAIN
-- NEVER hallucinate, invent, or add text that doesn't exist in source
-- A plain colored shirt MUST stay a plain colored shirt with NO added graphics
+MANDATORY QUALITY STANDARDS:
+1. OUTPUT MUST LOOK LIKE A REAL PHOTOGRAPH taken with a professional DSLR camera
+2. NOT AI-generated looking, NOT rendered, NOT illustrated, NOT artistic
+3. Real camera characteristics: natural depth of field, authentic bokeh, realistic lens behavior
+4. Professional studio or natural lighting with realistic shadows and highlights
+5. Authentic material textures: fabric weave, leather grain, metal reflections, plastic sheen
+6. Natural color grading like professional product photography
+7. Sharp focus on the product with realistic background blur if applicable
 
-IMPERFECTION REMOVAL:
-- Remove minor imperfections: scratches, scuffs, dust, fingerprints
-- Make the product look pristine and new
+PRODUCT PRESERVATION (CRITICAL - ZERO TOLERANCE):
+- The product must be PIXEL-PERFECT identical to the source image
+- Every letter, number, logo, pattern, texture, color MUST be exactly the same
+- DO NOT modify, alter, reimagine, or "improve" any aspect of the product
+- Treat the product as a sacred photograph that cannot be touched
+- Copy the product exactly as it appears - every thread, every stitch, every detail
 
-NO NEW TEXT: Do NOT add any NEW text, labels, watermarks, or captions to the image. Only preserve existing text."""
+⛔ ABSOLUTELY FORBIDDEN:
+- DO NOT add any text, logos, watermarks that don't exist in the source
+- DO NOT change product colors, patterns, or textures
+- DO NOT make the image look AI-generated, artistic, or illustrated
+- DO NOT use unrealistic lighting or impossible shadows
+
+OUTPUT: A photograph so realistic that it's indistinguishable from a real camera shot."""
 
     # Models to try via Vertex AI OAuth2
-    # gemini-2.0-flash-exp supports native image generation
+    # gemini-3-pro-image-preview is PRIMARY for best quality (mermi gibi fotoğraflar!)
     models_to_try = [
+        'gemini-3-pro-image-preview',
         'gemini-2.0-flash-exp',
     ]
     
