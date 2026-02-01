@@ -65,7 +65,7 @@ const LENS_OPTIONS = [
 // ═══════════════════════════════════════════════════════════════════
 // SUB-COMPONENT: Option Button Group (Compact)
 // ═══════════════════════════════════════════════════════════════════
-const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4 }) => {
+const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4, translationKeyPrefix, t }) => {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -86,7 +86,7 @@ const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns =
                                 : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                             }`}
                     >
-                        {opt.label}
+                        {translationKeyPrefix && t ? t(`${translationKeyPrefix}.${opt.id}`) : opt.label}
                     </button>
                 ))}
             </div>
@@ -142,9 +142,9 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
     // Get label for active image
     const getActiveImageLabel = () => {
         if (activeImageIndex === -1 || generatedImages.length === 0) {
-            return 'Original';
+            return t('aspectRatio.ratios.original');
         }
-        return `Generated ${activeImageIndex + 1}`;
+        return `${t('handsfree.generated')} ${activeImageIndex + 1}`;
     };
 
     // Handle image upload
@@ -449,6 +449,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                             selected={cameraAngle}
                             onSelect={setCameraAngle}
                             columns={5}
+                            translationKeyPrefix="camera.angles"
+                            t={t}
                         />
 
                         {/* Shot Scale */}
@@ -459,6 +461,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                             selected={shotScale}
                             onSelect={setShotScale}
                             columns={3}
+                            translationKeyPrefix="shotScale.scales"
+                            t={t}
                         />
 
                         {/* Lens */}
@@ -479,6 +483,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                             selected={aspectRatio}
                             onSelect={setAspectRatio}
                             columns={4}
+                            translationKeyPrefix="aspectRatio.ratios"
+                            t={t}
                         />
 
                         {/* Generate Prompt Button */}
@@ -545,10 +551,10 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                 <section className="flex-1 flex flex-col p-6 overflow-y-auto">
                     {/* Canvas Area - Fixed height for harmony with left panel */}
                     <div className="flex flex-col">
-                        {/* Main Canvas - Reduced height */}
+                        {/* Main Canvas - Adjusted height to align with left panel */}
                         <div
                             className="relative rounded-2xl overflow-hidden"
-                            style={{ height: '320px' }}
+                            style={{ height: '450px' }}
                         >
                             {sourceImage ? (
                                 <>
@@ -624,9 +630,9 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                         activeImageIndex === -1 ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
                                     }`}
                                 >
-                                    <img src={sourceImage} alt="Original" className="w-full h-full object-cover" />
+                                    <img src={sourceImage} alt={t('aspectRatio.ratios.original')} className="w-full h-full object-cover" />
                                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
-                                        Original
+                                        {t('aspectRatio.ratios.original')}
                                     </div>
                                 </button>
 
@@ -639,7 +645,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                             activeImageIndex === idx ? 'border-cyan-500 ring-2 ring-cyan-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
                                         }`}
                                     >
-                                        <img src={img} alt={`Generated ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <img src={img} alt={`${t('handsfree.generated')} ${idx + 1}`} className="w-full h-full object-cover" />
                                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
                                             #{idx + 1}
                                         </div>
@@ -658,8 +664,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                     value={imagePrompt}
                                     onChange={(e) => setImagePrompt(e.target.value)}
                                     placeholder={isEditMode
-                                        ? "Edit this image: e.g., 'remove the car in the background', 'change the lighting to sunset'..."
-                                        : "Paste your generated prompt here or write your own prompt to generate a new image..."
+                                        ? t('handsfree.editPromptPlaceholder')
+                                        : t('handsfree.promptPlaceholder')
                                     }
                                     className={`w-full h-24 px-4 py-3 bg-white border-2 rounded-xl text-[#1A1A1A] text-sm placeholder-[#8C8C8C] focus:outline-none transition-colors resize-none ${
                                         isEditMode ? 'border-amber-300 focus:border-amber-500' : 'border-[#E8E7E4] focus:border-cyan-500'
@@ -686,19 +692,19 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                 {isGeneratingImage ? (
                                     <>
                                         <Loader2 size={18} className="animate-spin" />
-                                        <span>{isEditMode ? 'Editing...' : 'Generating...'}</span>
+                                        <span>{isEditMode ? t('handsfree.editing') : t('handsfree.generating')}</span>
                                     </>
                                 ) : (
                                     <>
                                         {isEditMode ? (
                                             <>
                                                 <Edit3 size={18} />
-                                                <span>Edit Selected Image</span>
+                                                <span>{t('handsfree.editSelectedImage')}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Sparkles size={18} />
-                                                <span>Generate New Image</span>
+                                                <span>{t('handsfree.generateNewImage')}</span>
                                             </>
                                         )}
                                         <span className="absolute right-4 text-xs text-white/70">6 {t('credits.creditsUnit')}</span>
