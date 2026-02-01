@@ -1383,7 +1383,8 @@ export const generateHandsfreeImage = async (imageBase64, analysisContext = {}, 
       body: JSON.stringify({
         action: 'generate',
         image: compressedImage,
-        prompt: analysisContext?.final_technical_prompt || analysisContext?.prompt || '',
+        prompt: analysisContext?.prompt || '',
+        isEditMode: analysisContext?.isEditMode || false,
         aspectRatio: analysisContext?.aspect_ratio_value || 'original',
         mode: mode
       })

@@ -91,6 +91,34 @@ def get_fresh_token():
         return None
 
 
+def build_handsfree_prompt(user_prompt, is_edit_mode=False):
+    """Build the full prompt with product preservation rules"""
+
+    if is_edit_mode:
+        return f"""EDIT MODE: Modify the background/environment of this image.
+
+USER REQUEST: {user_prompt}
+
+CRITICAL RULES:
+1. The PRODUCT in the image must remain 100% IDENTICAL - do not change it at all
+2. Only modify the BACKGROUND/ENVIRONMENT as requested
+3. Keep all product details: text, logos, colors, textures, patterns exactly the same
+4. Output must look like a real photograph taken with a professional camera
+5. Natural lighting and realistic shadows"""
+    else:
+        return f"""GENERATE: Create a new professional product photograph.
+
+USER REQUEST: {user_prompt}
+
+CRITICAL RULES:
+1. PRESERVE THE PRODUCT EXACTLY - every detail must be pixel-perfect identical to source
+2. All text, logos, patterns, textures, colors must remain exactly the same
+3. Create a new background/environment based on the user's request
+4. Output must look like a REAL PHOTOGRAPH from a professional DSLR camera
+5. Professional studio or natural lighting with realistic shadows
+6. The product should look pristine and professionally photographed"""
+
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -110,21 +138,26 @@ class handler(BaseHTTPRequestHandler):
             
             action = data.get('action', 'generate')
             image_data = data.get('image', '')
-            custom_prompt = data.get('prompt', '')
+            user_prompt = data.get('prompt', '')
+            is_edit_mode = data.get('isEditMode', False)
             aspect_ratio = data.get('aspectRatio', 'original')
-            
+
             print(f"\n{'='*60}")
             print("🎯 HANDSFREE MODE - Gemini 3 Pro (OAuth2 REST)")
             print(f"   Action: {action}")
-            print(f"   Prompt: {custom_prompt[:100] if custom_prompt else '(none)'}...")
+            print(f"   Edit Mode: {is_edit_mode}")
+            print(f"   User Prompt: {user_prompt[:100] if user_prompt else '(none)'}...")
             print(f"   OAuth2: {'Available' if oauth2_token else 'Not available'}")
             print(f"{'='*60}")
+
+            # Build full prompt with preservation rules
+            custom_prompt = build_handsfree_prompt(user_prompt, is_edit_mode)
             
             if not image_data:
                 raise ValueError("No image provided")
             
             # Only require prompt for 'generate' action, not 'analyze'
-            if action == 'generate' and not custom_prompt:
+            if action == 'generate' and not user_prompt:
                 raise ValueError("No prompt provided")
             
             # Handle 'analyze' action - just return basic analysis
@@ -215,44 +248,20 @@ def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_
     # Build aspect ratio instruction
     aspect_instruction = ''
     if aspect_ratio and aspect_ratio != 'original':
-        aspect_instruction = f" Output aspect ratio: {aspect_ratio}."
-    
-    # Ultra-photorealistic prompt for Gemini Image Generation
+        aspect_instruction = f"\n\nOutput aspect ratio: {aspect_ratio}."
+
+    # Full prompt (custom_prompt already contains preservation rules from build_handsfree_prompt)
     generation_prompt = f"""{custom_prompt}{aspect_instruction}
 
-═══════════════════════════════════════════════════════════════════════════════
-🎯 PHOTOREALISTIC QUALITY REQUIREMENTS - THIS MUST LOOK LIKE A REAL PHOTOGRAPH
-═══════════════════════════════════════════════════════════════════════════════
-
-MANDATORY QUALITY STANDARDS:
-1. OUTPUT MUST LOOK LIKE A REAL PHOTOGRAPH taken with a professional DSLR camera
-2. NOT AI-generated looking, NOT rendered, NOT illustrated, NOT artistic
-3. Real camera characteristics: natural depth of field, authentic bokeh, realistic lens behavior
-4. Professional studio or natural lighting with realistic shadows and highlights
-5. Authentic material textures: fabric weave, leather grain, metal reflections, plastic sheen
-6. Natural color grading like professional product photography
-7. Sharp focus on the product with realistic background blur if applicable
-
-PRODUCT PRESERVATION (CRITICAL - ZERO TOLERANCE):
-- The product must be PIXEL-PERFECT identical to the source image
-- Every letter, number, logo, pattern, texture, color MUST be exactly the same
-- DO NOT modify, alter, reimagine, or "improve" any aspect of the product
-- Treat the product as a sacred photograph that cannot be touched
-- Copy the product exactly as it appears - every thread, every stitch, every detail
-
-⛔ ABSOLUTELY FORBIDDEN:
-- DO NOT add any text, logos, watermarks that don't exist in the source
-- DO NOT change product colors, patterns, or textures
-- DO NOT make the image look AI-generated, artistic, or illustrated
-- DO NOT use unrealistic lighting or impossible shadows
-
-OUTPUT: A photograph so realistic that it's indistinguishable from a real camera shot."""
+QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, sharp focus."""
 
     # Models to try via Vertex AI OAuth2
-    # gemini-3-pro-image-preview is PRIMARY for best quality (mermi gibi fotoğraflar!)
+    # Try Gemini 3 variants first, then experimental models
     models_to_try = [
         'gemini-3-pro-image-preview',
-        'gemini-2.0-flash-exp',
+        'gemini-3.0-pro-image-preview',
+        'gemini-exp-1206',
+        'gemini-2.0-flash-exp-image-generation',
     ]
     
     for model_name in models_to_try:
@@ -346,27 +355,12 @@ def generate_with_fallback(image_data, custom_prompt, aspect_ratio='original'):
         # Build aspect ratio instruction
         aspect_instruction = ''
         if aspect_ratio and aspect_ratio != 'original':
-            aspect_instruction = f" Output aspect ratio: {aspect_ratio}."
-        
-        # Simplified prompt for Gemini
+            aspect_instruction = f"\n\nOutput aspect ratio: {aspect_ratio}."
+
+        # Full prompt (custom_prompt already contains preservation rules)
         generation_prompt = f"""{custom_prompt}{aspect_instruction}
 
-IMPORTANT REQUIREMENTS:
-1. IDENTITY: Keep the exact same face, body, hair, and clothing as the source image. Do not alter any facial features.
-2. QUALITY: Generate an ultra-photorealistic image with professional DSLR quality. Natural lighting, realistic shadows.
-3. This is a view/angle change only. The subject must remain identical to the source.
-
-⛔ TEXT/LOGO RULES (CRITICAL):
-- If clothing/product HAS text/logos → PRESERVE exactly (pixel-perfect)
-- If clothing/product is PLAIN (no text/logos) → keep it COMPLETELY PLAIN
-- NEVER hallucinate, invent, or add text that doesn't exist in source
-- A plain colored shirt MUST stay a plain colored shirt with NO added graphics
-
-IMPERFECTION REMOVAL:
-- Remove minor imperfections: scratches, scuffs, dust, fingerprints
-- Make the product look pristine and new
-
-NO NEW TEXT: Do NOT add any NEW text, labels, watermarks, or captions. Only preserve existing text."""
+QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting."""
 
         models_to_try = ['gemini-2.0-flash-exp', 'gemini-2.0-flash']
         

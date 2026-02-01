@@ -286,111 +286,22 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
             // Determine which image to use as source
             const activeImg = getActiveImage();
 
-            // CRITICAL: Ultra-strict product preservation rules
-            const productPreservationRules = `
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ CRITICAL WARNING - PRODUCT PRESERVATION IS MANDATORY ⚠️
-═══════════════════════════════════════════════════════════════════════════════
-
-You are looking at a SOURCE IMAGE containing a PRODUCT. This product MUST be preserved with ABSOLUTE PERFECTION. Any deviation is UNACCEPTABLE.
-
-🔴 ZERO TOLERANCE RULES - THE PRODUCT IS UNTOUCHABLE:
-
-1. TEXT PRESERVATION (CRITICAL):
-   - Every single letter MUST remain pixel-perfect identical
-   - Every number, digit MUST be exactly the same
-   - Every symbol, punctuation mark MUST NOT change
-   - Font style, font size, font weight MUST be preserved
-   - Text positioning, spacing, kerning MUST NOT shift even 1 pixel
-   - If there's "ABC123" on the product, output MUST show "ABC123" - not "ABC 123" or "ABC1Z3"
-
-2. LOGO & BRANDING PRESERVATION:
-   - Logos MUST be copied exactly as they appear
-   - Brand names, trademarks MUST remain identical
-   - Logo colors MUST NOT shift even 1% in hue/saturation
-   - Logo proportions MUST NOT change
-
-3. TEXTURE & MATERIAL PRESERVATION:
-   - Every thread, every stitch MUST be visible if it was visible
-   - Fabric weave patterns MUST be identical
-   - Surface textures (matte, glossy, rough, smooth) MUST be preserved
-   - Material appearance (leather, metal, plastic, wood, fabric) MUST NOT change
-   - Scratches, imperfections, wear marks MUST remain
-
-4. COLOR PRESERVATION:
-   - Exact RGB values MUST be maintained
-   - No color correction, no white balance changes on the product
-   - Shadows on the product MUST match the original lighting direction
-   - Highlights on the product MUST be in the same positions
-
-5. SHAPE & GEOMETRY PRESERVATION:
-   - Dimensions, proportions MUST be exactly the same
-   - Angles, curves, edges MUST NOT be altered
-   - No stretching, no warping, no perspective changes on the product
-   - If product has a dent or bend, it MUST remain
-
-6. DETAIL PRESERVATION:
-   - Buttons, zippers, clasps, buckles MUST be identical
-   - Stitching patterns MUST match exactly
-   - Labels, tags, barcodes MUST be preserved
-   - Even dust particles or minor imperfections MUST remain
-
-🔴 WHAT YOU CAN CHANGE:
-- Background ONLY
-- Environment ONLY
-- Lighting on background ONLY
-- Camera angle/perspective of the SCENE (but product appearance stays same)
-
-🔴 WHAT YOU CANNOT CHANGE:
-- ANYTHING on the product itself
-- The product is a PHOTOGRAPH that you are compositing into a new scene
-- Treat it as if you're doing a professional product photography composite
-`;
-
-            // Edit mode: only when a GENERATED image is selected (not original)
-            let finalPrompt;
-            if (isEditMode) {
-                // EDIT: Modify the generated image while preserving the product
-                finalPrompt = `${productPreservationRules}
-
-═══════════════════════════════════════════════════════════════════════════════
-🔧 EDIT MODE - MODIFY BACKGROUND/ENVIRONMENT ONLY
-═══════════════════════════════════════════════════════════════════════════════
-
-USER'S EDIT REQUEST: "${imagePrompt}"
-
-INSTRUCTIONS:
-1. Look at the current generated image
-2. Apply the user's requested edit to the BACKGROUND/ENVIRONMENT only
-3. The PRODUCT must remain 100% IDENTICAL - copy it pixel by pixel
-4. If user asks to "remove car" - remove it from background, NOT from product
-5. If user asks to "change lighting" - change environmental lighting, product lighting stays consistent
-6. Output should look like the same product photographed in the modified environment`;
-            } else {
-                // GENERATE: Create new image from original, preserving product perfectly
-                finalPrompt = `${productPreservationRules}
-
-═══════════════════════════════════════════════════════════════════════════════
-🎨 GENERATION MODE - CREATE NEW SCENE WITH PRESERVED PRODUCT
-═══════════════════════════════════════════════════════════════════════════════
-
-USER'S GENERATION REQUEST: "${imagePrompt}"
-
-INSTRUCTIONS:
-1. Extract the PRODUCT from the source image mentally
-2. Create a new background/environment based on user's prompt
-3. Place the EXACT SAME PRODUCT (pixel-perfect copy) into the new scene
-4. The product appearance, colors, text, logos, textures MUST be IDENTICAL to source
-5. Only the background/environment should reflect the user's prompt
-6. This is like professional product photography - same product, different backdrop`;
-            }
-
+            // Send clean request to backend - backend handles preservation rules
             const promptSchema = {
-                final_technical_prompt: finalPrompt,
+                prompt: imagePrompt,
+                isEditMode: isEditMode,
                 aspect_ratio_value: aspectRatio
             };
 
+            console.log('🎨 Handsfree request:', { isEditMode, prompt: imagePrompt.substring(0, 100) });
+
             const result = await generateHandsfreeImage(activeImg, promptSchema);
+
+            // Log full response for debugging
+            console.log('📦 Handsfree response:', result);
+            if (!result.success && result.model_errors) {
+                console.error('🔴 Model errors:', result.model_errors);
+            }
             const imageUrl = result.imageUrl || result.image_url || result.generated_image;
 
             if (result.success && imageUrl) {
