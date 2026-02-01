@@ -94,29 +94,85 @@ def get_fresh_token():
 def build_handsfree_prompt(user_prompt, is_edit_mode=False):
     """Build the full prompt with product preservation rules"""
 
+    preservation_rules = """
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ ABSOLUTE PRODUCT PRESERVATION - ZERO TOLERANCE FOR ANY CHANGES ⚠️
+═══════════════════════════════════════════════════════════════════════════════
+
+THE PRODUCT IN THIS IMAGE IS SACRED AND UNTOUCHABLE:
+
+1. TEXT PRESERVATION (CRITICAL):
+   - Every letter, number, symbol MUST be PIXEL-PERFECT identical
+   - Font style, size, weight, color MUST NOT change
+   - Text positioning MUST NOT shift even 1 pixel
+   - If text says "ABC123" it MUST remain "ABC123" exactly
+
+2. LOGO & BRANDING:
+   - Logos MUST be copied exactly as they appear
+   - Logo colors MUST NOT shift even 1% in hue/saturation
+   - Logo proportions MUST NOT change at all
+
+3. TEXTURE & MATERIAL:
+   - Every thread, stitch, weave pattern MUST be visible
+   - Surface textures (matte, glossy, rough, smooth) MUST be preserved
+   - Material appearance MUST NOT change
+
+4. COLOR:
+   - Exact RGB values MUST be maintained
+   - No color correction on the product
+   - Shadows and highlights on product MUST match original
+
+5. SHAPE & GEOMETRY:
+   - Dimensions, proportions MUST be exactly the same
+   - No stretching, warping, or perspective changes on product
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 PHOTOREALISTIC OUTPUT REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+OUTPUT MUST LOOK LIKE A REAL PHOTOGRAPH:
+- Shot with professional DSLR camera (Canon 5D, Sony A7, Nikon D850)
+- NOT AI-generated looking, NOT rendered, NOT illustrated
+- Natural depth of field, authentic bokeh
+- Professional studio or natural lighting
+- Realistic shadows and highlights
+- Sharp focus on product
+- Natural color grading like professional product photography
+
+⛔ FORBIDDEN:
+- DO NOT add text/logos that don't exist in source
+- DO NOT change product colors/patterns/textures
+- DO NOT make it look AI-generated or artistic
+- DO NOT use unrealistic lighting
+"""
+
     if is_edit_mode:
-        return f"""EDIT MODE: Modify the background/environment of this image.
+        return f"""{preservation_rules}
 
-USER REQUEST: {user_prompt}
+═══════════════════════════════════════════════════════════════════════════════
+🔧 EDIT MODE - MODIFY BACKGROUND/ENVIRONMENT ONLY
+═══════════════════════════════════════════════════════════════════════════════
 
-CRITICAL RULES:
-1. The PRODUCT in the image must remain 100% IDENTICAL - do not change it at all
+USER'S EDIT REQUEST: {user_prompt}
+
+INSTRUCTIONS:
+1. The PRODUCT must remain 100% IDENTICAL - copy it pixel by pixel
 2. Only modify the BACKGROUND/ENVIRONMENT as requested
-3. Keep all product details: text, logos, colors, textures, patterns exactly the same
-4. Output must look like a real photograph taken with a professional camera
-5. Natural lighting and realistic shadows"""
+3. Output should look like the same product photographed in a modified environment"""
     else:
-        return f"""GENERATE: Create a new professional product photograph.
+        return f"""{preservation_rules}
 
-USER REQUEST: {user_prompt}
+═══════════════════════════════════════════════════════════════════════════════
+🎨 GENERATE NEW PROFESSIONAL PRODUCT PHOTOGRAPH
+═══════════════════════════════════════════════════════════════════════════════
 
-CRITICAL RULES:
-1. PRESERVE THE PRODUCT EXACTLY - every detail must be pixel-perfect identical to source
-2. All text, logos, patterns, textures, colors must remain exactly the same
-3. Create a new background/environment based on the user's request
-4. Output must look like a REAL PHOTOGRAPH from a professional DSLR camera
-5. Professional studio or natural lighting with realistic shadows
-6. The product should look pristine and professionally photographed"""
+USER'S REQUEST: {user_prompt}
+
+INSTRUCTIONS:
+1. PRESERVE THE PRODUCT EXACTLY - pixel-perfect identical to source
+2. Create new background/environment based on user's request
+3. This is like professional product photography - same product, different backdrop
+4. Make it look like a REAL photograph, not AI-generated"""
 
 
 class handler(BaseHTTPRequestHandler):
@@ -265,9 +321,13 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, s
     for model_name in models_to_try:
         try:
             print(f"   Trying {model_name} via REST API...")
-            
+
             # Vertex AI REST endpoint
-            url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/{model_name}:generateContent"
+            # gemini-3-pro-image-preview requires global location
+            if model_name == 'gemini-3-pro-image-preview':
+                url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/{model_name}:generateContent"
+            else:
+                url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/{model_name}:generateContent"
             
             headers = {
                 "Authorization": f"Bearer {token}",
