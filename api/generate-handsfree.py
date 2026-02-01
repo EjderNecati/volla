@@ -256,11 +256,10 @@ def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_
 QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, sharp focus."""
 
     # Models to try via Vertex AI OAuth2
-    # Try experimental models with image generation capability
+    # Same as old working code from fb09286
     models_to_try = [
-        'gemini-2.0-flash-exp',           # Known working - supports image generation
-        'gemini-exp-1206',                 # Experimental
-        'gemini-2.0-flash-thinking-exp',   # Thinking model
+        'gemini-3-pro-image-preview',
+        'gemini-2.0-flash-exp',
     ]
     
     for model_name in models_to_try:
