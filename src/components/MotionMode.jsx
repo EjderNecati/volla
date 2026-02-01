@@ -10,7 +10,8 @@ import {
     Trash2,
     ImageIcon,
     Zap,
-    Crown
+    Crown,
+    Pencil
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
@@ -65,7 +66,7 @@ const VIDEO_ASPECT_RATIOS = [
 // REUSABLE OPTION GROUP COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4 }) => {
+const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns = 4, translationKeyPrefix, t }) => {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -86,7 +87,7 @@ const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns =
                                 : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                             }`}
                     >
-                        {opt.label}
+                        {translationKeyPrefix && t ? t(`${translationKeyPrefix}.${opt.id}`) : opt.label}
                     </button>
                 ))}
             </div>
@@ -132,6 +133,10 @@ export default function MotionMode({ marketplace, onNavigate }) {
     // Video player ref
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
+
+    // Edit mode state
+    const [editPrompt, setEditPrompt] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -375,13 +380,13 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                     <img
                                         src={sourceImage}
                                         alt="Source"
-                                        className="w-full h-32 object-cover rounded-xl border border-[#E8E7E4]"
+                                        className="w-full h-48 object-contain rounded-xl border border-[#E8E7E4] bg-[#F5F4F1]"
                                     />
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white text-xs font-medium"
                                     >
-                                        Change Image
+                                        {t('motion.changeImage') || 'Change Image'}
                                     </button>
                                     <button
                                         onClick={handleClear}
@@ -393,7 +398,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                             ) : (
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full h-32 border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center text-[#8C8C8C] hover:border-violet-400 hover:text-violet-500 transition-colors"
+                                    className="w-full h-48 border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center text-[#8C8C8C] hover:border-violet-400 hover:text-violet-500 transition-colors"
                                 >
                                     <Upload size={24} className="mb-2" />
                                     <span className="text-xs font-medium">
@@ -424,6 +429,8 @@ export default function MotionMode({ marketplace, onNavigate }) {
                             selected={cameraMovement}
                             onSelect={setCameraMovement}
                             columns={4}
+                            translationKeyPrefix="motion.cameraMovements"
+                            t={t}
                         />
 
                         {/* Speed */}
@@ -433,6 +440,8 @@ export default function MotionMode({ marketplace, onNavigate }) {
                             selected={speed}
                             onSelect={setSpeed}
                             columns={3}
+                            translationKeyPrefix="motion.speeds"
+                            t={t}
                         />
 
                         {/* Duration */}
@@ -507,11 +516,11 @@ export default function MotionMode({ marketplace, onNavigate }) {
                         </button>
 
                         {/* Progress Bar */}
-                        {isGenerating && progress > 0 && (
+                        {isGenerating && (
                             <div className="w-full bg-[#E8E7E4] rounded-full h-2 overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-500"
-                                    style={{ width: `${progress}%` }}
+                                    className={`h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-500 ${progress === 0 ? 'animate-pulse' : ''}`}
+                                    style={{ width: progress > 0 ? `${progress}%` : '10%' }}
                                 />
                             </div>
                         )}
@@ -573,7 +582,10 @@ export default function MotionMode({ marketplace, onNavigate }) {
 
                                     {/* Label */}
                                     <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
-                                        {activeVideoIndex === -1 ? 'Original' : `Video ${activeVideoIndex + 1}`}
+                                        {activeVideoIndex === -1
+                                            ? (t('motion.original') || 'Original')
+                                            : `${t('motion.video') || 'Video'} ${activeVideoIndex + 1}`
+                                        }
                                     </div>
 
                                     {/* Video Controls (only for video) */}
@@ -631,7 +643,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                 >
                                     <img src={sourceImage} alt="Original" className="w-full h-full object-cover" />
                                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
-                                        Original
+                                        {t('motion.original') || 'Original'}
                                     </div>
                                 </button>
 
@@ -655,10 +667,53 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                             <Play size={16} className="text-white" />
                                         </div>
                                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
-                                            Video {idx + 1}
+                                            {t('motion.video') || 'Video'} {idx + 1}
                                         </div>
                                     </button>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Video Edit Input - Only show when a video is selected */}
+                        {activeVideoIndex >= 0 && generatedVideos.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                                <div className="flex items-center gap-2 text-[#8C8C8C] text-xs font-semibold uppercase tracking-wider">
+                                    <Pencil size={12} />
+                                    {t('motion.editVideo') || 'Edit Video'}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={editPrompt}
+                                        onChange={(e) => setEditPrompt(e.target.value)}
+                                        placeholder={t('motion.editPlaceholder') || "E.g.: 'remove the woman in background', 'add rain effect'..."}
+                                        className="flex-1 px-4 py-3 bg-white border border-[#E8E7E4] rounded-xl text-sm text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:border-violet-400"
+                                        disabled={isEditing}
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            // TODO: Implement video editing API call
+                                            alert(t('motion.editComingSoon') || 'Video editing feature coming soon!');
+                                        }}
+                                        disabled={!editPrompt.trim() || isEditing}
+                                        className="px-4 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {isEditing ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                {t('motion.editing') || 'Editing...'}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Pencil size={16} />
+                                                {t('motion.editButton') || 'Edit'}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-[#8C8C8C]">
+                                    {t('motion.editDescription') || 'Describe what you want to change in the video. The scene will stay exactly the same except for your requested change.'}
+                                </p>
                             </div>
                         )}
                     </div>
