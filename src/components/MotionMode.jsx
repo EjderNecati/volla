@@ -34,9 +34,7 @@ const CAMERA_MOVEMENTS = [
     { id: 'dolly_in', label: 'Dolly In', en: 'Dolly In' },
     { id: 'dolly_out', label: 'Dolly Out', en: 'Dolly Out' },
     { id: 'orbit_cw', label: 'Orbit CW', en: 'Clockwise Orbit' },
-    { id: 'orbit_ccw', label: 'Orbit CCW', en: 'Counter-Clockwise' },
-    { id: 'crane_up', label: 'Crane Up', en: 'Crane Up' },
-    { id: 'crane_down', label: 'Crane Down', en: 'Crane Down' }
+    { id: 'orbit_ccw', label: 'Orbit CCW', en: 'Counter-Clockwise' }
 ];
 
 const SPEED_OPTIONS = [
@@ -52,11 +50,21 @@ const DURATION_OPTIONS = [
 ];
 
 const QUALITY_MODES = [
-    { id: 'fast', label: 'Fast', credits: 8, icon: Zap },
-    { id: 'pro', label: 'Pro', credits: 12, icon: Crown }
+    { id: 'fast', label: 'Fast', icon: Zap },
+    { id: 'pro', label: 'Pro', icon: Crown }
 ];
 
 const EDIT_CREDIT_COST = 12;
+
+// Credit costs based on duration and quality
+const getCreditCost = (duration, qualityMode) => {
+    const costs = {
+        '4': { fast: 6, pro: 9 },
+        '6': { fast: 8, pro: 12 },
+        '8': { fast: 10, pro: 15 }
+    };
+    return costs[duration]?.[qualityMode] || 8;
+};
 
 const VIDEO_ASPECT_RATIOS = [
     { id: '16:9', label: '16:9' },
@@ -362,7 +370,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
     };
 
     const activeMedia = getActiveMedia();
-    const creditCost = qualityMode === 'pro' ? 12 : 8;
+    const creditCost = getCreditCost(duration, qualityMode);
 
     return (
         <>
@@ -479,6 +487,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                             <div className="grid grid-cols-2 gap-2">
                                 {QUALITY_MODES.map((mode) => {
                                     const ModeIcon = mode.icon;
+                                    const modeCreditCost = getCreditCost(duration, mode.id);
                                     return (
                                         <button
                                             key={mode.id}
@@ -494,7 +503,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                             <ModeIcon size={14} />
                                             {mode.label}
                                             <span className="text-[10px] opacity-70">
-                                                {mode.credits} cr
+                                                {modeCreditCost} cr
                                             </span>
                                         </button>
                                     );
@@ -561,7 +570,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                     <div className="flex flex-col">
                         <div
                             className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                            style={{ height: '360px' }}
+                            style={{ height: '420px' }}
                         >
                             {sourceImage ? (
                                 <>
@@ -590,11 +599,20 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                                 onPause={() => setIsPlaying(false)}
                                             />
                                         ) : (
-                                            <img
-                                                src={activeMedia.url}
-                                                alt="Source"
-                                                className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
-                                            />
+                                            <div
+                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black"
+                                                style={{
+                                                    aspectRatio: aspectRatio.replace(':', '/'),
+                                                    maxHeight: '100%',
+                                                    maxWidth: '100%'
+                                                }}
+                                            >
+                                                <img
+                                                    src={activeMedia.url}
+                                                    alt="Source"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
                                         )}
                                     </div>
 
