@@ -152,6 +152,7 @@
         "downloadVideo": "動画をダウンロード",
         "editVideo": "動画を編集",
         "editPlaceholder": "例：「背景の女性を削除」「雨のエフェクトを追加」...",
+        "selectVideoFirst": "編集する動画を選択してください...",
         "editButton": "編集",
         "editing": "編集中...",
         "editDescription": "動画で何を変更したいかを説明してください。シーンはリクエストした変更以外は全く同じままです。",

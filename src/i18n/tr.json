@@ -173,6 +173,7 @@
         "downloadVideo": "Video İndir",
         "editVideo": "Video Düzenle",
         "editPlaceholder": "Örn: 'arka plandaki kadını kaldır', 'yağmur efekti ekle'...",
+        "selectVideoFirst": "Düzenlemek için bir video seçin...",
         "editButton": "Düzenle",
         "editing": "Düzenleniyor...",
         "editDescription": "Videoda neyi değiştirmek istediğinizi tanımlayın. Sahne, istediğiniz değişiklik dışında tamamen aynı kalacak.",

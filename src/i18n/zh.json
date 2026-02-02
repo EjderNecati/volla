@@ -153,6 +153,7 @@
         "downloadVideo": "下载视频",
         "editVideo": "编辑视频",
         "editPlaceholder": "例如：「移除背景中的女人」「添加雨天效果」...",
+        "selectVideoFirst": "选择要编辑的视频...",
         "editButton": "编辑",
         "editing": "编辑中...",
         "editDescription": "描述您想在视频中更改的内容。除了您请求的更改外，场景将保持完全相同。",

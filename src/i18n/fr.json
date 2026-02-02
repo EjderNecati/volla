@@ -152,6 +152,7 @@
         "downloadVideo": "Télécharger Vidéo",
         "editVideo": "Modifier Vidéo",
         "editPlaceholder": "Ex.: 'supprimer la femme en arrière-plan', 'ajouter effet de pluie'...",
+        "selectVideoFirst": "Sélectionnez une vidéo à modifier...",
         "editButton": "Modifier",
         "editing": "Modification...",
         "editDescription": "Décrivez ce que vous voulez changer dans la vidéo. La scène restera exactement la même sauf pour votre modification demandée.",

@@ -52,9 +52,11 @@ const DURATION_OPTIONS = [
 ];
 
 const QUALITY_MODES = [
-    { id: 'fast', label: 'Fast', credits: 10, icon: Zap },
-    { id: 'pro', label: 'Pro', credits: 20, icon: Crown }
+    { id: 'fast', label: 'Fast', credits: 8, icon: Zap },
+    { id: 'pro', label: 'Pro', credits: 12, icon: Crown }
 ];
+
+const EDIT_CREDIT_COST = 12;
 
 const VIDEO_ASPECT_RATIOS = [
     { id: '16:9', label: '16:9' },
@@ -172,6 +174,14 @@ export default function MotionMode({ marketplace, onNavigate }) {
         };
     }, []);
 
+    // Auto-pause video when switching selection
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+        }
+    }, [activeVideoIndex]);
+
     // Start polling for video completion
     const startPolling = useCallback((opName, modId) => {
         setPollingStatus('Processing video...');
@@ -189,10 +199,18 @@ export default function MotionMode({ marketplace, onNavigate }) {
                     setProgress(100);
                     setIsGenerating(false);
 
-                    // Add video to collection
+                    // Add video to collection (check for duplicates)
                     if (result.video_url) {
-                        setGeneratedVideos(prev => [...prev, result.video_url]);
-                        setActiveVideoIndex(generatedVideos.length);
+                        setGeneratedVideos(prev => {
+                            // Prevent duplicate videos
+                            if (prev.includes(result.video_url)) {
+                                return prev;
+                            }
+                            const newVideos = [...prev, result.video_url];
+                            // Set active index to the new video
+                            setActiveVideoIndex(newVideos.length - 1);
+                            return newVideos;
+                        });
 
                         // Save to history
                         saveVideoToHistory(result.video_url);
@@ -344,7 +362,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
     };
 
     const activeMedia = getActiveMedia();
-    const creditCost = qualityMode === 'pro' ? 20 : 10;
+    const creditCost = qualityMode === 'pro' ? 12 : 8;
 
     return (
         <>
@@ -538,7 +556,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                 {/* ════════════════════════════════════════════════════════════
                     RIGHT PANEL - 60% - Video Canvas
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-6 overflow-y-auto">
+                <section className="flex-1 flex flex-col p-5 overflow-y-auto">
                     {/* Video Canvas Area */}
                     <div className="flex flex-col">
                         <div
@@ -674,29 +692,37 @@ export default function MotionMode({ marketplace, onNavigate }) {
                             </div>
                         )}
 
-                        {/* Video Edit Input - Only show when a video is selected */}
-                        {activeVideoIndex >= 0 && generatedVideos.length > 0 && (
+                        {/* Video Edit Input - Show when videos are generated */}
+                        {generatedVideos.length > 0 && (
                             <div className="mt-4 space-y-3">
-                                <div className="flex items-center gap-2 text-[#8C8C8C] text-xs font-semibold uppercase tracking-wider">
-                                    <Pencil size={12} />
-                                    {t('motion.editVideo') || 'Edit Video'}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-[#8C8C8C] text-xs font-semibold uppercase tracking-wider">
+                                        <Pencil size={12} />
+                                        {t('motion.editVideo') || 'Edit Video'}
+                                    </div>
+                                    <span className="text-[10px] text-[#8C8C8C]">
+                                        {EDIT_CREDIT_COST} {t('credits.creditsUnit') || 'credits'}
+                                    </span>
                                 </div>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={editPrompt}
                                         onChange={(e) => setEditPrompt(e.target.value)}
-                                        placeholder={t('motion.editPlaceholder') || "E.g.: 'remove the woman in background', 'add rain effect'..."}
+                                        placeholder={activeVideoIndex >= 0
+                                            ? (t('motion.editPlaceholder') || "E.g.: 'remove the woman in background', 'add rain effect'...")
+                                            : (t('motion.selectVideoFirst') || "Select a video to edit...")
+                                        }
                                         className="flex-1 px-4 py-3 bg-white border border-[#E8E7E4] rounded-xl text-sm text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:border-violet-400"
-                                        disabled={isEditing}
+                                        disabled={isEditing || activeVideoIndex < 0}
                                     />
                                     <button
                                         onClick={() => {
                                             // TODO: Implement video editing API call
                                             alert(t('motion.editComingSoon') || 'Video editing feature coming soon!');
                                         }}
-                                        disabled={!editPrompt.trim() || isEditing}
-                                        className="px-4 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        disabled={!editPrompt.trim() || isEditing || activeVideoIndex < 0}
+                                        className="px-4 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                                     >
                                         {isEditing ? (
                                             <>

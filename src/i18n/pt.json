@@ -152,6 +152,7 @@
         "downloadVideo": "Baixar Vídeo",
         "editVideo": "Editar Vídeo",
         "editPlaceholder": "Ex.: 'remova a mulher do fundo', 'adicione efeito de chuva'...",
+        "selectVideoFirst": "Selecione um vídeo para editar...",
         "editButton": "Editar",
         "editing": "Editando...",
         "editDescription": "Descreva o que você quer mudar no vídeo. A cena permanecerá exatamente igual, exceto pela alteração solicitada.",

@@ -103,6 +103,7 @@
         "downloadVideo": "Download Video",
         "editVideo": "Edit Video",
         "editPlaceholder": "E.g.: 'remove the woman in background', 'add rain effect'...",
+        "selectVideoFirst": "Select a video to edit...",
         "editButton": "Edit",
         "editing": "Editing...",
         "editDescription": "Describe what you want to change in the video. The scene will stay exactly the same except for your requested change.",
