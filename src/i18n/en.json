@@ -428,7 +428,13 @@
         "resumeProject": "Resume Project",
         "openAIStudio": "Open AI Studio",
         "noProjects": "No projects yet",
-        "startScanning": "Start scanning products to build your history"
+        "startScanning": "Start scanning products to build your history",
+        "noVideos": "No videos",
+        "oneVideo": "1 video",
+        "videos": "videos",
+        "noImages": "No images",
+        "oneImage": "1 image",
+        "images": "images"
     },
     "paywall": {
         "limitedTimeOffer": "Limited Time Offer",

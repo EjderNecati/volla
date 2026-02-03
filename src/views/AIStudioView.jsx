@@ -1193,6 +1193,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                 <MotionMode
                     marketplace={marketplace}
                     onNavigate={onNavigate}
+                    initialProject={initialProject?.productInfo?.featureType === 'motion' ? initialProject : null}
                 />
             ) : (
                 <main className="flex-1 flex min-h-0">

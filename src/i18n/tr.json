@@ -418,7 +418,13 @@
         "resumeProject": "Projeye Devam Et",
         "openAIStudio": "AI Stüdyo Aç",
         "noProjects": "Henüz proje yok",
-        "startScanning": "Geçmişinizi oluşturmak için ürün taramaya başlayın"
+        "startScanning": "Geçmişinizi oluşturmak için ürün taramaya başlayın",
+        "noVideos": "Video yok",
+        "oneVideo": "1 video",
+        "videos": "video",
+        "noImages": "Görsel yok",
+        "oneImage": "1 görsel",
+        "images": "görsel"
     },
     "paywall": {
         "limitedTimeOffer": "Sınırlı Süreli Teklif",

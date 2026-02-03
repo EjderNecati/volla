@@ -109,7 +109,7 @@ const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns =
 // MAIN MOTION MODE COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function MotionMode({ marketplace, onNavigate }) {
+export default function MotionMode({ marketplace, onNavigate, initialProject }) {
     const { t } = useTranslation();
     const { useCredits: useCreditsHook } = useCredits();
 
@@ -181,6 +181,35 @@ export default function MotionMode({ marketplace, onNavigate }) {
             }
         };
     }, []);
+
+    // Load project data when resuming from history
+    useEffect(() => {
+        if (initialProject && initialProject.productInfo?.featureType === 'motion') {
+            console.log('🎬 Loading Motion project:', initialProject.id);
+
+            // Load source image
+            if (initialProject.originalImage) {
+                setSourceImage(initialProject.originalImage);
+            }
+
+            // Load motion settings from productInfo
+            const info = initialProject.productInfo;
+            if (info.cameraMovement) setCameraMovement(info.cameraMovement);
+            if (info.speed) setSpeed(info.speed);
+            if (info.duration) setDuration(info.duration);
+            if (info.qualityMode) setQualityMode(info.qualityMode);
+            if (info.aspectRatio) setAspectRatio(info.aspectRatio);
+            if (info.customDirective) setCustomDirective(info.customDirective);
+
+            // Load generated videos from assets
+            const videoAssets = initialProject.assets?.filter(a => a.type === 'MOTION_VIDEO') || [];
+            if (videoAssets.length > 0) {
+                const videoUrls = videoAssets.map(a => a.url);
+                setGeneratedVideos(videoUrls);
+                setActiveVideoIndex(videoUrls.length - 1); // Show last video
+            }
+        }
+    }, [initialProject]);
 
     // Auto-pause video when switching selection
     useEffect(() => {
@@ -566,11 +595,10 @@ export default function MotionMode({ marketplace, onNavigate }) {
                     RIGHT PANEL - 60% - Video Canvas
                 ════════════════════════════════════════════════════════════ */}
                 <section className="flex-1 flex flex-col p-5 overflow-y-auto">
-                    {/* Video Canvas Area */}
-                    <div className="flex flex-col">
+                    {/* Video Canvas Area - fills available space */}
+                    <div className="flex flex-col flex-1">
                         <div
-                            className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                            style={{ height: '480px' }}
+                            className="relative rounded-2xl overflow-hidden bg-[#1A1A1A] flex-1 min-h-[400px]"
                         >
                             {sourceImage ? (
                                 <>
@@ -587,12 +615,13 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                     <div className="absolute inset-0 bg-black/30" />
 
                                     {/* Main Content */}
-                                    <div className="relative h-full w-full flex items-center justify-center p-3">
+                                    <div className="relative h-full w-full flex items-center justify-center p-4">
                                         {activeMedia.type === 'video' ? (
                                             <video
                                                 ref={videoRef}
                                                 src={activeMedia.url}
-                                                className="h-full w-full object-contain rounded-xl shadow-2xl"
+                                                className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+                                                style={{ aspectRatio: aspectRatio.replace(':', '/') }}
                                                 loop
                                                 playsInline
                                                 onPlay={() => setIsPlaying(true)}
@@ -600,15 +629,13 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                             />
                                         ) : (
                                             <div
-                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black h-full"
-                                                style={{
-                                                    aspectRatio: aspectRatio.replace(':', '/')
-                                                }}
+                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black/80 flex items-center justify-center max-h-full max-w-full"
+                                                style={{ aspectRatio: aspectRatio.replace(':', '/') }}
                                             >
                                                 <img
                                                     src={activeMedia.url}
                                                     alt="Source"
-                                                    className="w-full h-full object-cover"
+                                                    className="max-w-full max-h-full object-contain"
                                                 />
                                             </div>
                                         )}
