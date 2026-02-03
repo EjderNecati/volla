@@ -570,7 +570,7 @@ export default function MotionMode({ marketplace, onNavigate }) {
                     <div className="flex flex-col">
                         <div
                             className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                            style={{ height: '420px' }}
+                            style={{ height: '480px' }}
                         >
                             {sourceImage ? (
                                 <>
@@ -587,12 +587,12 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                     <div className="absolute inset-0 bg-black/30" />
 
                                     {/* Main Content */}
-                                    <div className="relative h-full w-full flex items-center justify-center p-4">
+                                    <div className="relative h-full w-full flex items-center justify-center p-3">
                                         {activeMedia.type === 'video' ? (
                                             <video
                                                 ref={videoRef}
                                                 src={activeMedia.url}
-                                                className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+                                                className="h-full w-full object-contain rounded-xl shadow-2xl"
                                                 loop
                                                 playsInline
                                                 onPlay={() => setIsPlaying(true)}
@@ -600,11 +600,9 @@ export default function MotionMode({ marketplace, onNavigate }) {
                                             />
                                         ) : (
                                             <div
-                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black"
+                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black h-full"
                                                 style={{
-                                                    aspectRatio: aspectRatio.replace(':', '/'),
-                                                    maxHeight: '100%',
-                                                    maxWidth: '100%'
+                                                    aspectRatio: aspectRatio.replace(':', '/')
                                                 }}
                                             >
                                                 <img

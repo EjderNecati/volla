@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Image, Trash2, ExternalLink, Sparkles, FolderOpen, MoreHorizontal, Database } from 'lucide-react';
+import { Clock, Image, Trash2, ExternalLink, Sparkles, FolderOpen, MoreHorizontal, Database, Video } from 'lucide-react';
 import { getProjects, deleteProject, deleteAllProjects, getStorageUsage } from '../utils/projectManager';
 import { useTranslation } from '../i18n';
 
@@ -79,17 +79,57 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
 
     // Get asset count for display
     const getAssetCountText = (project) => {
+        // Check if this is a Motion project
+        const isMotionProject = project.productInfo?.featureType === 'motion';
+        if (isMotionProject) {
+            const videoCount = project.assets?.filter(a => a.type === 'MOTION_VIDEO').length || 0;
+            if (videoCount === 0) return t('history.noVideos') || 'No videos';
+            if (videoCount === 1) return t('history.oneVideo') || '1 video';
+            return `${videoCount} ${t('history.videos') || 'videos'}`;
+        }
+
         const count = project.assets?.length || 0;
-        if (count === 0) return 'No images';
-        if (count === 1) return '1 image';
-        return `${count} images`;
+        if (count === 0) return t('history.noImages') || 'No images';
+        if (count === 1) return t('history.oneImage') || '1 image';
+        return `${count} ${t('history.images') || 'images'}`;
     };
 
     // Render multi-thumbnail preview (shows up to 4 images in grid)
     const renderThumbnailGrid = (project) => {
+        // Check if this is a Motion project - use originalImage for thumbnail
+        const isMotionProject = project.productInfo?.featureType === 'motion';
+
+        if (isMotionProject && project.originalImage) {
+            return (
+                <div className="relative w-full h-full">
+                    <img
+                        src={project.originalImage}
+                        alt="Motion Project"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Video indicator overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                            <Video className="w-5 h-5 text-white" />
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         const assets = project.assets || [];
 
         if (assets.length === 0) {
+            // Fallback to originalImage if no assets
+            if (project.originalImage) {
+                return (
+                    <img
+                        src={project.originalImage}
+                        alt="Project"
+                        className="w-full h-full object-cover"
+                    />
+                );
+            }
             return (
                 <div className="w-full h-full flex items-center justify-center bg-[#F5F4F1]">
                     <Image className="w-12 h-12 text-[#8C8C8C]" />

@@ -222,6 +222,12 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             console.log('📂 Resuming project from history:', initialProject.id);
             setCurrentProjectId(initialProject.id);
 
+            // Check if this is a Motion project and switch to motion mode
+            if (initialProject.productInfo?.featureType === 'motion') {
+                console.log('🎬 Motion project detected, switching to Motion mode');
+                setStudioMode('motion');
+            }
+
             // Load all assets
             if (initialProject.assets && initialProject.assets.length > 0) {
                 setSessionAssets(initialProject.assets);
