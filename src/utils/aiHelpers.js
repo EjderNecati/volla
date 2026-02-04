@@ -1518,6 +1518,7 @@ export const generateCreativeImage = async (imageBase64, creativeOptions) => {
         customNote: creativeOptions.customNote || '',
         manualPrompt: creativeOptions.manualPrompt || '',
         outputCount: creativeOptions.outputCount || 2,
+        aspectRatio: creativeOptions.aspectRatio || '1:1',
         isEdit: creativeOptions.isEdit || false
       })
     });

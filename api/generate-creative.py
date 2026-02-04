@@ -5,7 +5,6 @@ Supports: Black Friday, Valentine's Day, Christmas, and more themes
 """
 
 import os
-import base64
 import json
 import traceback
 import requests
@@ -48,91 +47,122 @@ except Exception as e:
 
 _last_errors = []
 
-# Theme configurations with detailed prompts
+# Theme configurations with IMPROVED detailed prompts for high-quality output
 THEME_CONFIGS = {
     'black_friday': {
         'name': 'Black Friday',
-        'background': 'dark dramatic black background with subtle gold sparkles',
-        'text_style': 'bold white and gold "BLACK FRIDAY" text with glowing effect',
-        'mood': 'urgent, exciting, premium sale atmosphere',
-        'colors': 'black, gold, white accents'
+        'scene': 'Luxurious black velvet surface with scattered gold confetti and subtle smoke effects. Premium studio lighting with dramatic shadows.',
+        'decorations': 'elegant gold ribbons, premium shopping bags in background, subtle sparkle effects',
+        'typography': 'BLACK FRIDAY in bold metallic gold 3D letters with glossy reflection',
+        'mood': 'luxury, exclusivity, premium shopping event',
+        'style': 'high-end fashion advertisement, Vogue magazine quality'
     },
     'valentines': {
         'name': "Valentine's Day",
-        'background': 'romantic soft pink and red gradient with floating hearts',
-        'text_style': 'elegant script font in deep red or rose gold',
-        'mood': 'romantic, warm, loving, gift-giving atmosphere',
-        'colors': 'pink, red, rose gold, white'
+        'scene': 'Soft blush pink silk fabric background with gentle bokeh heart lights. Romantic soft-focus photography style.',
+        'decorations': 'red rose petals scattered around, small heart confetti, soft pink feathers',
+        'typography': 'elegant rose gold script lettering with subtle shine',
+        'mood': 'romantic, tender, gift of love',
+        'style': 'luxury perfume advertisement, romantic cinema aesthetic'
     },
     'christmas': {
         'name': 'Christmas',
-        'background': 'festive red and green with snow, Christmas lights, pine branches',
-        'text_style': 'classic Christmas font with snow effect',
-        'mood': 'magical, warm, festive, holiday celebration',
-        'colors': 'red, green, gold, white, silver'
+        'scene': 'Cozy Christmas setting with warm golden fairy lights bokeh, snow-dusted pine branches framing the edges.',
+        'decorations': 'red and gold ornaments, cinnamon sticks, pine cones, subtle snowflakes',
+        'typography': 'classic serif Christmas font in deep red with gold outline',
+        'mood': 'magical, warm, festive joy, gift-giving spirit',
+        'style': 'Coca-Cola Christmas ad quality, heartwarming holiday catalogue'
     },
     'summer_sale': {
         'name': 'Summer Sale',
-        'background': 'bright sunny beach vibes with palm trees, blue sky',
-        'text_style': 'fun bold letters in tropical colors',
-        'mood': 'vibrant, energetic, refreshing, vacation feel',
-        'colors': 'yellow, orange, turquoise, coral'
+        'scene': 'Bright tropical paradise with turquoise water reflection, palm leaf shadows, golden hour sunlight.',
+        'decorations': 'tropical flowers (hibiscus, plumeria), citrus slices, beach sand texture at edges',
+        'typography': 'bold playful font in coral and turquoise gradient',
+        'mood': 'refreshing, vacation vibes, carefree summer energy',
+        'style': 'travel magazine cover, resort advertisement quality'
     },
     'new_year': {
         'name': 'New Year',
-        'background': 'midnight blue with gold fireworks and confetti',
-        'text_style': 'glamorous gold metallic text',
-        'mood': 'celebratory, elegant, new beginnings',
-        'colors': 'navy blue, gold, silver, white'
+        'scene': 'Elegant midnight blue backdrop with golden firework bursts frozen in time, champagne bubble effects.',
+        'decorations': 'gold and silver confetti, champagne glasses, clock showing midnight, streamers',
+        'typography': 'glamorous art deco style gold metallic numbers',
+        'mood': 'celebration, elegance, new beginnings, luxury party',
+        'style': 'Times Square celebration advertisement, luxury brand New Year campaign'
     },
     'flash_sale': {
         'name': 'Flash Sale',
-        'background': 'dynamic red/orange gradient with lightning bolts',
-        'text_style': 'bold impact font with electric glow effect',
-        'mood': 'urgent, fast, exciting, limited time',
-        'colors': 'red, orange, yellow, electric blue'
+        'scene': 'Dynamic gradient from deep red to orange with motion blur effects suggesting speed and urgency.',
+        'decorations': 'lightning bolt graphics, timer/clock elements, speed lines',
+        'typography': 'bold impactful sans-serif with electric glow and shadow',
+        'mood': 'urgent, exciting, limited time opportunity, act now',
+        'style': 'tech product launch, gaming advertisement energy'
     },
     'mothers_day': {
         'name': "Mother's Day",
-        'background': 'soft floral arrangement with pastel colors',
-        'text_style': 'elegant flowing script in soft pink or lavender',
-        'mood': 'warm, loving, appreciation, gentle',
-        'colors': 'soft pink, lavender, peach, cream'
+        'scene': 'Dreamy soft focus with fresh peonies and garden roses, gentle morning light filtering through.',
+        'decorations': 'delicate flower petals, soft ribbon bows, pearl accents, lace texture hints',
+        'typography': 'elegant calligraphy script in dusty rose or lavender',
+        'mood': 'tender love, appreciation, gentle warmth, gratitude',
+        'style': 'luxury gift brand advertisement, elegant greeting card quality'
     },
     'easter': {
         'name': 'Easter',
-        'background': 'spring meadow with Easter eggs and flowers',
-        'text_style': 'playful spring colors with subtle pattern',
-        'mood': 'fresh, spring, joyful, renewal',
-        'colors': 'pastel yellow, pink, green, lavender'
+        'scene': 'Fresh spring garden setting with soft morning dew, pastel colored Easter eggs in grass.',
+        'decorations': 'spring flowers (tulips, daffodils), cute bunny silhouettes, butterfly accents',
+        'typography': 'playful rounded font in pastel rainbow colors',
+        'mood': 'joyful spring, renewal, family celebration, fresh start',
+        'style': 'premium chocolate brand Easter campaign, spring catalogue'
     },
     'halloween': {
         'name': 'Halloween',
-        'background': 'spooky purple/orange with bats and pumpkins',
-        'text_style': 'creepy dripping font in orange or green',
-        'mood': 'fun spooky, mysterious, playful scary',
-        'colors': 'orange, purple, black, green'
+        'scene': 'Atmospheric purple and orange gradient with mysterious fog, full moon glow in background.',
+        'decorations': 'carved pumpkins with candle glow, bat silhouettes, spider webs with dew drops',
+        'typography': 'spooky dripping font in bright orange with green glow',
+        'mood': 'fun spooky, mysterious excitement, playful scary',
+        'style': 'Disney Halloween special advertisement, premium candy brand campaign'
     },
     'cyber_monday': {
         'name': 'Cyber Monday',
-        'background': 'digital matrix style with neon blue circuits',
-        'text_style': 'futuristic tech font with neon glow',
-        'mood': 'digital, tech-savvy, modern, online deals',
-        'colors': 'neon blue, cyan, black, white'
+        'scene': 'Futuristic digital space with neon blue circuit board patterns, holographic grid effects.',
+        'decorations': 'floating digital particles, matrix-style code rain, glowing data streams',
+        'typography': 'futuristic tech font with cyan neon glow and digital glitch effect',
+        'mood': 'digital innovation, tech-savvy, modern online shopping',
+        'style': 'Apple product launch aesthetic, tech startup advertisement'
     },
     'spring_sale': {
         'name': 'Spring Sale',
-        'background': 'fresh blooming flowers with soft sunlight',
-        'text_style': 'fresh green and floral themed text',
-        'mood': 'fresh, renewal, bright, blooming',
-        'colors': 'green, pink, yellow, white'
+        'scene': 'Fresh blooming garden with cherry blossoms falling, soft natural daylight, green grass bokeh.',
+        'decorations': 'butterflies, fresh green leaves, flower buds, dewdrops',
+        'typography': 'fresh modern font in spring green with floral accents',
+        'mood': 'renewal, fresh energy, blooming opportunities, new season',
+        'style': 'organic beauty brand campaign, lifestyle magazine cover'
     },
     'back_to_school': {
         'name': 'Back to School',
-        'background': 'chalkboard or notebook paper with school supplies',
-        'text_style': 'chalk or pencil style handwriting',
-        'mood': 'academic, fresh start, organized, youthful',
-        'colors': 'navy, red, yellow, green, white'
+        'scene': 'Clean modern desk setup with organized school supplies, warm study lamp lighting.',
+        'decorations': 'colorful pencils, notebooks, apples, graduation cap hints, ABC letters',
+        'typography': 'friendly bold font resembling chalk or marker writing',
+        'mood': 'fresh start, organized, youthful energy, academic success',
+        'style': 'Apple education campaign, premium stationery brand advertisement'
+    }
+}
+
+# Aspect ratio configurations
+ASPECT_RATIO_CONFIGS = {
+    '1:1': {
+        'name': 'Square (1:1)',
+        'description': 'perfect square format, Instagram feed style',
+        'composition': 'centered product with equal spacing on all sides'
+    },
+    '4:5': {
+        'name': 'Portrait (4:5)',
+        'description': 'vertical portrait format, Instagram post optimal',
+        'composition': 'product centered with more vertical space for text above/below'
+    },
+    '9:16': {
+        'name': 'Story (9:16)',
+        'description': 'vertical story format for Instagram/TikTok stories',
+        'composition': 'product in center-lower area, promotional text at top, ample vertical space'
     }
 }
 
@@ -163,108 +193,111 @@ def get_fresh_token():
         return None
 
 
-def build_creative_prompt(mode, theme, discount, custom_note, manual_prompt):
-    """Build promotional image generation prompt"""
+def build_creative_prompt(mode, theme, discount, custom_note, manual_prompt, aspect_ratio='1:1'):
+    """Build promotional image generation prompt - IMPROVED FOR HIGH QUALITY OUTPUT"""
 
-    preservation_rules = """
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ ABSOLUTE PRODUCT PRESERVATION - ZERO TOLERANCE FOR ANY CHANGES ⚠️
-═══════════════════════════════════════════════════════════════════════════════
-
-THE PRODUCT IN THIS IMAGE IS SACRED AND UNTOUCHABLE:
-
-1. TEXT PRESERVATION (CRITICAL):
-   - Every letter, number, symbol MUST be PIXEL-PERFECT identical
-   - Font style, size, weight, color MUST NOT change
-   - If text says "ABC123" it MUST remain "ABC123" exactly
-
-2. LOGO & BRANDING:
-   - Logos MUST be copied exactly as they appear
-   - Logo colors MUST NOT shift
-
-3. TEXTURE & MATERIAL:
-   - Every detail, pattern MUST be preserved
-   - Surface textures MUST NOT change
-
-4. COLOR:
-   - Exact product colors MUST be maintained
-   - No color correction on the product
-
-5. SHAPE & GEOMETRY:
-   - Dimensions, proportions MUST be exactly the same
-   - No stretching, warping on product
-
-═══════════════════════════════════════════════════════════════════════════════
-"""
+    aspect_config = ASPECT_RATIO_CONFIGS.get(aspect_ratio, ASPECT_RATIO_CONFIGS['1:1'])
 
     # Manual mode - user provides full prompt
     if mode == 'manual':
-        return f"""{preservation_rules}
+        return f"""You are a world-class advertising photographer and digital artist.
+
+TASK: Create a stunning promotional product image based on user's request.
 
 ═══════════════════════════════════════════════════════════════════════════════
-🎨 CREATIVE STUDIO - CUSTOM PROMOTIONAL IMAGE
+⚠️ CRITICAL: PRODUCT PRESERVATION RULES
+═══════════════════════════════════════════════════════════════════════════════
+The product in the reference image MUST be preserved EXACTLY:
+- Keep ALL text/labels on product PIXEL-PERFECT (every letter, number, symbol)
+- Keep ALL logos and branding IDENTICAL
+- Keep ALL colors, textures, materials UNCHANGED
+- Keep ALL shapes, proportions, dimensions EXACT
+- DO NOT modify, enhance, or alter the product in ANY way
+- The product should look like a professional studio photo of the EXACT same item
 ═══════════════════════════════════════════════════════════════════════════════
 
-USER'S CREATIVE REQUEST: {manual_prompt}
+USER'S CREATIVE REQUEST:
+{manual_prompt}
 
-INSTRUCTIONS:
-1. PRESERVE THE PRODUCT EXACTLY - pixel-perfect identical to source
-2. Create promotional/marketing image based on user's description
-3. Make it look professional, ready for social media advertisement
-4. High quality, e-commerce ready, eye-catching design
+OUTPUT FORMAT: {aspect_config['name']} - {aspect_config['description']}
+COMPOSITION: {aspect_config['composition']}
 
-OUTPUT: Professional promotional product photograph"""
+QUALITY STANDARD:
+- Professional advertising photography quality
+- Sharp, well-lit product photography
+- Premium brand advertisement level
+- Ready for Instagram, TikTok, or e-commerce hero image
+
+Create the image now."""
 
     # Auto mode - theme-based generation
     theme_config = THEME_CONFIGS.get(theme, THEME_CONFIGS['black_friday'])
 
-    # Build discount text
-    discount_text = ''
+    # Build discount/badge section
+    badge_text = ''
     if discount:
-        discount_text = f"""
-DISCOUNT BADGE:
-- Display "{discount}% OFF" prominently in the image
-- Use bold, readable text with high contrast
-- Position the badge where it's clearly visible but doesn't cover the product
-- Make it look like a professional sale badge/sticker"""
+        badge_text = f"""
+PROMOTIONAL BADGE (IMPORTANT):
+Add a professional "{discount}% OFF" badge/sticker that:
+- Is prominently visible but doesn't cover the product
+- Uses the theme's color palette
+- Looks like a real premium sale tag (glossy, 3D effect)
+- Positioned at a corner or edge strategically"""
     elif custom_note:
-        discount_text = f"""
-CUSTOM TEXT/BADGE:
-- Display "{custom_note}" prominently in the image
-- Use bold, readable text with high contrast
-- Position where clearly visible but doesn't cover the product"""
+        badge_text = f"""
+CUSTOM PROMOTIONAL TEXT:
+Add "{custom_note}" as elegant promotional text that:
+- Complements the theme design
+- Is clearly readable with good contrast
+- Positioned where it enhances the composition"""
 
-    return f"""{preservation_rules}
+    return f"""You are a world-class advertising photographer working for a premium brand.
 
 ═══════════════════════════════════════════════════════════════════════════════
-🎨 CREATIVE STUDIO - {theme_config['name'].upper()} PROMOTIONAL IMAGE
+🎨 CREATIVE BRIEF: {theme_config['name'].upper()} PROMOTIONAL CAMPAIGN
 ═══════════════════════════════════════════════════════════════════════════════
 
-THEME: {theme_config['name']}
+CAMPAIGN THEME: {theme_config['name']}
+REFERENCE STYLE: {theme_config['style']}
 
-BACKGROUND DESIGN:
-{theme_config['background']}
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ CRITICAL: PRODUCT PRESERVATION RULES
+═══════════════════════════════════════════════════════════════════════════════
+The product in the reference image MUST be preserved EXACTLY:
+- Keep ALL text/labels on product PIXEL-PERFECT (every letter, number, symbol)
+- Keep ALL logos and branding IDENTICAL
+- Keep ALL colors, textures, materials UNCHANGED
+- Keep ALL shapes, proportions, dimensions EXACT
+- DO NOT modify, enhance, or alter the product in ANY way
+- The product should look like it was photographed in this new setting
+═══════════════════════════════════════════════════════════════════════════════
 
-COLOR PALETTE:
-{theme_config['colors']}
+SCENE SETUP:
+{theme_config['scene']}
+
+DECORATIVE ELEMENTS (around the product, NOT on it):
+{theme_config['decorations']}
+
+TYPOGRAPHY STYLE (if text needed):
+{theme_config['typography']}
 
 MOOD & ATMOSPHERE:
 {theme_config['mood']}
+{badge_text}
 
-TEXT STYLING (for any promotional text):
-{theme_config['text_style']}
-{discount_text}
+OUTPUT FORMAT: {aspect_config['name']} - {aspect_config['description']}
+COMPOSITION: {aspect_config['composition']}
 
-INSTRUCTIONS:
-1. PRESERVE THE PRODUCT EXACTLY - pixel-perfect identical to source
-2. Create a {theme_config['name']} themed promotional background
-3. The product should be the hero - centered and prominent
-4. Add appropriate {theme_config['name']} decorative elements around the product
-5. Make it look like a professional e-commerce promotional image
-6. Ready for Instagram, TikTok, or other social media advertisement
+EXECUTION:
+1. Place the EXACT product from reference image as the hero/center
+2. Build the {theme_config['name']} themed environment AROUND the product
+3. Use professional studio lighting that matches the theme mood
+4. Add decorative elements that frame/complement without covering product
+5. Ensure premium advertising quality - this is for a major brand campaign
 
-OUTPUT: Professional {theme_config['name']} promotional product photograph
-The result should look like a high-budget marketing campaign image."""
+The final image should look like it belongs in a high-budget advertising campaign for {theme_config['name']}.
+
+Create the image now."""
 
 
 def generate_with_gemini(image_data, prompt):
@@ -443,6 +476,7 @@ class handler(BaseHTTPRequestHandler):
             custom_note = data.get('customNote', '')
             manual_prompt = data.get('manualPrompt', '')
             output_count = min(4, max(1, int(data.get('outputCount', 2))))
+            aspect_ratio = data.get('aspectRatio', '1:1')
             is_edit = data.get('isEdit', False)
 
             print(f"\n{'='*60}")
@@ -450,6 +484,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"   Mode: {mode}")
             print(f"   Theme: {theme}")
             print(f"   Discount: {discount}")
+            print(f"   Aspect Ratio: {aspect_ratio}")
             print(f"   Custom Note: {custom_note[:50] if custom_note else '(none)'}")
             print(f"   Output Count: {output_count}")
             print(f"   Is Edit: {is_edit}")
@@ -462,7 +497,7 @@ class handler(BaseHTTPRequestHandler):
                 raise ValueError("No prompt provided for manual mode")
 
             # Build the creative prompt
-            prompt = build_creative_prompt(mode, theme, discount, custom_note, manual_prompt)
+            prompt = build_creative_prompt(mode, theme, discount, custom_note, manual_prompt, aspect_ratio)
 
             # Generate images
             generated_images = []

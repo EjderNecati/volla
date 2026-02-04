@@ -44,6 +44,13 @@ const DISCOUNTS = [
 const OUTPUT_COUNTS = [1, 2, 3, 4];
 const CREDIT_COST_PER_IMAGE = 2;
 
+// Aspect ratios for output
+const ASPECT_RATIOS = [
+    { id: '1:1', label: '1:1', cssValue: '1/1', icon: '⬜' },
+    { id: '4:5', label: '4:5', cssValue: '4/5', icon: '📱' },
+    { id: '9:16', label: '9:16', cssValue: '9/16', icon: '📲' }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // REUSABLE OPTION GROUP COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -97,6 +104,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     const [selectedDiscount, setSelectedDiscount] = useState('none');
     const [customNote, setCustomNote] = useState('');
     const [outputCount, setOutputCount] = useState(2);
+    const [aspectRatio, setAspectRatio] = useState('1:1');
 
     // Manual mode settings
     const [manualPrompt, setManualPrompt] = useState('');
@@ -258,7 +266,8 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 discount: discountInfo?.value || null,
                 customNote,
                 manualPrompt: mode === 'manual' ? manualPrompt : '',
-                outputCount
+                outputCount,
+                aspectRatio
             });
 
             if (result.success && result.images && result.images.length > 0) {
@@ -519,6 +528,29 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             </div>
                         )}
 
+                        {/* Aspect Ratio */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                {t('creative.aspectRatio') || 'Aspect Ratio'}
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                {ASPECT_RATIOS.map((ratio) => (
+                                    <button
+                                        key={ratio.id}
+                                        onClick={() => setAspectRatio(ratio.id)}
+                                        className={`px-3 py-2.5 rounded-xl font-medium text-sm border-2 transition-all flex items-center justify-center gap-2 ${
+                                            aspectRatio === ratio.id
+                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                        }`}
+                                    >
+                                        <span>{ratio.icon}</span>
+                                        <span>{ratio.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Output Count */}
                         <div className="space-y-2">
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -581,8 +613,13 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     <div className="flex-1 flex flex-col min-h-0">
                         <div className="flex-1 flex items-center justify-center min-h-0">
                             <div
-                                className="relative rounded-2xl overflow-hidden bg-[#1A1A1A] w-full"
-                                style={{ maxHeight: 'calc(100vh - 280px)', aspectRatio: '16/9' }}
+                                className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
+                                style={{
+                                    width: '100%',
+                                    maxWidth: aspectRatio === '9:16' ? '400px' : aspectRatio === '4:5' ? '500px' : '600px',
+                                    aspectRatio: aspectRatio === '1:1' ? '1/1' : aspectRatio === '4:5' ? '4/5' : '9/16',
+                                    maxHeight: 'calc(100vh - 280px)'
+                                }}
                             >
                                 {sourceImage ? (
                                     <>
