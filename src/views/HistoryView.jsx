@@ -96,25 +96,51 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
 
     // Render multi-thumbnail preview (shows up to 4 images in grid)
     const renderThumbnailGrid = (project) => {
-        // Check if this is a Motion project - use originalImage for thumbnail
+        // Check if this is a Motion project - use originalImage or ORIGINAL asset for thumbnail
         const isMotionProject = project.productInfo?.featureType === 'motion';
 
-        if (isMotionProject && project.originalImage) {
-            return (
-                <div className="relative w-full h-full">
-                    <img
-                        src={project.originalImage}
-                        alt="Motion Project"
-                        className="w-full h-full object-cover"
-                    />
-                    {/* Video indicator overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
-                            <Video className="w-5 h-5 text-white" />
+        if (isMotionProject) {
+            // Try multiple sources for motion project thumbnail
+            const motionThumbnail = project.originalImage ||
+                project.assets?.find(a => a.type === 'ORIGINAL')?.url ||
+                project.assets?.[0]?.url;
+
+            if (motionThumbnail) {
+                return (
+                    <div className="relative w-full h-full">
+                        <img
+                            src={motionThumbnail}
+                            alt="Motion Project"
+                            className="w-full h-full object-cover"
+                        />
+                        {/* Video indicator overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                                <Video className="w-5 h-5 text-white" />
+                            </div>
                         </div>
                     </div>
-                </div>
-            );
+                );
+            }
+        }
+
+        // Check if this is a Creative project - similar fallback logic
+        const isCreativeProject = project.productInfo?.featureType === 'creative';
+
+        if (isCreativeProject) {
+            const creativeThumbnail = project.originalImage ||
+                project.assets?.find(a => a.type === 'ORIGINAL')?.url ||
+                project.assets?.[0]?.url;
+
+            if (creativeThumbnail) {
+                return (
+                    <img
+                        src={creativeThumbnail}
+                        alt="Creative Project"
+                        className="w-full h-full object-cover"
+                    />
+                );
+            }
         }
 
         const assets = project.assets || [];

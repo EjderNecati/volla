@@ -244,12 +244,18 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         }
     }, [activeVideoIndex]);
 
-    // Start polling for video completion
+    // Start polling for video completion with simulated progress
     const startPolling = useCallback((opName, modId) => {
         setPollingStatus('Processing video...');
-        setProgress(0);
+        setProgress(5); // Start at 5%
+
+        let simulatedProgress = 5;
+        let pollCount = 0;
+        const maxPollCount = 60; // ~5 minutes max at 5s intervals
 
         pollingIntervalRef.current = setInterval(async () => {
+            pollCount++;
+
             try {
                 const result = await pollMotionGeneration(opName, modId);
 
@@ -287,14 +293,45 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                     setPollingStatus('');
 
                 } else {
-                    // Still processing
-                    const prog = result.progress || 0;
-                    setProgress(prog);
-                    setPollingStatus(`Processing... ${prog}%`);
+                    // Still processing - use API progress if available, otherwise simulate
+                    const apiProgress = result.progress || 0;
+
+                    // Simulate progress: gradually increase but never exceed 95% until complete
+                    // Progress speeds up initially then slows down as it approaches 95%
+                    if (apiProgress > simulatedProgress) {
+                        simulatedProgress = apiProgress;
+                    } else {
+                        // Simulate progress based on poll count
+                        // Fast early (5-50%), slower mid (50-80%), very slow late (80-95%)
+                        if (simulatedProgress < 50) {
+                            simulatedProgress = Math.min(50, simulatedProgress + 8);
+                        } else if (simulatedProgress < 80) {
+                            simulatedProgress = Math.min(80, simulatedProgress + 4);
+                        } else if (simulatedProgress < 95) {
+                            simulatedProgress = Math.min(95, simulatedProgress + 1);
+                        }
+                    }
+
+                    setProgress(simulatedProgress);
+                    setPollingStatus(`Processing... ${simulatedProgress}%`);
+                }
+
+                // Timeout check
+                if (pollCount >= maxPollCount) {
+                    clearInterval(pollingIntervalRef.current);
+                    pollingIntervalRef.current = null;
+                    setError('Video generation timed out. Please try again.');
+                    setIsGenerating(false);
+                    setPollingStatus('');
                 }
             } catch (err) {
                 console.error('Polling error:', err);
-                // Continue polling on transient errors
+                // Continue polling on transient errors, but still update simulated progress
+                if (simulatedProgress < 30) {
+                    simulatedProgress = Math.min(30, simulatedProgress + 3);
+                    setProgress(simulatedProgress);
+                    setPollingStatus(`Processing... ${simulatedProgress}%`);
+                }
             }
         }, 5000); // Poll every 5 seconds
     }, [generatedVideos.length]);
