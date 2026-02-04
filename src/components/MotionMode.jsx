@@ -202,11 +202,18 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     // Load project data when resuming from history
     useEffect(() => {
         if (initialProject && initialProject.productInfo?.featureType === 'motion') {
-            console.log('🎬 Loading Motion project:', initialProject.id);
+            console.log('🎬 Loading Motion project:', initialProject.id, initialProject);
 
-            // Load source image
-            if (initialProject.originalImage) {
-                setSourceImage(initialProject.originalImage);
+            // Load source image - try multiple sources
+            const sourceImg = initialProject.originalImage ||
+                              initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url ||
+                              initialProject.assets?.[0]?.thumbnail;
+
+            if (sourceImg) {
+                console.log('🎬 Setting source image from project');
+                setSourceImage(sourceImg);
+            } else {
+                console.warn('🎬 No source image found in project');
             }
 
             // Load motion settings from productInfo
@@ -224,6 +231,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 const videoUrls = videoAssets.map(a => a.url);
                 setGeneratedVideos(videoUrls);
                 setActiveVideoIndex(videoUrls.length - 1); // Show last video
+                console.log('🎬 Loaded', videoUrls.length, 'videos');
             }
         }
     }, [initialProject]);
@@ -303,19 +311,28 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 motionName,
                 marketplace || 'motion',
                 sourceImage,
-                [{
-                    id: `motion_${Date.now()}`,
-                    type: 'MOTION_VIDEO',
-                    url: videoUrl,
-                    createdAt: Date.now(),
-                    metadata: {
-                        cameraMovement,
-                        speed,
-                        duration,
-                        qualityMode,
-                        aspectRatio
+                [
+                    // Save source image as ORIGINAL asset for reliable retrieval
+                    {
+                        id: `original_${Date.now()}`,
+                        type: 'ORIGINAL',
+                        url: sourceImage,
+                        createdAt: Date.now()
+                    },
+                    {
+                        id: `motion_${Date.now()}`,
+                        type: 'MOTION_VIDEO',
+                        url: videoUrl,
+                        createdAt: Date.now(),
+                        metadata: {
+                            cameraMovement,
+                            speed,
+                            duration,
+                            qualityMode,
+                            aspectRatio
+                        }
                     }
-                }],
+                ],
                 null,
                 {
                     featureType: 'motion',
@@ -328,6 +345,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 }
             );
             await saveProject(project);
+            console.log('🎬 Motion project saved to history');
         } catch (err) {
             console.warn('Failed to save motion to history:', err);
         }
