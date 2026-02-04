@@ -206,8 +206,8 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
 
             // Load source image - try multiple sources
             const sourceImg = initialProject.originalImage ||
-                              initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url ||
-                              initialProject.assets?.[0]?.thumbnail;
+                initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url ||
+                initialProject.assets?.[0]?.thumbnail;
 
             if (sourceImg) {
                 console.log('🎬 Setting source image from project');
@@ -657,11 +657,11 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 {/* ════════════════════════════════════════════════════════════
                     RIGHT PANEL - 60% - Video Canvas
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-5 overflow-y-auto">
-                    {/* Video Canvas Area - fills available space */}
-                    <div className="flex flex-col flex-1">
+                <section className="flex-1 flex flex-col p-5 overflow-hidden">
+                    {/* Video Canvas Area - fixed height container */}
+                    <div className="flex-1 flex items-center justify-center min-h-0">
                         <div
-                            className="relative rounded-2xl overflow-hidden bg-[#1A1A1A] flex-1 min-h-[400px]"
+                            className="relative rounded-2xl overflow-hidden bg-[#1A1A1A] w-full h-full max-h-[calc(100vh-200px)] min-h-[400px]"
                         >
                             {sourceImage ? (
                                 <>
@@ -677,30 +677,24 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     />
                                     <div className="absolute inset-0 bg-black/30" />
 
-                                    {/* Main Content */}
-                                    <div className="relative h-full w-full flex items-center justify-center p-4">
+                                    {/* Main Content - absolute positioned to prevent container expansion */}
+                                    <div className="absolute inset-0 flex items-center justify-center p-4">
                                         {activeMedia.type === 'video' ? (
                                             <video
                                                 ref={videoRef}
                                                 src={activeMedia.url}
                                                 className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
-                                                style={{ aspectRatio: aspectRatio.replace(':', '/') }}
                                                 loop
                                                 playsInline
                                                 onPlay={() => setIsPlaying(true)}
                                                 onPause={() => setIsPlaying(false)}
                                             />
                                         ) : (
-                                            <div
-                                                className="relative rounded-xl shadow-2xl overflow-hidden bg-black/80 flex items-center justify-center max-h-full max-w-full"
-                                                style={{ aspectRatio: aspectRatio.replace(':', '/') }}
-                                            >
-                                                <img
-                                                    src={activeMedia.url}
-                                                    alt="Source"
-                                                    className="max-w-full max-h-full object-contain"
-                                                />
-                                            </div>
+                                            <img
+                                                src={activeMedia.url}
+                                                alt="Source"
+                                                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                                            />
                                         )}
                                     </div>
 
@@ -723,11 +717,10 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                             </button>
                                             <button
                                                 onClick={handleAddToLibrary}
-                                                className={`p-2 backdrop-blur-sm rounded-lg text-white transition-colors ${
-                                                    addedToLibrary
+                                                className={`p-2 backdrop-blur-sm rounded-lg text-white transition-colors ${addedToLibrary
                                                         ? 'bg-emerald-500'
                                                         : 'bg-black/60 hover:bg-black/80'
-                                                }`}
+                                                    }`}
                                                 title={t('library.addToLibrary') || 'Add to Library'}
                                             >
                                                 {addedToLibrary ? <Check size={18} /> : <Bookmark size={18} />}
@@ -770,11 +763,10 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                 {/* Original Source - Always first */}
                                 <button
                                     onClick={() => setActiveVideoIndex(-1)}
-                                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                                        activeVideoIndex === -1
+                                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${activeVideoIndex === -1
                                             ? 'border-emerald-500 ring-2 ring-emerald-500/30'
                                             : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
-                                    }`}
+                                        }`}
                                 >
                                     <img src={sourceImage} alt="Original" className="w-full h-full object-cover" />
                                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-0.5">
@@ -787,11 +779,10 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     <button
                                         key={idx}
                                         onClick={() => setActiveVideoIndex(idx)}
-                                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                                            activeVideoIndex === idx
+                                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${activeVideoIndex === idx
                                                 ? 'border-violet-500 ring-2 ring-violet-500/30'
                                                 : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
-                                        }`}
+                                            }`}
                                     >
                                         <video
                                             src={videoUrl}
