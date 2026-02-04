@@ -657,12 +657,19 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 {/* ════════════════════════════════════════════════════════════
                     RIGHT PANEL - 60% - Video Canvas
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-5 overflow-hidden">
-                    {/* Video Canvas Area - fixed height container */}
-                    <div className="flex-1 flex items-center justify-center min-h-0">
-                        <div
-                            className="relative rounded-2xl overflow-hidden bg-[#1A1A1A] w-full h-full max-h-[calc(100vh-200px)] min-h-[400px]"
-                        >
+                <section className="flex-1 flex flex-col p-5 overflow-hidden min-w-0">
+                    {/* Video Canvas Area - proportional container */}
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex-1 flex items-center justify-center min-h-0">
+                            <div
+                                className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
+                                style={{
+                                    width: '100%',
+                                    maxWidth: aspectRatio === '9:16' ? '400px' : aspectRatio === '1:1' ? '600px' : '100%',
+                                    aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
+                                    maxHeight: 'calc(100vh - 280px)'
+                                }}
+                            >
                             {sourceImage ? (
                                 <>
                                     {/* Frosted Glass Background */}
@@ -755,6 +762,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     </div>
                                 </div>
                             )}
+                        </div>
                         </div>
 
                         {/* Film Strip - Generated Videos */}
