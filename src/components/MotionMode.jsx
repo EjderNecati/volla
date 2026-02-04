@@ -173,10 +173,19 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            setSourceImage(event.target.result);
+            const imageData = event.target.result;
+            setSourceImage(imageData);
             setGeneratedVideos([]);
             setActiveVideoIndex(-1);
             setError(null);
+
+            // Auto-add device uploads to library
+            addToLibrary({
+                url: imageData,
+                type: 'image',
+                name: file.name || `Upload ${new Date().toLocaleDateString()}`,
+                source: 'upload'
+            }).catch(err => console.warn('Auto-add to library failed:', err));
         };
         reader.readAsDataURL(file);
     };

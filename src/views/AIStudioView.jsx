@@ -352,6 +352,14 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             const base64 = await fileToBase64(file);
             addAssetToSession(base64, 'ORIGINAL', null, 'Upload');
             // Note: SEO analysis now only runs on Generate button click
+
+            // Auto-add device uploads to library
+            addToLibrary({
+                url: base64,
+                type: 'image',
+                name: file.name || `Upload ${new Date().toLocaleDateString()}`,
+                source: 'upload'
+            }).catch(err => console.warn('Auto-add to library failed:', err));
         } catch (err) {
             setError('Failed to upload image');
         }

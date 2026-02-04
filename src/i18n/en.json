@@ -45,7 +45,8 @@
         "import": "Import",
         "optional": "optional",
         "dragOrClick": "Click or drag & drop",
-        "tryAgain": "Try Again"
+        "tryAgain": "Try Again",
+        "select": "Select"
     },
     "nav": {
         "home": "Home",
@@ -455,7 +456,8 @@
         "addedToLibrary": "Added to library!",
         "selectSource": "Select Source",
         "fromLibrary": "From Library",
-        "fromDevice": "From Device"
+        "fromDevice": "From Device",
+        "uploadFromDevice": "Upload from your device"
     },
     "paywall": {
         "limitedTimeOffer": "Limited Time Offer",

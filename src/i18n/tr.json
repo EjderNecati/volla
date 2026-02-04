@@ -46,7 +46,8 @@
         "import": "İçe Aktar",
         "optional": "isteğe bağlı",
         "dragOrClick": "Tıkla veya sürükle bırak",
-        "tryAgain": "Tekrar Dene"
+        "tryAgain": "Tekrar Dene",
+        "select": "Seç"
     },
     "nav": {
         "home": "Ana Sayfa",
@@ -445,7 +446,8 @@
         "addedToLibrary": "Kütüphaneye eklendi!",
         "selectSource": "Kaynak Seçin",
         "fromLibrary": "Kütüphaneden",
-        "fromDevice": "Cihazdan"
+        "fromDevice": "Cihazdan",
+        "uploadFromDevice": "Cihazınızdan yükleyin"
     },
     "paywall": {
         "limitedTimeOffer": "Sınırlı Süreli Teklif",
