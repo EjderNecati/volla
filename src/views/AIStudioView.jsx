@@ -23,8 +23,7 @@ import {
 import { addToLibrary } from '../utils/libraryManager';
 import { calculateGenerationCost } from '../utils/creditManager';
 import AssetFilmStrip from '../components/AssetFilmStrip';
-import WelcomeOverlay from '../components/WelcomeOverlay';
-import MascotAnimation from '../components/MascotAnimation';
+// Dragon animation removed
 import HandsfreeMode from '../components/HandsfreeMode';
 import MotionMode from '../components/MotionMode';
 import CreativeMode from '../components/CreativeMode';
@@ -65,15 +64,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     const { credits, isAdmin } = useCredits();
 
     // ═══════════════════════════════════════════════════════════════════
-    // DRAGON ANIMATION STATE - Only show if no marketplace pre-selected
-    // ═══════════════════════════════════════════════════════════════════
-    const [showWelcome, setShowWelcome] = useState(() => {
-        // Skip welcome if marketplace already selected from HomeView
-        if (propMarketplace) return false;
-        return !sessionStorage.getItem('volla_studio_welcomed');
-    });
-    const [showMascot, setShowMascot] = useState(false);
-    const [selectedPlatformForAnimation, setSelectedPlatformForAnimation] = useState(null);
+    // Dragon animation removed
 
     // ═══════════════════════════════════════════════════════════════════
     // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion'
@@ -322,24 +313,11 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     };
 
     // ═══════════════════════════════════════════════════════════════════
-    // PLATFORM SELECTION HANDLER (with Dragon Animation)
+    // PLATFORM SELECTION HANDLER
     // ═══════════════════════════════════════════════════════════════════
     const handlePlatformSelect = (platform) => {
-        if (showWelcome) {
-            setSelectedPlatformForAnimation(platform);
-            setShowMascot(true);
-
-            setTimeout(() => {
-                setLocalMarketplace(platform);
-                if (onMarketplaceSelect) onMarketplaceSelect(platform);
-                setShowWelcome(false);
-                setShowMascot(false);
-                sessionStorage.setItem('volla_studio_welcomed', 'true');
-            }, 2500);
-        } else {
-            setLocalMarketplace(platform);
-            if (onMarketplaceSelect) onMarketplaceSelect(platform);
-        }
+        setLocalMarketplace(platform);
+        if (onMarketplaceSelect) onMarketplaceSelect(platform);
     };
 
     // ═══════════════════════════════════════════════════════════════════
@@ -609,20 +587,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             setLoading(false);
         }
     };
-
-    // ═══════════════════════════════════════════════════════════════════
-    // RENDER: Dragon Animation
-    // ═══════════════════════════════════════════════════════════════════
-    const renderDragonAnimation = () => (
-        <>
-            <WelcomeOverlay isActive={showWelcome && !showMascot} />
-            <MascotAnimation
-                platform={selectedPlatformForAnimation}
-                isAnimating={showMascot}
-                onAnimationEnd={() => { }}
-            />
-        </>
-    );
 
     // ═══════════════════════════════════════════════════════════════════
     // RENDER: Platform Selector (grid layout matching other selectors)
@@ -1174,9 +1138,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // ═══════════════════════════════════════════════════════════════════
     return (
         <div className="min-h-screen bg-[#FAF9F6] flex flex-col font-poppins">
-            {/* Dragon Animation */}
-            {renderDragonAnimation()}
-
             {/* Header */}
             <header className="px-6 py-3 border-b border-[#E8E7E4] bg-white">
                 <div className="flex items-center justify-between">

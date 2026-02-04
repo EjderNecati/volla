@@ -11,7 +11,20 @@
       "Bash(vercel --prod:*)",
       "Bash(ping:*)",
       "WebFetch(domain:docs.cloud.google.com)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(npx eslint:*)",
+      "Bash(node -e:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx netlify deploy:*)",
+      "Bash(npx netlify login:*)",
+      "Bash($date = Get-Date -Format \"yyyy-MM-dd_HH-mm\")",
+      "Bash($dest = \"$env:USERPROFILE\\\\Desktop\\\\volla_backup_$date\")",
+      "Bash(Copy-Item -Path \"c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\" -Destination $dest -Recurse -Exclude \"node_modules\",\".git\")",
+      "Bash(Write-Host \"Backup created: $dest\")",
+      "Bash(powershell -Command:*)",
+      "Bash(xcopy \"c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\" \"c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup_%date:~-4%%date:~3,2%%date:~0,2%\"\" /E /I /EXCLUDE:c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\\\\node_modules\\\\ 2>nul || powershell -c \"Copy-Item 'c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\\\\*' -Destination 'c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup' -Recurse -Exclude 'node_modules','.git' -Force)",
+      "Bash(New-Item -ItemType Directory -Path 'c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup' -Force)",
+      "Bash(Out-Null \")"
     ]
   }
 }
