@@ -1488,3 +1488,51 @@ export const pollMotionGeneration = async (operationName, modelId) => {
     throw error;
   }
 };
+
+
+// =====================================================
+// CREATIVE STUDIO - Promotional Image Generation
+// =====================================================
+
+/**
+ * Generate promotional/marketing images with themes
+ * @param {string} imageBase64 - Source image as base64
+ * @param {object} creativeOptions - Creative settings
+ * @returns {Promise<{success: boolean, images?: string[], error?: string}>}
+ */
+export const generateCreativeImage = async (imageBase64, creativeOptions) => {
+  log('🎨 Creative Studio: Starting generation...');
+
+  try {
+    // Compress image to avoid 413 Payload Too Large
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
+    const response = await fetch('/api/generate-creative', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: compressedImage,
+        mode: creativeOptions.mode || 'auto',
+        theme: creativeOptions.theme || 'black_friday',
+        discount: creativeOptions.discount || null,
+        customNote: creativeOptions.customNote || '',
+        manualPrompt: creativeOptions.manualPrompt || '',
+        outputCount: creativeOptions.outputCount || 2,
+        isEdit: creativeOptions.isEdit || false
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Generation failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎨 Creative Studio: Generation complete', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Creative Studio generation failed:', error);
+    throw error;
+  }
+};

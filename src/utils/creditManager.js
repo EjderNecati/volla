@@ -72,7 +72,10 @@ export const CREDIT_COSTS = {
 
     // Motion (Video Generation) costs
     motion_fast: 10,          // 10 credits for Fast mode (veo-3.1-fast-generate-001)
-    motion_pro: 20            // 20 credits for Pro mode (veo-3.1-generate-001)
+    motion_pro: 20,           // 20 credits for Pro mode (veo-3.1-generate-001)
+
+    // Creative Studio costs
+    creative_studio: 2        // 2 credits per promotional image (same as photo_generation)
 };
 
 // NEW: Calculate generation cost dynamically

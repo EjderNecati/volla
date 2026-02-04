@@ -164,6 +164,62 @@
         "step3": "Selecciona el modo de calidad (Rápido o Pro)",
         "step4": "¡Haz clic en Generar Video y espera la magia!"
     },
+    "creative": {
+        "title": "Estudio Creativo",
+        "subtitle": "Generación de imágenes promocionales con IA",
+        "sourceImage": "Imagen Fuente",
+        "uploadImage": "Subir Imagen",
+        "uploadFirst": "Sube una imagen de producto para comenzar",
+        "changeImage": "Cambiar Imagen",
+        "modeToggle": {
+            "title": "Modo",
+            "auto": "Auto",
+            "manual": "Manual"
+        },
+        "autoMode": {
+            "theme": "Tema",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "San Valentín",
+                "christmas": "Navidad",
+                "summer_sale": "Rebajas de Verano",
+                "new_year": "Año Nuevo",
+                "flash_sale": "Venta Flash",
+                "mothers_day": "Día de la Madre",
+                "easter": "Pascua",
+                "halloween": "Halloween",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Rebajas de Primavera",
+                "back_to_school": "Vuelta al Cole"
+            },
+            "discount": "Descuento",
+            "noDiscount": "Ninguno",
+            "customNote": "Nota Personalizada",
+            "customNotePlaceholder": "Ej.: '25% descuento', 'Envío gratis'..."
+        },
+        "manualMode": {
+            "prompt": "Prompt Creativo",
+            "promptPlaceholder": "Describe la imagen promocional que deseas crear..."
+        },
+        "outputCount": "Cantidad de Salidas",
+        "generate": "Generar",
+        "generating": "Generando...",
+        "canvas": {
+            "original": "Original",
+            "generated": "Generado"
+        },
+        "edit": {
+            "title": "Editar Resultado",
+            "placeholder": "Describe los cambios a realizar...",
+            "selectFirst": "Selecciona una imagen generada para editar...",
+            "button": "Editar"
+        },
+        "errors": {
+            "noImage": "Por favor sube una imagen primero",
+            "noPrompt": "Por favor ingresa un prompt",
+            "generationFailed": "La generación falló"
+        }
+    },
     "camera": {
         "title": "Ángulo de Cámara",
         "angles": {

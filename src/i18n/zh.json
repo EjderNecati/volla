@@ -164,6 +164,62 @@
         "step3": "选择质量模式（快速或专业）",
         "step4": "点击生成视频，等待魔法发生！"
     },
+    "creative": {
+        "title": "创意工作室",
+        "subtitle": "AI驱动的促销图片生成",
+        "sourceImage": "源图片",
+        "uploadImage": "上传图片",
+        "uploadFirst": "上传产品图片以开始",
+        "changeImage": "更换图片",
+        "modeToggle": {
+            "title": "模式",
+            "auto": "自动",
+            "manual": "手动"
+        },
+        "autoMode": {
+            "theme": "主题",
+            "themes": {
+                "black_friday": "黑色星期五",
+                "valentines": "情人节",
+                "christmas": "圣诞节",
+                "summer_sale": "夏季促销",
+                "new_year": "新年",
+                "flash_sale": "闪购",
+                "mothers_day": "母亲节",
+                "easter": "复活节",
+                "halloween": "万圣节",
+                "cyber_monday": "网络星期一",
+                "spring_sale": "春季促销",
+                "back_to_school": "返校季"
+            },
+            "discount": "折扣",
+            "noDiscount": "无",
+            "customNote": "自定义备注",
+            "customNotePlaceholder": "例如：「75折优惠」「免运费」..."
+        },
+        "manualMode": {
+            "prompt": "创意提示词",
+            "promptPlaceholder": "描述您想创建的促销图片..."
+        },
+        "outputCount": "输出数量",
+        "generate": "生成",
+        "generating": "生成中...",
+        "canvas": {
+            "original": "原图",
+            "generated": "已生成"
+        },
+        "edit": {
+            "title": "编辑结果",
+            "placeholder": "描述要进行的更改...",
+            "selectFirst": "选择要编辑的生成图片...",
+            "button": "编辑"
+        },
+        "errors": {
+            "noImage": "请先上传图片",
+            "noPrompt": "请输入提示词",
+            "generationFailed": "生成失败"
+        }
+    },
     "camera": {
         "title": "摄像角度",
         "angles": {

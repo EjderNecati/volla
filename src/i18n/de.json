@@ -164,6 +164,62 @@
         "step3": "Wählen Sie den Qualitätsmodus (Schnell oder Pro)",
         "step4": "Klicken Sie auf Video Generieren und warten Sie auf die Magie!"
     },
+    "creative": {
+        "title": "Kreativ Studio",
+        "subtitle": "KI-gestützte Werbebild-Erstellung",
+        "sourceImage": "Quellbild",
+        "uploadImage": "Bild Hochladen",
+        "uploadFirst": "Laden Sie ein Produktbild hoch, um zu beginnen",
+        "changeImage": "Bild Ändern",
+        "modeToggle": {
+            "title": "Modus",
+            "auto": "Auto",
+            "manual": "Manuell"
+        },
+        "autoMode": {
+            "theme": "Thema",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "Valentinstag",
+                "christmas": "Weihnachten",
+                "summer_sale": "Sommerschlussverkauf",
+                "new_year": "Neujahr",
+                "flash_sale": "Blitzverkauf",
+                "mothers_day": "Muttertag",
+                "easter": "Ostern",
+                "halloween": "Halloween",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Frühlingsverkauf",
+                "back_to_school": "Schulanfang"
+            },
+            "discount": "Rabatt",
+            "noDiscount": "Keiner",
+            "customNote": "Eigene Notiz",
+            "customNotePlaceholder": "Z.B.: '25% Rabatt', 'Kostenloser Versand'..."
+        },
+        "manualMode": {
+            "prompt": "Kreativ-Prompt",
+            "promptPlaceholder": "Beschreiben Sie das gewünschte Werbebild..."
+        },
+        "outputCount": "Ausgabeanzahl",
+        "generate": "Generieren",
+        "generating": "Generierung...",
+        "canvas": {
+            "original": "Original",
+            "generated": "Generiert"
+        },
+        "edit": {
+            "title": "Ergebnis Bearbeiten",
+            "placeholder": "Beschreiben Sie die gewünschten Änderungen...",
+            "selectFirst": "Wählen Sie ein generiertes Bild zum Bearbeiten...",
+            "button": "Bearbeiten"
+        },
+        "errors": {
+            "noImage": "Bitte laden Sie zuerst ein Bild hoch",
+            "noPrompt": "Bitte geben Sie einen Prompt ein",
+            "generationFailed": "Generierung fehlgeschlagen"
+        }
+    },
     "camera": {
         "title": "Kamerawinkel",
         "angles": {

@@ -163,6 +163,62 @@
         "step3": "品質モードを選択（高速またはPro）",
         "step4": "動画を生成をクリックして魔法を待つ！"
     },
+    "creative": {
+        "title": "クリエイティブスタジオ",
+        "subtitle": "AIによるプロモーション画像生成",
+        "sourceImage": "ソース画像",
+        "uploadImage": "画像をアップロード",
+        "uploadFirst": "製品画像をアップロードして開始",
+        "changeImage": "画像を変更",
+        "modeToggle": {
+            "title": "モード",
+            "auto": "自動",
+            "manual": "手動"
+        },
+        "autoMode": {
+            "theme": "テーマ",
+            "themes": {
+                "black_friday": "ブラックフライデー",
+                "valentines": "バレンタイン",
+                "christmas": "クリスマス",
+                "summer_sale": "サマーセール",
+                "new_year": "新年",
+                "flash_sale": "フラッシュセール",
+                "mothers_day": "母の日",
+                "easter": "イースター",
+                "halloween": "ハロウィン",
+                "cyber_monday": "サイバーマンデー",
+                "spring_sale": "スプリングセール",
+                "back_to_school": "新学期"
+            },
+            "discount": "割引",
+            "noDiscount": "なし",
+            "customNote": "カスタムノート",
+            "customNotePlaceholder": "例：「25%オフ」「送料無料」..."
+        },
+        "manualMode": {
+            "prompt": "クリエイティブプロンプト",
+            "promptPlaceholder": "作成したいプロモーション画像を説明してください..."
+        },
+        "outputCount": "出力数",
+        "generate": "生成",
+        "generating": "生成中...",
+        "canvas": {
+            "original": "オリジナル",
+            "generated": "生成済み"
+        },
+        "edit": {
+            "title": "結果を編集",
+            "placeholder": "変更内容を説明してください...",
+            "selectFirst": "編集する生成画像を選択してください...",
+            "button": "編集"
+        },
+        "errors": {
+            "noImage": "まず画像をアップロードしてください",
+            "noPrompt": "プロンプトを入力してください",
+            "generationFailed": "生成に失敗しました"
+        }
+    },
     "camera": {
         "title": "カメラアングル",
         "angles": {

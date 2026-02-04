@@ -27,6 +27,7 @@ import WelcomeOverlay from '../components/WelcomeOverlay';
 import MascotAnimation from '../components/MascotAnimation';
 import HandsfreeMode from '../components/HandsfreeMode';
 import MotionMode from '../components/MotionMode';
+import CreativeMode from '../components/CreativeMode';
 import SourceSelectionModal from '../components/SourceSelectionModal';
 import { useTranslation } from '../i18n';
 
@@ -1220,6 +1221,16 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 <Video size={12} />
                                 {t('studio.motion') || 'Motion'}
                             </button>
+                            <button
+                                onClick={() => setStudioMode('creative')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'creative'
+                                    ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow'
+                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
+                                    }`}
+                            >
+                                <Sparkles size={12} />
+                                {t('studio.creative') || 'Creative'}
+                            </button>
                         </div>
                     </div>
 
@@ -1257,6 +1268,12 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     marketplace={marketplace}
                     onNavigate={onNavigate}
                     initialProject={initialProject?.productInfo?.featureType === 'motion' ? initialProject : null}
+                />
+            ) : studioMode === 'creative' ? (
+                <CreativeMode
+                    marketplace={marketplace}
+                    onNavigate={onNavigate}
+                    initialProject={initialProject?.productInfo?.featureType === 'creative' ? initialProject : null}
                 />
             ) : (
                 <main className="flex-1 flex min-h-0">

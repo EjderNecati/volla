@@ -116,6 +116,62 @@
         "step3": "Pick quality mode (Fast for quick results, Pro for higher quality)",
         "step4": "Click Generate Video and wait for the magic!"
     },
+    "creative": {
+        "title": "Creative Studio",
+        "subtitle": "AI-powered promotional image generation",
+        "sourceImage": "Source Image",
+        "uploadImage": "Upload Image",
+        "uploadFirst": "Upload a product image to get started",
+        "changeImage": "Change Image",
+        "modeToggle": {
+            "title": "Mode",
+            "auto": "Auto",
+            "manual": "Manual"
+        },
+        "autoMode": {
+            "theme": "Theme",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "Valentine's",
+                "christmas": "Christmas",
+                "summer_sale": "Summer Sale",
+                "new_year": "New Year",
+                "flash_sale": "Flash Sale",
+                "mothers_day": "Mother's Day",
+                "easter": "Easter",
+                "halloween": "Halloween",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Spring Sale",
+                "back_to_school": "Back to School"
+            },
+            "discount": "Discount",
+            "noDiscount": "None",
+            "customNote": "Custom Note",
+            "customNotePlaceholder": "E.g., '25% discount', 'Free shipping'..."
+        },
+        "manualMode": {
+            "prompt": "Creative Prompt",
+            "promptPlaceholder": "Describe the promotional image you want to create..."
+        },
+        "outputCount": "Output Count",
+        "generate": "Generate",
+        "generating": "Generating...",
+        "canvas": {
+            "original": "Original",
+            "generated": "Generated"
+        },
+        "edit": {
+            "title": "Edit Result",
+            "placeholder": "Describe changes to make...",
+            "selectFirst": "Select a generated image to edit...",
+            "button": "Edit"
+        },
+        "errors": {
+            "noImage": "Please upload an image first",
+            "noPrompt": "Please enter a prompt",
+            "generationFailed": "Generation failed"
+        }
+    },
     "login": {
         "subtitle": "AI-Powered Product Photography",
         "welcome": "Welcome back",
@@ -320,6 +376,7 @@
         "normal": "Normal",
         "handsfree": "Handsfree",
         "motion": "Motion",
+        "creative": "Creative",
         "studioImage": "AI Studio Image",
         "original": "Original",
         "uploadPhoto": "Upload Photo",

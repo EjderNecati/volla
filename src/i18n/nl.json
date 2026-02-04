@@ -163,6 +163,62 @@
         "step3": "Selecteer kwaliteitsmodus (Snel of Pro)",
         "step4": "Klik op Video Genereren en wacht op de magie!"
     },
+    "creative": {
+        "title": "Creatieve Studio",
+        "subtitle": "AI-aangedreven promotiebeelden genereren",
+        "sourceImage": "Bronafbeelding",
+        "uploadImage": "Afbeelding Uploaden",
+        "uploadFirst": "Upload een productafbeelding om te beginnen",
+        "changeImage": "Afbeelding Wijzigen",
+        "modeToggle": {
+            "title": "Modus",
+            "auto": "Auto",
+            "manual": "Handmatig"
+        },
+        "autoMode": {
+            "theme": "Thema",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "Valentijnsdag",
+                "christmas": "Kerst",
+                "summer_sale": "Zomeruitverkoop",
+                "new_year": "Nieuwjaar",
+                "flash_sale": "Flash Sale",
+                "mothers_day": "Moederdag",
+                "easter": "Pasen",
+                "halloween": "Halloween",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Lenteuitverkoop",
+                "back_to_school": "Terug naar School"
+            },
+            "discount": "Korting",
+            "noDiscount": "Geen",
+            "customNote": "Aangepaste Notitie",
+            "customNotePlaceholder": "Bijv.: '25% korting', 'Gratis verzending'..."
+        },
+        "manualMode": {
+            "prompt": "Creatieve Prompt",
+            "promptPlaceholder": "Beschrijf de promotieafbeelding die je wilt maken..."
+        },
+        "outputCount": "Aantal Outputs",
+        "generate": "Genereren",
+        "generating": "Genereren...",
+        "canvas": {
+            "original": "Origineel",
+            "generated": "Gegenereerd"
+        },
+        "edit": {
+            "title": "Resultaat Bewerken",
+            "placeholder": "Beschrijf de gewenste wijzigingen...",
+            "selectFirst": "Selecteer een gegenereerde afbeelding om te bewerken...",
+            "button": "Bewerken"
+        },
+        "errors": {
+            "noImage": "Upload eerst een afbeelding",
+            "noPrompt": "Voer een prompt in",
+            "generationFailed": "Genereren mislukt"
+        }
+    },
     "camera": {
         "title": "Camera Hoek",
         "angles": {

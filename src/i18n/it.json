@@ -163,6 +163,62 @@
         "step3": "Seleziona la modalità qualità (Veloce o Pro)",
         "step4": "Clicca su Genera Video e attendi la magia!"
     },
+    "creative": {
+        "title": "Studio Creativo",
+        "subtitle": "Generazione di immagini promozionali con IA",
+        "sourceImage": "Immagine Sorgente",
+        "uploadImage": "Carica Immagine",
+        "uploadFirst": "Carica un'immagine del prodotto per iniziare",
+        "changeImage": "Cambia Immagine",
+        "modeToggle": {
+            "title": "Modalità",
+            "auto": "Auto",
+            "manual": "Manuale"
+        },
+        "autoMode": {
+            "theme": "Tema",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "San Valentino",
+                "christmas": "Natale",
+                "summer_sale": "Saldi Estivi",
+                "new_year": "Capodanno",
+                "flash_sale": "Vendita Flash",
+                "mothers_day": "Festa della Mamma",
+                "easter": "Pasqua",
+                "halloween": "Halloween",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Saldi Primaverili",
+                "back_to_school": "Ritorno a Scuola"
+            },
+            "discount": "Sconto",
+            "noDiscount": "Nessuno",
+            "customNote": "Nota Personalizzata",
+            "customNotePlaceholder": "Es.: '25% di sconto', 'Spedizione gratuita'..."
+        },
+        "manualMode": {
+            "prompt": "Prompt Creativo",
+            "promptPlaceholder": "Descrivi l'immagine promozionale che vuoi creare..."
+        },
+        "outputCount": "Numero Output",
+        "generate": "Genera",
+        "generating": "Generazione...",
+        "canvas": {
+            "original": "Originale",
+            "generated": "Generato"
+        },
+        "edit": {
+            "title": "Modifica Risultato",
+            "placeholder": "Descrivi le modifiche da apportare...",
+            "selectFirst": "Seleziona un'immagine generata da modificare...",
+            "button": "Modifica"
+        },
+        "errors": {
+            "noImage": "Carica prima un'immagine",
+            "noPrompt": "Inserisci un prompt",
+            "generationFailed": "Generazione fallita"
+        }
+    },
     "camera": {
         "title": "Angolo Camera",
         "angles": {

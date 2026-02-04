@@ -186,6 +186,62 @@
         "step3": "Kalite modunu seçin (Hızlı veya Pro)",
         "step4": "Video Oluştur'a tıklayın ve sihrin gerçekleşmesini bekleyin!"
     },
+    "creative": {
+        "title": "Kreatif Stüdyo",
+        "subtitle": "AI destekli promosyon görseli oluşturma",
+        "sourceImage": "Kaynak Görsel",
+        "uploadImage": "Görsel Yükle",
+        "uploadFirst": "Başlamak için bir ürün görseli yükleyin",
+        "changeImage": "Görsel Değiştir",
+        "modeToggle": {
+            "title": "Mod",
+            "auto": "Otomatik",
+            "manual": "Manuel"
+        },
+        "autoMode": {
+            "theme": "Tema",
+            "themes": {
+                "black_friday": "Black Friday",
+                "valentines": "Sevgililer Günü",
+                "christmas": "Yılbaşı",
+                "summer_sale": "Yaz İndirimi",
+                "new_year": "Yeni Yıl",
+                "flash_sale": "Flaş İndirim",
+                "mothers_day": "Anneler Günü",
+                "easter": "Paskalya",
+                "halloween": "Cadılar Bayramı",
+                "cyber_monday": "Cyber Monday",
+                "spring_sale": "Bahar İndirimi",
+                "back_to_school": "Okula Dönüş"
+            },
+            "discount": "İndirim",
+            "noDiscount": "Yok",
+            "customNote": "Özel Not",
+            "customNotePlaceholder": "Örn: '%25 indirim', 'Ücretsiz kargo'..."
+        },
+        "manualMode": {
+            "prompt": "Kreatif Prompt",
+            "promptPlaceholder": "Oluşturmak istediğiniz promosyon görselini tarif edin..."
+        },
+        "outputCount": "Çıktı Sayısı",
+        "generate": "Oluştur",
+        "generating": "Oluşturuluyor...",
+        "canvas": {
+            "original": "Orijinal",
+            "generated": "Oluşturulan"
+        },
+        "edit": {
+            "title": "Sonucu Düzenle",
+            "placeholder": "Yapılacak değişiklikleri tarif edin...",
+            "selectFirst": "Düzenlemek için oluşturulmuş bir görsel seçin...",
+            "button": "Düzenle"
+        },
+        "errors": {
+            "noImage": "Lütfen önce bir görsel yükleyin",
+            "noPrompt": "Lütfen bir prompt girin",
+            "generationFailed": "Oluşturma başarısız oldu"
+        }
+    },
     "camera": {
         "title": "Kamera Açısı",
         "angles": {
@@ -310,6 +366,8 @@
         "refreshSEO": "SEO Yenile (1 kredi)",
         "normal": "Normal",
         "handsfree": "Handsfree",
+        "motion": "Hareket",
+        "creative": "Kreatif",
         "studioImage": "AI Stüdyo Görseli",
         "original": "Orijinal",
         "uploadPhoto": "Fotoğraf Yükle",
