@@ -509,14 +509,6 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 ════════════════════════════════════════════════════════════ */}
                 <aside className="w-[40%] min-w-[360px] max-w-[480px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
                     <div className="p-5 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-center gap-2 pb-3 border-b border-[#E8E7E4]">
-                            <Video size={20} className="text-violet-500" />
-                            <h2 className="text-lg font-bold text-[#1A1A1A]">
-                                {t('motion.title') || 'Motion'}
-                            </h2>
-                        </div>
-
                         {/* Source Image Upload */}
                         <div className="space-y-2">
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -535,7 +527,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     <img
                                         src={sourceImage}
                                         alt="Source"
-                                        className="w-full h-48 object-contain rounded-xl border border-[#E8E7E4] bg-[#F5F4F1]"
+                                        className="w-full h-32 object-contain rounded-xl border border-[#E8E7E4] bg-[#F5F4F1]"
                                     />
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
@@ -553,7 +545,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                             ) : (
                                 <button
                                     onClick={() => setShowSourceModal(true)}
-                                    className="w-full h-48 border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center text-[#8C8C8C] hover:border-violet-400 hover:text-violet-500 transition-colors"
+                                    className="w-full h-32 border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center text-[#8C8C8C] hover:border-violet-400 hover:text-violet-500 transition-colors"
                                 >
                                     <Upload size={24} className="mb-2" />
                                     <span className="text-xs font-medium">
@@ -613,7 +605,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
                                 {t('motion.qualityMode') || 'Quality Mode'}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {QUALITY_MODES.map((mode) => {
                                     const ModeIcon = mode.icon;
                                     const modeCreditCost = getCreditCost(duration, mode.id);
@@ -621,18 +613,16 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                         <button
                                             key={mode.id}
                                             onClick={() => setQualityMode(mode.id)}
-                                            className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all border flex items-center justify-center gap-2
+                                            className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border flex items-center justify-center gap-1.5
                                                 ${qualityMode === mode.id
-                                                    ? mode.id === 'pro'
-                                                        ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-violet-500'
-                                                        : 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                                     : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                                 }`}
                                         >
-                                            <ModeIcon size={14} />
+                                            <ModeIcon size={12} />
                                             {mode.label}
-                                            <span className="text-[10px] opacity-70">
-                                                {modeCreditCost} cr
+                                            <span className="opacity-70">
+                                                {modeCreditCost}cr
                                             </span>
                                         </button>
                                     );

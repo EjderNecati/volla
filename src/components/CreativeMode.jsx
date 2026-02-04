@@ -359,14 +359,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 ════════════════════════════════════════════════════════════ */}
                 <aside className="w-[40%] min-w-[360px] max-w-[480px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
                     <div className="p-5 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-center gap-2 pb-3 border-b border-[#E8E7E4]">
-                            <Sparkles size={20} className="text-pink-500" />
-                            <h2 className="text-lg font-bold text-[#1A1A1A]">
-                                {t('creative.title') || 'Creative Studio'}
-                            </h2>
-                        </div>
-
                         {/* Source Image Upload */}
                         <div className="space-y-2">
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -418,10 +410,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
                                 {t('creative.modeToggle.title') || 'Mode'}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 <button
                                     onClick={() => setMode('auto')}
-                                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                                    className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
                                         mode === 'auto'
                                             ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                             : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
@@ -431,7 +423,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 </button>
                                 <button
                                     onClick={() => setMode('manual')}
-                                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                                    className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
                                         mode === 'manual'
                                             ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                             : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
@@ -451,19 +443,18 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         <Gift size={12} />
                                         {t('creative.autoMode.theme') || 'Theme'}
                                     </div>
-                                    <div className="grid grid-cols-3 gap-1.5">
+                                    <div className="grid grid-cols-4 gap-1.5">
                                         {THEMES.map((theme) => (
                                             <button
                                                 key={theme.id}
                                                 onClick={() => setSelectedTheme(theme.id)}
-                                                className={`px-2 py-2 rounded-lg text-[10px] font-medium transition-all text-center border flex flex-col items-center gap-1
+                                                className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border
                                                     ${selectedTheme === theme.id
                                                         ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                                         : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                                     }`}
                                             >
-                                                <span className="text-base">{theme.icon}</span>
-                                                <span className="leading-tight">{t(`creative.autoMode.themes.${theme.id}`) || theme.label}</span>
+                                                {t(`creative.autoMode.themes.${theme.id}`) || theme.label}
                                             </button>
                                         ))}
                                     </div>
@@ -533,19 +524,18 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
                                 {t('creative.aspectRatio') || 'Aspect Ratio'}
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 gap-1.5">
                                 {ASPECT_RATIOS.map((ratio) => (
                                     <button
                                         key={ratio.id}
                                         onClick={() => setAspectRatio(ratio.id)}
-                                        className={`px-3 py-2.5 rounded-xl font-medium text-sm border-2 transition-all flex items-center justify-center gap-2 ${
+                                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
                                             aspectRatio === ratio.id
                                                 ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                         }`}
                                     >
-                                        <span>{ratio.icon}</span>
-                                        <span>{ratio.label}</span>
+                                        {ratio.label}
                                     </button>
                                 ))}
                             </div>
@@ -556,15 +546,15 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
                                 {t('creative.outputCount') || 'Output Count'}
                             </div>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-4 gap-1.5">
                                 {OUTPUT_COUNTS.map((count) => (
                                     <button
                                         key={count}
                                         onClick={() => setOutputCount(count)}
-                                        className={`aspect-square rounded-xl font-bold text-lg border-2 transition-all ${
+                                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
                                             outputCount === count
                                                 ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                         }`}
                                     >
                                         {count}
