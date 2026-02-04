@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, Sparkles, Clock, Settings, Zap } from 'lucide-react';
+import { Home, FileText, Sparkles, Clock, Settings, Zap, FolderOpen } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import CreditDisplay from './CreditDisplay';
 import UserProfilePanel from './UserProfilePanel';
@@ -25,6 +25,7 @@ export default function Sidebar({ activeTab, onNavigate, marketplace }) {
         { id: 'home', labelKey: 'nav.home', icon: Home },
         { id: 'analysis', labelKey: 'nav.analysis', icon: FileText },
         { id: 'history', labelKey: 'nav.history', icon: Clock },
+        { id: 'library', labelKey: 'nav.library', icon: FolderOpen },
     ];
 
     return (

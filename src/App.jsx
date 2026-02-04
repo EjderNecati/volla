@@ -11,6 +11,7 @@ import HomeView from './views/HomeView';
 import AIStudioView from './views/AIStudioView';
 import AnalysisView from './views/AnalysisView';
 import HistoryView from './views/HistoryView';
+import LibraryView from './views/LibraryView';
 import SettingsView from './views/SettingsView';
 import PricingView from './views/PricingView';
 import PrivacyPage from './views/PrivacyPage';
@@ -29,6 +30,7 @@ function getInitialRoute() {
     if (path === '/studio') return 'studio';
     if (path === '/analysis') return 'analysis';
     if (path === '/history') return 'history';
+    if (path === '/library') return 'library';
     if (path === '/settings') return 'settings';
     return 'landing';
 }
@@ -137,6 +139,14 @@ function AppContent() {
                     <HistoryView
                         onNavigate={handleNavigate}
                         onLoadProject={handleLoadProject}
+                    />
+                );
+            case 'library':
+                return (
+                    <LibraryView
+                        onNavigate={handleNavigate}
+                        onSelectAsset={handleLoadAsset}
+                        marketplace={marketplace}
                     />
                 );
             case 'settings':

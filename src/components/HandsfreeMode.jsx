@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import {
     Camera, Upload, Copy, Check, Sparkles, Loader2, Download,
-    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3
+    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3, FolderOpen
 } from 'lucide-react';
 import { analyzeProductForHandsfree, generateHandsfreeImage } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
+import { addToLibrary } from '../utils/libraryManager';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
+import SourceSelectionModal from './SourceSelectionModal';
 
 /**
  * HandsfreeMode - Professional Prompt Architect
@@ -125,6 +127,10 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
     // Prompt input for image generation/edit
     const [imagePrompt, setImagePrompt] = useState('');
 
+    // Library/Source selection state
+    const [showSourceModal, setShowSourceModal] = useState(false);
+    const [addedToLibrary, setAddedToLibrary] = useState(false);
+
     const fileInputRef = useRef(null);
 
     // Get active image (source or generated)
@@ -159,6 +165,33 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
             setActiveImageIndex(-1); // Start with original selected
         };
         reader.readAsDataURL(file);
+    };
+
+    // Add current image to library
+    const handleAddToLibrary = async () => {
+        const activeImage = getActiveImage();
+        if (activeImage) {
+            try {
+                await addToLibrary({
+                    url: activeImage,
+                    type: 'image',
+                    name: `Handsfree ${new Date().toLocaleDateString()}`,
+                    source: activeImageIndex >= 0 ? 'generated' : 'upload',
+                    metadata: { cameraAngle, shotScale, lens, aspectRatio }
+                });
+                setAddedToLibrary(true);
+                setTimeout(() => setAddedToLibrary(false), 2000);
+            } catch (err) {
+                console.error('Failed to add to library:', err);
+            }
+        }
+    };
+
+    // Handle selection from library
+    const handleSelectFromLibrary = (asset) => {
+        setSourceImage(asset.url);
+        setGeneratedImages([]);
+        setActiveImageIndex(-1);
     };
 
     // Build professional prompt with CLEAR, ACTIONABLE directives
@@ -410,7 +443,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => setShowSourceModal(true)}
                                     className="w-full h-32 border-2 border-dashed border-[#E8E7E4] rounded-xl hover:border-[#1A1A1A] transition-colors flex flex-col items-center justify-center gap-2 bg-[#F5F4F1]"
                                 >
                                     <Upload size={24} className="text-[#8C8C8C]" />
@@ -584,21 +617,38 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                         </div>
                                     </div>
 
-                                    {/* Download Button */}
-                                    <button
-                                        onClick={() => {
-                                            const link = document.createElement('a');
-                                            link.href = getActiveImage();
-                                            link.download = `volla_handsfree_${Date.now()}.png`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                        }}
-                                        className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-105"
-                                        title="Download Image"
-                                    >
-                                        <Download size={18} className="text-[#1A1A1A]" />
-                                    </button>
+                                    {/* Canvas Control Buttons */}
+                                    <div className="absolute top-4 right-4 flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const link = document.createElement('a');
+                                                link.href = getActiveImage();
+                                                link.download = `volla_handsfree_${Date.now()}.png`;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            }}
+                                            className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-105"
+                                            title="Download Image"
+                                        >
+                                            <Download size={18} className="text-[#1A1A1A]" />
+                                        </button>
+                                        <button
+                                            onClick={handleAddToLibrary}
+                                            className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
+                                                addedToLibrary
+                                                    ? 'bg-emerald-500'
+                                                    : 'bg-white/90 hover:bg-white'
+                                            }`}
+                                            title={t('library.addToLibrary') || 'Add to Library'}
+                                        >
+                                            {addedToLibrary ? (
+                                                <Check size={18} className="text-white" />
+                                            ) : (
+                                                <FolderOpen size={18} className="text-[#1A1A1A]" />
+                                            )}
+                                        </button>
+                                    </div>
 
                                     {/* Loading Overlay */}
                                     {isGeneratingImage && (
@@ -722,6 +772,15 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                 onClose={() => setShowCreditsModal(false)}
                 feature="handsfree"
                 onNavigate={onNavigate}
+            />
+
+            {/* Source Selection Modal */}
+            <SourceSelectionModal
+                isOpen={showSourceModal}
+                onClose={() => setShowSourceModal(false)}
+                onSelectFromLibrary={handleSelectFromLibrary}
+                onSelectFromDevice={() => fileInputRef.current?.click()}
+                acceptVideo={false}
             />
         </>
     );

@@ -11,13 +11,17 @@ import {
     ImageIcon,
     Zap,
     Crown,
-    Pencil
+    Pencil,
+    FolderOpen,
+    Check
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
 import { startMotionGeneration, pollMotionGeneration } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
+import { addToLibrary } from '../utils/libraryManager';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
+import SourceSelectionModal from './SourceSelectionModal';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOTION CONFIGURATION
@@ -147,6 +151,10 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     // Edit mode state
     const [editPrompt, setEditPrompt] = useState('');
     const [isEditing, setIsEditing] = useState(false);
+
+    // Library/Source selection state
+    const [showSourceModal, setShowSourceModal] = useState(false);
+    const [addedToLibrary, setAddedToLibrary] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -398,6 +406,34 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         }
     };
 
+    // Add current video to library
+    const handleAddToLibrary = async () => {
+        const activeMedia = getActiveMedia();
+        if (activeMedia.url) {
+            try {
+                await addToLibrary({
+                    url: activeMedia.url,
+                    type: activeMedia.type,
+                    name: `Motion ${new Date().toLocaleDateString()}`,
+                    source: 'generated',
+                    metadata: { cameraMovement, speed, duration, qualityMode }
+                });
+                setAddedToLibrary(true);
+                setTimeout(() => setAddedToLibrary(false), 2000);
+            } catch (err) {
+                console.error('Failed to add to library:', err);
+            }
+        }
+    };
+
+    // Handle selection from library
+    const handleSelectFromLibrary = (asset) => {
+        setSourceImage(asset.url);
+        setGeneratedVideos([]);
+        setActiveVideoIndex(-1);
+        setError(null);
+    };
+
     const activeMedia = getActiveMedia();
     const creditCost = getCreditCost(duration, qualityMode);
 
@@ -452,7 +488,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => setShowSourceModal(true)}
                                     className="w-full h-48 border-2 border-dashed border-[#E8E7E4] rounded-xl flex flex-col items-center justify-center text-[#8C8C8C] hover:border-violet-400 hover:text-violet-500 transition-colors"
                                 >
                                     <Upload size={24} className="mb-2" />
@@ -664,6 +700,17 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                             >
                                                 <Download size={18} />
                                             </button>
+                                            <button
+                                                onClick={handleAddToLibrary}
+                                                className={`p-2 backdrop-blur-sm rounded-lg text-white transition-colors ${
+                                                    addedToLibrary
+                                                        ? 'bg-emerald-500'
+                                                        : 'bg-black/60 hover:bg-black/80'
+                                                }`}
+                                                title={t('library.addToLibrary') || 'Add to Library'}
+                                            >
+                                                {addedToLibrary ? <Check size={18} /> : <FolderOpen size={18} />}
+                                            </button>
                                         </div>
                                     )}
 
@@ -810,6 +857,15 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 onClose={() => setShowCreditsModal(false)}
                 feature={qualityMode === 'pro' ? 'motion_pro' : 'motion_fast'}
                 onNavigate={onNavigate}
+            />
+
+            {/* Source Selection Modal */}
+            <SourceSelectionModal
+                isOpen={showSourceModal}
+                onClose={() => setShowSourceModal(false)}
+                onSelectFromLibrary={handleSelectFromLibrary}
+                onSelectFromDevice={() => fileInputRef.current?.click()}
+                acceptVideo={false}
             />
         </>
     );

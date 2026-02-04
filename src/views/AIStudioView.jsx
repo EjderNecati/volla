@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Camera, Sparkles, Users, RotateCcw, Upload, ArrowLeft,
     Store, ShoppingBag, ShoppingCart, Type, Image as ImageIcon,
-    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X, Video
+    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X, Video, FolderOpen
 } from 'lucide-react';
 import { useCredits } from '../contexts/CreditContext';
 import {
@@ -20,12 +20,14 @@ import {
     canAddAssets,
     getStorageUsage
 } from '../utils/projectManager';
+import { addToLibrary } from '../utils/libraryManager';
 import { calculateGenerationCost } from '../utils/creditManager';
 import AssetFilmStrip from '../components/AssetFilmStrip';
 import WelcomeOverlay from '../components/WelcomeOverlay';
 import MascotAnimation from '../components/MascotAnimation';
 import HandsfreeMode from '../components/HandsfreeMode';
 import MotionMode from '../components/MotionMode';
+import SourceSelectionModal from '../components/SourceSelectionModal';
 import { useTranslation } from '../i18n';
 
 // Marketplace color configuration
@@ -131,6 +133,12 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     const [currentProjectId, setCurrentProjectId] = useState(null);
     const [projectSaved, setProjectSaved] = useState(false);
     const saveTimeoutRef = useRef(null);
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LIBRARY STATE
+    // ═══════════════════════════════════════════════════════════════════
+    const [showSourceModal, setShowSourceModal] = useState(false);
+    const [addedToLibrary, setAddedToLibrary] = useState(false);
 
     // ═══════════════════════════════════════════════════════════════════
     // SAVE CURRENT PROJECT (auto-save helper)
@@ -347,6 +355,32 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
         } catch (err) {
             setError('Failed to upload image');
         }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LIBRARY HANDLERS
+    // ═══════════════════════════════════════════════════════════════════
+    const handleAddToLibrary = async () => {
+        const activeAsset = getActiveAsset();
+        if (activeAsset?.url) {
+            try {
+                await addToLibrary({
+                    url: activeAsset.url,
+                    type: 'image',
+                    name: `Studio ${new Date().toLocaleDateString()}`,
+                    source: activeAsset.type === 'ORIGINAL' ? 'upload' : 'generated',
+                    metadata: { type: activeAsset.type, marketplace }
+                });
+                setAddedToLibrary(true);
+                setTimeout(() => setAddedToLibrary(false), 2000);
+            } catch (err) {
+                console.error('Failed to add to library:', err);
+            }
+        }
+    };
+
+    const handleSelectFromLibrary = (asset) => {
+        addAssetToSession(asset.url, 'ORIGINAL', null, 'Library');
     };
 
     // ═══════════════════════════════════════════════════════════════════
@@ -641,25 +675,29 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // ═══════════════════════════════════════════════════════════════════
     // RENDER: Upload Zone
     // ═══════════════════════════════════════════════════════════════════
+    const fileInputRef = useRef(null);
+
     const renderUploadZone = () => {
         // Show upload zone when no assets uploaded yet
         if (sessionAssets.length > 0) return null;
 
         return (
             <div className="flex flex-col items-center justify-center py-8">
-                <label
+                <button
+                    onClick={() => setShowSourceModal(true)}
                     className="w-full h-40 flex flex-col items-center justify-center cursor-pointer bg-[#FAF9F6] border-2 border-dashed border-[#D4D3D0] rounded-2xl p-6 text-center transition-all hover:border-[#E06847] hover:bg-[#FFF9F7]"
                 >
                     <Upload className="w-10 h-10 text-[#8C8C8C] mb-2" />
                     <span className="text-[#1A1A1A] font-medium text-sm">{t('studio.uploadPhoto')}</span>
-                    <span className="text-[#8C8C8C] text-xs mt-1">{t('common.dragOrClick')}</span>
-                    <input
-                        type="file"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                    />
-                </label>
+                    <span className="text-[#8C8C8C] text-xs mt-1">{t('library.selectSource') || 'Library or Device'}</span>
+                </button>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                />
             </div>
         );
     };
@@ -1055,21 +1093,38 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                             </svg>
                         </button>
 
-                        {/* Download Button - Top Right */}
-                        <button
-                            onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = activeAsset.url;
-                                link.download = `volla_${activeAsset.type.toLowerCase()}_${Date.now()}.png`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                            }}
-                            className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-105"
-                            title="Download Image"
-                        >
-                            <Download size={18} className="text-[#1A1A1A]" />
-                        </button>
+                        {/* Canvas Control Buttons - Top Right */}
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            <button
+                                onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = activeAsset.url;
+                                    link.download = `volla_${activeAsset.type.toLowerCase()}_${Date.now()}.png`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                }}
+                                className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-105"
+                                title="Download Image"
+                            >
+                                <Download size={18} className="text-[#1A1A1A]" />
+                            </button>
+                            <button
+                                onClick={handleAddToLibrary}
+                                className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
+                                    addedToLibrary
+                                        ? 'bg-emerald-500'
+                                        : 'bg-white/90 hover:bg-white'
+                                }`}
+                                title={t('library.addToLibrary') || 'Add to Library'}
+                            >
+                                {addedToLibrary ? (
+                                    <Check size={18} className="text-white" />
+                                ) : (
+                                    <FolderOpen size={18} className="text-[#1A1A1A]" />
+                                )}
+                            </button>
+                        </div>
 
                         {/* Loading Overlay */}
                         {anyLoading && (
@@ -1423,6 +1478,15 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     </aside>
                 </main>
             )}
+
+            {/* Source Selection Modal */}
+            <SourceSelectionModal
+                isOpen={showSourceModal}
+                onClose={() => setShowSourceModal(false)}
+                onSelectFromLibrary={handleSelectFromLibrary}
+                onSelectFromDevice={() => fileInputRef.current?.click()}
+                acceptVideo={false}
+            />
         </div>
     );
 }
