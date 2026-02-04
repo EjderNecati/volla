@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Camera, Sparkles, Users, RotateCcw, Upload, ArrowLeft,
     Store, ShoppingBag, ShoppingCart, Type, Image as ImageIcon,
-    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X, Video, FolderOpen
+    Wand2, Eye, ImagePlus, Loader2, Copy, Check, Search, Tag, DollarSign, AlignLeft, Save, Download, Zap, RefreshCw, X, Video, Bookmark
 } from 'lucide-react';
 import { useCredits } from '../contexts/CreditContext';
 import {
@@ -1104,6 +1104,21 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                         {/* Canvas Control Buttons - Top Right */}
                         <div className="absolute top-4 right-4 flex gap-2">
                             <button
+                                onClick={handleAddToLibrary}
+                                className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
+                                    addedToLibrary
+                                        ? 'bg-emerald-500'
+                                        : 'bg-white/90 hover:bg-white'
+                                }`}
+                                title={t('library.addToLibrary') || 'Add to Library'}
+                            >
+                                {addedToLibrary ? (
+                                    <Check size={18} className="text-white" />
+                                ) : (
+                                    <Bookmark size={18} className="text-[#1A1A1A]" />
+                                )}
+                            </button>
+                            <button
                                 onClick={() => {
                                     const link = document.createElement('a');
                                     link.href = activeAsset.url;
@@ -1116,21 +1131,6 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                                 title="Download Image"
                             >
                                 <Download size={18} className="text-[#1A1A1A]" />
-                            </button>
-                            <button
-                                onClick={handleAddToLibrary}
-                                className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
-                                    addedToLibrary
-                                        ? 'bg-emerald-500'
-                                        : 'bg-white/90 hover:bg-white'
-                                }`}
-                                title={t('library.addToLibrary') || 'Add to Library'}
-                            >
-                                {addedToLibrary ? (
-                                    <Check size={18} className="text-white" />
-                                ) : (
-                                    <FolderOpen size={18} className="text-[#1A1A1A]" />
-                                )}
                             </button>
                         </div>
 

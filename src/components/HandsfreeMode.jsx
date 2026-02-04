@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
     Camera, Upload, Copy, Check, Sparkles, Loader2, Download,
-    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3, FolderOpen
+    RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3, Bookmark
 } from 'lucide-react';
 import { analyzeProductForHandsfree, generateHandsfreeImage } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
@@ -629,6 +629,21 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                     {/* Canvas Control Buttons */}
                                     <div className="absolute top-4 right-4 flex gap-2">
                                         <button
+                                            onClick={handleAddToLibrary}
+                                            className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
+                                                addedToLibrary
+                                                    ? 'bg-emerald-500'
+                                                    : 'bg-white/90 hover:bg-white'
+                                            }`}
+                                            title={t('library.addToLibrary') || 'Add to Library'}
+                                        >
+                                            {addedToLibrary ? (
+                                                <Check size={18} className="text-white" />
+                                            ) : (
+                                                <Bookmark size={18} className="text-[#1A1A1A]" />
+                                            )}
+                                        </button>
+                                        <button
                                             onClick={() => {
                                                 const link = document.createElement('a');
                                                 link.href = getActiveImage();
@@ -641,21 +656,6 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                                             title="Download Image"
                                         >
                                             <Download size={18} className="text-[#1A1A1A]" />
-                                        </button>
-                                        <button
-                                            onClick={handleAddToLibrary}
-                                            className={`p-2 rounded-full shadow-lg transition-all hover:scale-105 ${
-                                                addedToLibrary
-                                                    ? 'bg-emerald-500'
-                                                    : 'bg-white/90 hover:bg-white'
-                                            }`}
-                                            title={t('library.addToLibrary') || 'Add to Library'}
-                                        >
-                                            {addedToLibrary ? (
-                                                <Check size={18} className="text-white" />
-                                            ) : (
-                                                <FolderOpen size={18} className="text-[#1A1A1A]" />
-                                            )}
                                         </button>
                                     </div>
 

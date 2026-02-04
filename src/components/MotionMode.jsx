@@ -12,7 +12,7 @@ import {
     Zap,
     Crown,
     Pencil,
-    FolderOpen,
+    Bookmark,
     Check
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
@@ -704,12 +704,6 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                                 {isPlaying ? <Pause size={18} /> : <Play size={18} />}
                                             </button>
                                             <button
-                                                onClick={handleDownload}
-                                                className="p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white hover:bg-black/80 transition-colors"
-                                            >
-                                                <Download size={18} />
-                                            </button>
-                                            <button
                                                 onClick={handleAddToLibrary}
                                                 className={`p-2 backdrop-blur-sm rounded-lg text-white transition-colors ${
                                                     addedToLibrary
@@ -718,7 +712,13 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                                 }`}
                                                 title={t('library.addToLibrary') || 'Add to Library'}
                                             >
-                                                {addedToLibrary ? <Check size={18} /> : <FolderOpen size={18} />}
+                                                {addedToLibrary ? <Check size={18} /> : <Bookmark size={18} />}
+                                            </button>
+                                            <button
+                                                onClick={handleDownload}
+                                                className="p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white hover:bg-black/80 transition-colors"
+                                            >
+                                                <Download size={18} />
                                             </button>
                                         </div>
                                     )}
