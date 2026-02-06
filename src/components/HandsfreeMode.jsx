@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Camera, Upload, Copy, Check, Sparkles, Loader2, Download,
     RotateCcw, Eye, Move, Focus, Aperture, Image as ImageIcon, AlertCircle, Wand2, X, Edit3, Bookmark
@@ -99,7 +99,7 @@ const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns =
 // ═══════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
-export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
+export default function HandsfreeMode({ marketplace, onBack, onNavigate, initialProject }) {
     const { t } = useTranslation();
     const { useCredits: useCreditsHook } = useCredits();
 
@@ -132,6 +132,37 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
     const [addedToLibrary, setAddedToLibrary] = useState(false);
 
     const fileInputRef = useRef(null);
+
+    // Load project data when resuming from history
+    useEffect(() => {
+        if (initialProject && initialProject.productInfo?.featureType === 'handsfree') {
+            console.log('⚡ Loading Handsfree project:', initialProject.id);
+
+            // Load source image
+            const sourceImg = initialProject.originalImage ||
+                initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url;
+            if (sourceImg) {
+                setSourceImage(sourceImg);
+            }
+
+            // Load handsfree settings from productInfo
+            const info = initialProject.productInfo;
+            if (info.cameraAngle) setCameraAngle(info.cameraAngle);
+            if (info.shotScale) setShotScale(info.shotScale);
+            if (info.lens) setLens(info.lens);
+            if (info.aspectRatio) setAspectRatio(info.aspectRatio);
+            if (info.directive) setManualDirective(info.directive);
+
+            // Load generated images from assets
+            const handsfreeAssets = initialProject.assets?.filter(a => a.type === 'HANDSFREE') || [];
+            if (handsfreeAssets.length > 0) {
+                const imageUrls = handsfreeAssets.map(a => a.url);
+                setGeneratedImages(imageUrls);
+                setActiveImageIndex(imageUrls.length - 1);
+                console.log('⚡ Loaded', imageUrls.length, 'handsfree images');
+            }
+        }
+    }, [initialProject]);
 
     // Get active image (source or generated)
     // activeImageIndex: -1 = original source, 0+ = generated images
@@ -369,6 +400,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate }) {
                         }],
                         null,
                         {
+                            featureType: 'handsfree',
                             cameraAngle,
                             shotScale,
                             lens,

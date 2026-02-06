@@ -143,6 +143,33 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
             }
         }
 
+        // Check if this is a Handsfree project
+        const isHandsfreeProject = project.productInfo?.featureType === 'handsfree';
+
+        if (isHandsfreeProject) {
+            const handsfreeThumbnail = project.originalImage ||
+                project.assets?.find(a => a.type === 'ORIGINAL')?.url ||
+                project.assets?.[0]?.url;
+
+            if (handsfreeThumbnail) {
+                return (
+                    <div className="relative w-full h-full">
+                        <img
+                            src={handsfreeThumbnail}
+                            alt="Handsfree Project"
+                            className="w-full h-full object-cover"
+                        />
+                        {/* Handsfree indicator overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                                <Sparkles className="w-5 h-5 text-white" />
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+        }
+
         const assets = project.assets || [];
 
         if (assets.length === 0) {
@@ -319,8 +346,25 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
                                     <div className="aspect-square relative overflow-hidden bg-[#F5F4F1]">
                                         {renderThumbnailGrid(project)}
 
-                                        {/* Marketplace Badge */}
-                                        {project.marketplace && (
+                                        {/* Feature Type Badge for special modes */}
+                                        {project.productInfo?.featureType === 'motion' && (
+                                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium uppercase text-white bg-gradient-to-r from-violet-500 to-purple-500">
+                                                {t('studio.motion') || 'Motion'}
+                                            </div>
+                                        )}
+                                        {project.productInfo?.featureType === 'creative' && (
+                                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium uppercase text-white bg-gradient-to-r from-pink-500 to-rose-500">
+                                                {t('studio.creative') || 'Creative'}
+                                            </div>
+                                        )}
+                                        {project.productInfo?.featureType === 'handsfree' && (
+                                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium uppercase text-white bg-gradient-to-r from-cyan-500 to-blue-500">
+                                                {t('studio.handsfree') || 'Handsfree'}
+                                            </div>
+                                        )}
+                                        {/* Marketplace Badge - Only show for normal mode (not motion/creative/handsfree) */}
+                                        {project.marketplace &&
+                                         !project.productInfo?.featureType && (
                                             <div
                                                 className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium uppercase text-white"
                                                 style={{ backgroundColor: projectColor.primary }}

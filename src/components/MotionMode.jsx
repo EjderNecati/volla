@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
-import { startMotionGeneration, pollMotionGeneration } from '../utils/aiHelpers';
+import { startMotionGeneration, pollMotionGeneration, startMotionEdit } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
 import { addToLibrary } from '../utils/libraryManager';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
@@ -156,6 +156,9 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     const [showSourceModal, setShowSourceModal] = useState(false);
     const [addedToLibrary, setAddedToLibrary] = useState(false);
 
+    // Project tracking for history (prevent duplicate projects)
+    const [currentProjectId, setCurrentProjectId] = useState(null);
+
     const fileInputRef = useRef(null);
 
     // Get active media (source image or generated video)
@@ -204,6 +207,9 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         if (initialProject && initialProject.productInfo?.featureType === 'motion') {
             console.log('🎬 Loading Motion project:', initialProject.id, initialProject);
 
+            // IMPORTANT: Set project ID for reuse (prevents duplicate projects)
+            setCurrentProjectId(initialProject.id);
+
             // Load source image - try multiple sources
             const sourceImg = initialProject.originalImage ||
                 initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url ||
@@ -244,6 +250,82 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         }
     }, [activeVideoIndex]);
 
+    // Save video to history - MUST be defined before startPolling
+    const saveVideoToHistory = useCallback(async (videoUrl, currentVideos) => {
+        try {
+            const movement = CAMERA_MOVEMENTS.find(m => m.id === cameraMovement);
+            const motionName = customDirective
+                ? `Motion: ${customDirective.substring(0, 30)}...`
+                : `Motion: ${movement?.label || cameraMovement}`;
+
+            // Build assets array - include all previously generated videos + the new one
+            const assets = [
+                // Save source image as ORIGINAL asset for reliable retrieval
+                {
+                    id: `original_${Date.now()}`,
+                    type: 'ORIGINAL',
+                    url: sourceImage,
+                    createdAt: Date.now()
+                }
+            ];
+
+            // Add all generated videos (including the new one)
+            // currentVideos is passed from the caller to avoid stale closure issues
+            const allVideos = [...currentVideos];
+            if (!allVideos.includes(videoUrl)) {
+                allVideos.push(videoUrl);
+            }
+
+            allVideos.forEach((url, index) => {
+                assets.push({
+                    id: `motion_${Date.now()}_${index}`,
+                    type: 'MOTION_VIDEO',
+                    url: url,
+                    createdAt: Date.now(),
+                    metadata: {
+                        cameraMovement,
+                        speed,
+                        duration,
+                        qualityMode,
+                        aspectRatio
+                    }
+                });
+            });
+
+            const project = createProject(
+                motionName,
+                marketplace || 'motion',
+                sourceImage,
+                assets,
+                null,
+                {
+                    featureType: 'motion',
+                    cameraMovement,
+                    speed,
+                    duration,
+                    qualityMode,
+                    aspectRatio,
+                    customDirective
+                }
+            );
+
+            // IMPORTANT: Reuse existing project ID to prevent duplicate entries
+            if (currentProjectId) {
+                project.id = currentProjectId;
+                console.log('🎬 Updating existing Motion project:', currentProjectId);
+            } else {
+                // First save - store the new project ID for future updates
+                setCurrentProjectId(project.id);
+                console.log('🎬 Creating new Motion project:', project.id);
+            }
+
+            await saveProject(project);
+            console.log('🎬 Motion project saved to history with', assets.length, 'assets');
+        } catch (err) {
+            console.warn('Failed to save motion to history:', err);
+        }
+    }, [sourceImage, marketplace, cameraMovement, speed, duration, qualityMode, aspectRatio, customDirective, currentProjectId]);
+
     // Start polling for video completion with simulated progress
     const startPolling = useCallback((opName, modId) => {
         setPollingStatus('Processing video...');
@@ -266,6 +348,8 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                     setPollingStatus('Video ready!');
                     setProgress(100);
                     setIsGenerating(false);
+                    setIsEditing(false);
+                    setEditPrompt(''); // Clear edit prompt after success
 
                     // Add video to collection (check for duplicates)
                     if (result.video_url) {
@@ -277,11 +361,13 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                             const newVideos = [...prev, result.video_url];
                             // Set active index to the new video
                             setActiveVideoIndex(newVideos.length - 1);
+
+                            // Save to history with the updated videos array
+                            // We pass newVideos to avoid stale closure issues
+                            saveVideoToHistory(result.video_url, newVideos);
+
                             return newVideos;
                         });
-
-                        // Save to history
-                        saveVideoToHistory(result.video_url);
                     }
 
                 } else if (result.status === 'FAILED' || result.status === 'ERROR') {
@@ -290,6 +376,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
 
                     setError(result.error || 'Video generation failed');
                     setIsGenerating(false);
+                    setIsEditing(false);
                     setPollingStatus('');
 
                 } else {
@@ -322,6 +409,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                     pollingIntervalRef.current = null;
                     setError('Video generation timed out. Please try again.');
                     setIsGenerating(false);
+                    setIsEditing(false);
                     setPollingStatus('');
                 }
             } catch (err) {
@@ -334,59 +422,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 }
             }
         }, 5000); // Poll every 5 seconds
-    }, [generatedVideos.length]);
-
-    // Save video to history
-    const saveVideoToHistory = async (videoUrl) => {
-        try {
-            const movement = CAMERA_MOVEMENTS.find(m => m.id === cameraMovement);
-            const motionName = customDirective
-                ? `Motion: ${customDirective.substring(0, 30)}...`
-                : `Motion: ${movement?.label || cameraMovement}`;
-
-            const project = createProject(
-                motionName,
-                marketplace || 'motion',
-                sourceImage,
-                [
-                    // Save source image as ORIGINAL asset for reliable retrieval
-                    {
-                        id: `original_${Date.now()}`,
-                        type: 'ORIGINAL',
-                        url: sourceImage,
-                        createdAt: Date.now()
-                    },
-                    {
-                        id: `motion_${Date.now()}`,
-                        type: 'MOTION_VIDEO',
-                        url: videoUrl,
-                        createdAt: Date.now(),
-                        metadata: {
-                            cameraMovement,
-                            speed,
-                            duration,
-                            qualityMode,
-                            aspectRatio
-                        }
-                    }
-                ],
-                null,
-                {
-                    featureType: 'motion',
-                    cameraMovement,
-                    speed,
-                    duration,
-                    qualityMode,
-                    aspectRatio,
-                    customDirective
-                }
-            );
-            await saveProject(project);
-            console.log('🎬 Motion project saved to history');
-        } catch (err) {
-            console.warn('Failed to save motion to history:', err);
-        }
-    };
+    }, [saveVideoToHistory]);
 
     // Generate video
     const handleGenerateVideo = async () => {
@@ -441,8 +477,52 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         setCustomDirective('');
         setError(null);
         setIsGenerating(false);
+        setIsEditing(false);
         setPollingStatus('');
         setProgress(0);
+        setEditPrompt('');
+        // Reset project ID so next session creates a new project
+        setCurrentProjectId(null);
+    };
+
+    // Edit video - generates new video with edit instructions
+    const handleEditVideo = async () => {
+        if (!sourceImage || !editPrompt.trim() || activeVideoIndex < 0) return;
+
+        // Check credits (same as generation)
+        const creditFeature = qualityMode === 'pro' ? 'motion_pro' : 'motion_fast';
+        const creditResult = useCreditsHook(creditFeature);
+        if (!creditResult.success) {
+            setShowCreditsModal(true);
+            return;
+        }
+
+        setIsEditing(true);
+        setError(null);
+        setPollingStatus('Starting video edit...');
+        setProgress(0);
+
+        try {
+            const result = await startMotionEdit(sourceImage, editPrompt, {
+                duration: parseInt(duration),
+                qualityMode,
+                aspectRatio
+            });
+
+            if (result.success && result.operation_name) {
+                setOperationName(result.operation_name);
+                setModelId(result.model_id);
+                // Reuse the same polling mechanism
+                startPolling(result.operation_name, result.model_id);
+                // Note: isEditing will be cleared when polling completes (in startPolling)
+            } else {
+                throw new Error(result.error || 'Failed to start edit');
+            }
+        } catch (err) {
+            setError(err.message);
+            setIsEditing(false);
+            setPollingStatus('');
+        }
     };
 
     // Toggle video playback
@@ -684,19 +764,13 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 {/* ════════════════════════════════════════════════════════════
                     RIGHT PANEL - 60% - Video Canvas
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-5 overflow-hidden min-w-0">
-                    {/* Video Canvas Area - proportional container */}
-                    <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex-1 flex items-center justify-center min-h-0">
-                            <div
-                                className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                                style={{
-                                    width: '100%',
-                                    maxWidth: aspectRatio === '9:16' ? '400px' : aspectRatio === '1:1' ? '600px' : '100%',
-                                    aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
-                                    maxHeight: 'calc(100vh - 280px)'
-                                }}
-                            >
+                <section className="flex-1 flex flex-col p-6 overflow-y-auto">
+                    {/* Video Canvas Area */}
+                    <div className="flex flex-col">
+                        <div
+                            className="relative rounded-2xl overflow-hidden"
+                            style={{ height: '450px' }}
+                        >
                             {sourceImage ? (
                                 <>
                                     {/* Frosted Glass Background */}
@@ -706,13 +780,14 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                             backgroundImage: `url(${activeMedia.url})`,
                                             backgroundSize: 'cover',
                                             backgroundPosition: 'center',
-                                            filter: 'blur(30px) brightness(0.5)'
+                                            filter: 'blur(30px) brightness(0.7)',
+                                            transform: 'scale(1.2)'
                                         }}
                                     />
-                                    <div className="absolute inset-0 bg-black/30" />
+                                    <div className="absolute inset-0 bg-black/20" />
 
-                                    {/* Main Content - absolute positioned to prevent container expansion */}
-                                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                                    {/* Main Content */}
+                                    <div className="relative h-full w-full flex items-center justify-center p-4">
                                         {activeMedia.type === 'video' ? (
                                             <video
                                                 ref={videoRef}
@@ -780,7 +855,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     )}
                                 </>
                             ) : (
-                                <div className="h-full flex items-center justify-center">
+                                <div className="h-full flex items-center justify-center bg-[#F5F4F1] rounded-2xl border-2 border-dashed border-[#E8E7E4]">
                                     <div className="text-center text-[#8C8C8C]">
                                         <Video size={48} className="mx-auto mb-4 opacity-30" />
                                         <p className="text-sm">
@@ -789,7 +864,6 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     </div>
                                 </div>
                             )}
-                        </div>
                         </div>
 
                         {/* Film Strip - Generated Videos */}
@@ -860,11 +934,8 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                         disabled={isEditing || activeVideoIndex < 0}
                                     />
                                     <button
-                                        onClick={() => {
-                                            // TODO: Implement video editing API call
-                                            alert(t('motion.editComingSoon') || 'Video editing feature coming soon!');
-                                        }}
-                                        disabled={!editPrompt.trim() || isEditing || activeVideoIndex < 0}
+                                        onClick={handleEditVideo}
+                                        disabled={!editPrompt.trim() || isEditing || isGenerating || activeVideoIndex < 0}
                                         className="px-4 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                                     >
                                         {isEditing ? (

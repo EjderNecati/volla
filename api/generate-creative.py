@@ -1,24 +1,32 @@
 """
-Creative Studio Mode - Promotional Image Generation with Themes
-Uses Gemini 2.0 Flash Exp for theme-based product marketing images
-Supports: Black Friday, Valentine's Day, Christmas, and more themes
+Creative Studio Mode - HYBRID APPROACH (Lightweight)
+=====================================================
+Professional promotional image generation using:
+1. AI background generation - Create themed backgrounds only
+2. Product placement with frame/shadow - Professional presentation
+3. Text overlay (Pillow) - Add badges and text programmatically
+
+Product is 100% preserved - we never ask AI to modify it.
 """
 
 import os
+import io
 import json
+import base64
 import traceback
 import requests
 from http.server import BaseHTTPRequestHandler
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 print("=" * 60)
-print("🎨 Creative Studio Mode - Promotional Image Generation")
+print("🎨 Creative Studio Mode - HYBRID APPROACH (Lightweight)")
 print("=" * 60)
 
-# Get Service Account credentials from environment
+# Get credentials
 GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 GOOGLE_API_KEY = os.environ.get("VERTEX_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
-# Parse credentials and setup OAuth2
+# OAuth2 setup
 oauth2_token = None
 project_id = None
 
@@ -47,123 +55,114 @@ except Exception as e:
 
 _last_errors = []
 
-# Theme configurations with IMPROVED detailed prompts for high-quality output
-THEME_CONFIGS = {
+# ═══════════════════════════════════════════════════════════════════════════════
+# THEME CONFIGURATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+THEME_BACKGROUNDS = {
     'black_friday': {
         'name': 'Black Friday',
-        'scene': 'Luxurious black velvet surface with scattered gold confetti and subtle smoke effects. Premium studio lighting with dramatic shadows.',
-        'decorations': 'elegant gold ribbons, premium shopping bags in background, subtle sparkle effects',
-        'typography': 'BLACK FRIDAY in bold metallic gold 3D letters with glossy reflection',
-        'mood': 'luxury, exclusivity, premium shopping event',
-        'style': 'high-end fashion advertisement, Vogue magazine quality'
+        'prompt': 'Ultra premium Black Friday sale background. Luxurious black velvet texture with elegant gold sparkles and shimmer effects scattered around edges. Rich dark gradient. High-end fashion photography backdrop. 8K quality, professional studio lighting. Empty center space. No products, no text.',
+        'badge_color': '#FFD700',
+        'badge_bg': '#000000',
+        'frame_color': '#FFD700',
+        'gradient': [(20, 20, 20), (40, 35, 25)]
     },
     'valentines': {
         'name': "Valentine's Day",
-        'scene': 'Soft blush pink silk fabric background with gentle bokeh heart lights. Romantic soft-focus photography style.',
-        'decorations': 'red rose petals scattered around, small heart confetti, soft pink feathers',
-        'typography': 'elegant rose gold script lettering with subtle shine',
-        'mood': 'romantic, tender, gift of love',
-        'style': 'luxury perfume advertisement, romantic cinema aesthetic'
+        'prompt': 'Romantic Valentine sale background. Soft blush pink silk texture with gentle bokeh heart lights, scattered red rose petals at edges. Dreamy romantic atmosphere with soft glow. Premium perfume ad style. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#E91E63',
+        'frame_color': '#E91E63',
+        'gradient': [(255, 220, 230), (255, 180, 200)]
     },
     'christmas': {
         'name': 'Christmas',
-        'scene': 'Cozy Christmas setting with warm golden fairy lights bokeh, snow-dusted pine branches framing the edges.',
-        'decorations': 'red and gold ornaments, cinnamon sticks, pine cones, subtle snowflakes',
-        'typography': 'classic serif Christmas font in deep red with gold outline',
-        'mood': 'magical, warm, festive joy, gift-giving spirit',
-        'style': 'Coca-Cola Christmas ad quality, heartwarming holiday catalogue'
+        'prompt': 'Magical Christmas sale background. Rich deep red velvet with golden bokeh fairy lights, subtle snowflakes, pine branches at corners. Warm cozy holiday atmosphere. Coca-Cola ad quality. 8K. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#C62828',
+        'frame_color': '#FFD700',
+        'gradient': [(139, 20, 20), (20, 80, 20)]
     },
     'summer_sale': {
         'name': 'Summer Sale',
-        'scene': 'Bright tropical paradise with turquoise water reflection, palm leaf shadows, golden hour sunlight.',
-        'decorations': 'tropical flowers (hibiscus, plumeria), citrus slices, beach sand texture at edges',
-        'typography': 'bold playful font in coral and turquoise gradient',
-        'mood': 'refreshing, vacation vibes, carefree summer energy',
-        'style': 'travel magazine cover, resort advertisement quality'
+        'prompt': 'Fresh vibrant summer sale background. Bright gradient from turquoise ocean to sunny yellow, palm leaf shadows at edges, tropical beach vibes. Resort advertisement quality. 8K. Empty center. No products, no text.',
+        'badge_color': '#000000',
+        'badge_bg': '#FFEB3B',
+        'frame_color': '#00BCD4',
+        'gradient': [(0, 200, 200), (255, 220, 0)]
     },
     'new_year': {
         'name': 'New Year',
-        'scene': 'Elegant midnight blue backdrop with golden firework bursts frozen in time, champagne bubble effects.',
-        'decorations': 'gold and silver confetti, champagne glasses, clock showing midnight, streamers',
-        'typography': 'glamorous art deco style gold metallic numbers',
-        'mood': 'celebration, elegance, new beginnings, luxury party',
-        'style': 'Times Square celebration advertisement, luxury brand New Year campaign'
+        'prompt': 'Glamorous New Year celebration background. Sophisticated midnight blue with gold confetti explosion, champagne bubble effects, firework sparkles. Luxury party atmosphere. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#000000',
+        'badge_bg': '#FFD700',
+        'frame_color': '#FFD700',
+        'gradient': [(10, 20, 50), (30, 30, 80)]
     },
     'flash_sale': {
         'name': 'Flash Sale',
-        'scene': 'Dynamic gradient from deep red to orange with motion blur effects suggesting speed and urgency.',
-        'decorations': 'lightning bolt graphics, timer/clock elements, speed lines',
-        'typography': 'bold impactful sans-serif with electric glow and shadow',
-        'mood': 'urgent, exciting, limited time opportunity, act now',
-        'style': 'tech product launch, gaming advertisement energy'
+        'prompt': 'Dynamic urgent flash sale background. Bold red to orange gradient with lightning bolt effects, speed lines, energetic motion blur. Tech product launch energy. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#FF5722',
+        'frame_color': '#FFEB3B',
+        'gradient': [(255, 80, 0), (255, 150, 0)]
     },
     'mothers_day': {
         'name': "Mother's Day",
-        'scene': 'Dreamy soft focus with fresh peonies and garden roses, gentle morning light filtering through.',
-        'decorations': 'delicate flower petals, soft ribbon bows, pearl accents, lace texture hints',
-        'typography': 'elegant calligraphy script in dusty rose or lavender',
-        'mood': 'tender love, appreciation, gentle warmth, gratitude',
-        'style': 'luxury gift brand advertisement, elegant greeting card quality'
+        'prompt': 'Elegant Mother\'s Day background. Soft lavender to blush pink gradient, delicate peony petals floating, gentle warm lighting. Luxury gift brand aesthetic. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#9C27B0',
+        'frame_color': '#E91E63',
+        'gradient': [(230, 200, 230), (255, 200, 220)]
     },
     'easter': {
         'name': 'Easter',
-        'scene': 'Fresh spring garden setting with soft morning dew, pastel colored Easter eggs in grass.',
-        'decorations': 'spring flowers (tulips, daffodils), cute bunny silhouettes, butterfly accents',
-        'typography': 'playful rounded font in pastel rainbow colors',
-        'mood': 'joyful spring, renewal, family celebration, fresh start',
-        'style': 'premium chocolate brand Easter campaign, spring catalogue'
+        'prompt': 'Joyful Easter spring background. Fresh pastel gradient with mint, pink, yellow. Decorated Easter eggs at corners, spring flowers, butterfly accents. Premium chocolate brand style. 8K. Empty center. No products, no text.',
+        'badge_color': '#000000',
+        'badge_bg': '#81C784',
+        'frame_color': '#7B1FA2',
+        'gradient': [(200, 255, 220), (255, 220, 240)]
     },
     'halloween': {
         'name': 'Halloween',
-        'scene': 'Atmospheric purple and orange gradient with mysterious fog, full moon glow in background.',
-        'decorations': 'carved pumpkins with candle glow, bat silhouettes, spider webs with dew drops',
-        'typography': 'spooky dripping font in bright orange with green glow',
-        'mood': 'fun spooky, mysterious excitement, playful scary',
-        'style': 'Disney Halloween special advertisement, premium candy brand campaign'
+        'prompt': 'Fun spooky Halloween background. Purple to orange gradient with mysterious fog, carved pumpkin glow at edges, bat silhouettes, spider web accents. Playful scary atmosphere. 8K. Empty center. No products, no text.',
+        'badge_color': '#000000',
+        'badge_bg': '#FF9800',
+        'frame_color': '#7B1FA2',
+        'gradient': [(80, 0, 120), (255, 140, 0)]
     },
     'cyber_monday': {
         'name': 'Cyber Monday',
-        'scene': 'Futuristic digital space with neon blue circuit board patterns, holographic grid effects.',
-        'decorations': 'floating digital particles, matrix-style code rain, glowing data streams',
-        'typography': 'futuristic tech font with cyan neon glow and digital glitch effect',
-        'mood': 'digital innovation, tech-savvy, modern online shopping',
-        'style': 'Apple product launch aesthetic, tech startup advertisement'
+        'prompt': 'Futuristic Cyber Monday background. Dark blue with neon cyan circuit board patterns, digital matrix effects, holographic grid, tech aesthetic. Apple launch style. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#000000',
+        'badge_bg': '#00E5FF',
+        'frame_color': '#00E5FF',
+        'gradient': [(10, 20, 60), (0, 60, 80)]
     },
     'spring_sale': {
         'name': 'Spring Sale',
-        'scene': 'Fresh blooming garden with cherry blossoms falling, soft natural daylight, green grass bokeh.',
-        'decorations': 'butterflies, fresh green leaves, flower buds, dewdrops',
-        'typography': 'fresh modern font in spring green with floral accents',
-        'mood': 'renewal, fresh energy, blooming opportunities, new season',
-        'style': 'organic beauty brand campaign, lifestyle magazine cover'
+        'prompt': 'Fresh spring renewal background. Clean gradient from fresh green to white, cherry blossom petals floating, natural daylight glow. Lifestyle brand aesthetic. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#4CAF50',
+        'frame_color': '#E91E63',
+        'gradient': [(200, 255, 200), (255, 255, 255)]
     },
     'back_to_school': {
         'name': 'Back to School',
-        'scene': 'Clean modern desk setup with organized school supplies, warm study lamp lighting.',
-        'decorations': 'colorful pencils, notebooks, apples, graduation cap hints, ABC letters',
-        'typography': 'friendly bold font resembling chalk or marker writing',
-        'mood': 'fresh start, organized, youthful energy, academic success',
-        'style': 'Apple education campaign, premium stationery brand advertisement'
+        'prompt': 'Clean organized back to school background. Bright gradient from white to light blue, subtle pencil and notebook illustrations at edges. Academic energy. 8K quality. Empty center. No products, no text.',
+        'badge_color': '#FFFFFF',
+        'badge_bg': '#2196F3',
+        'frame_color': '#FF9800',
+        'gradient': [(255, 255, 255), (200, 220, 255)]
     }
 }
 
-# Aspect ratio configurations
-ASPECT_RATIO_CONFIGS = {
-    '1:1': {
-        'name': 'Square (1:1)',
-        'description': 'perfect square format, Instagram feed style',
-        'composition': 'centered product with equal spacing on all sides'
-    },
-    '4:5': {
-        'name': 'Portrait (4:5)',
-        'description': 'vertical portrait format, Instagram post optimal',
-        'composition': 'product centered with more vertical space for text above/below'
-    },
-    '9:16': {
-        'name': 'Story (9:16)',
-        'description': 'vertical story format for Instagram/TikTok stories',
-        'composition': 'product in center-lower area, promotional text at top, ample vertical space'
-    }
+# Aspect ratio dimensions
+ASPECT_DIMENSIONS = {
+    '1:1': (1024, 1024),
+    '4:5': (1024, 1280),
+    '9:16': (1024, 1820)
 }
 
 
@@ -193,239 +192,47 @@ def get_fresh_token():
         return None
 
 
-def build_creative_prompt(mode, theme, discount, custom_note, manual_prompt, aspect_ratio='1:1'):
-    """Build promotional image generation prompt - IMPROVED FOR HIGH QUALITY OUTPUT"""
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 1: GENERATE THEMED BACKGROUND (NO PRODUCT)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-    aspect_config = ASPECT_RATIO_CONFIGS.get(aspect_ratio, ASPECT_RATIO_CONFIGS['1:1'])
-
-    # Manual mode - user provides full prompt
-    if mode == 'manual':
-        return f"""You are a world-class advertising photographer and digital artist.
-
-TASK: Create a stunning promotional product image based on user's request.
-
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ CRITICAL: PRODUCT PRESERVATION RULES
-═══════════════════════════════════════════════════════════════════════════════
-The product in the reference image MUST be preserved EXACTLY:
-- Keep ALL text/labels on product PIXEL-PERFECT (every letter, number, symbol)
-- Keep ALL logos and branding IDENTICAL
-- Keep ALL colors, textures, materials UNCHANGED
-- Keep ALL shapes, proportions, dimensions EXACT
-- DO NOT modify, enhance, or alter the product in ANY way
-- The product should look like a professional studio photo of the EXACT same item
-═══════════════════════════════════════════════════════════════════════════════
-
-USER'S CREATIVE REQUEST:
-{manual_prompt}
-
-OUTPUT FORMAT: {aspect_config['name']} - {aspect_config['description']}
-COMPOSITION: {aspect_config['composition']}
-
-QUALITY STANDARD:
-- Professional advertising photography quality
-- Sharp, well-lit product photography
-- Premium brand advertisement level
-- Ready for Instagram, TikTok, or e-commerce hero image
-
-Create the image now."""
-
-    # Auto mode - theme-based generation
-    theme_config = THEME_CONFIGS.get(theme, THEME_CONFIGS['black_friday'])
-
-    # Build discount/badge section
-    badge_text = ''
-    if discount:
-        badge_text = f"""
-PROMOTIONAL BADGE (IMPORTANT):
-Add a professional "{discount}% OFF" badge/sticker that:
-- Is prominently visible but doesn't cover the product
-- Uses the theme's color palette
-- Looks like a real premium sale tag (glossy, 3D effect)
-- Positioned at a corner or edge strategically"""
-    elif custom_note:
-        badge_text = f"""
-CUSTOM PROMOTIONAL TEXT:
-Add "{custom_note}" as elegant promotional text that:
-- Complements the theme design
-- Is clearly readable with good contrast
-- Positioned where it enhances the composition"""
-
-    return f"""You are a world-class advertising photographer working for a premium brand.
-
-═══════════════════════════════════════════════════════════════════════════════
-🎨 CREATIVE BRIEF: {theme_config['name'].upper()} PROMOTIONAL CAMPAIGN
-═══════════════════════════════════════════════════════════════════════════════
-
-CAMPAIGN THEME: {theme_config['name']}
-REFERENCE STYLE: {theme_config['style']}
-
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ CRITICAL: PRODUCT PRESERVATION RULES
-═══════════════════════════════════════════════════════════════════════════════
-The product in the reference image MUST be preserved EXACTLY:
-- Keep ALL text/labels on product PIXEL-PERFECT (every letter, number, symbol)
-- Keep ALL logos and branding IDENTICAL
-- Keep ALL colors, textures, materials UNCHANGED
-- Keep ALL shapes, proportions, dimensions EXACT
-- DO NOT modify, enhance, or alter the product in ANY way
-- The product should look like it was photographed in this new setting
-═══════════════════════════════════════════════════════════════════════════════
-
-SCENE SETUP:
-{theme_config['scene']}
-
-DECORATIVE ELEMENTS (around the product, NOT on it):
-{theme_config['decorations']}
-
-TYPOGRAPHY STYLE (if text needed):
-{theme_config['typography']}
-
-MOOD & ATMOSPHERE:
-{theme_config['mood']}
-{badge_text}
-
-OUTPUT FORMAT: {aspect_config['name']} - {aspect_config['description']}
-COMPOSITION: {aspect_config['composition']}
-
-EXECUTION:
-1. Place the EXACT product from reference image as the hero/center
-2. Build the {theme_config['name']} themed environment AROUND the product
-3. Use professional studio lighting that matches the theme mood
-4. Add decorative elements that frame/complement without covering product
-5. Ensure premium advertising quality - this is for a major brand campaign
-
-The final image should look like it belongs in a high-budget advertising campaign for {theme_config['name']}.
-
-Create the image now."""
-
-
-def generate_with_gemini(image_data, prompt):
-    """Generate image using Gemini 2.0 Flash Exp"""
+def generate_themed_background(theme, aspect_ratio, token, proj_id):
+    """Generate a themed background using AI - NO PRODUCT"""
     global _last_errors
 
-    if not GOOGLE_API_KEY:
-        _last_errors.append("No API key available")
-        return None
+    theme_config = THEME_BACKGROUNDS.get(theme, THEME_BACKGROUNDS['black_friday'])
+    dimensions = ASPECT_DIMENSIONS.get(aspect_ratio, ASPECT_DIMENSIONS['1:1'])
 
-    # Clean base64
-    if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
-        mime_type = 'image/png' if 'png' in image_data.lower() else 'image/jpeg'
-    else:
-        base64_clean = image_data
-        mime_type = 'image/jpeg'
+    prompt = f"""{theme_config['prompt']}
 
-    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-    missing_padding = len(base64_clean) % 4
-    if missing_padding:
-        base64_clean += '=' * (4 - missing_padding)
+Image dimensions: {dimensions[0]}x{dimensions[1]} pixels
+Style: Ultra high quality, 8K resolution, professional product photography background
+CRITICAL: Leave clear empty space in the center (60% of frame) for product placement
+CRITICAL: Generate ONLY the background - absolutely NO product, NO text, NO logos"""
 
-    # Use Gemini API directly
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key={GOOGLE_API_KEY}"
+    print(f"   🎨 Generating {theme_config['name']} background...")
 
-    headers = {"Content-Type": "application/json"}
+    # Try Vertex AI Gemini
+    if token and proj_id:
+        location = 'us-central1'
+        url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{proj_id}/locations/{location}/publishers/google/models/gemini-2.0-flash-exp:generateContent"
 
-    payload = {
-        "contents": [{
-            "parts": [
-                {"text": prompt},
-                {
-                    "inline_data": {
-                        "mime_type": mime_type,
-                        "data": base64_clean
-                    }
-                }
-            ]
-        }],
-        "generationConfig": {
-            "responseModalities": ["IMAGE", "TEXT"]
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
         }
-    }
 
-    try:
-        print("   Making request to Gemini API...")
-        response = requests.post(url, headers=headers, json=payload, timeout=120)
+        payload = {
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }],
+            "generationConfig": {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+        }
 
-        print(f"   Response status: {response.status_code}")
-
-        if response.status_code == 200:
-            result = response.json()
-
-            if "candidates" in result:
-                for candidate in result["candidates"]:
-                    if "content" in candidate and "parts" in candidate["content"]:
-                        for part in candidate["content"]["parts"]:
-                            inline_data = part.get("inlineData") or part.get("inline_data")
-                            if inline_data:
-                                img_data = inline_data.get("data")
-                                img_mime = inline_data.get("mimeType", "image/png")
-                                if img_data:
-                                    return f"data:{img_mime};base64,{img_data}"
-
-            _last_errors.append("Gemini: No image in response")
-        else:
-            error_text = response.text[:300]
-            _last_errors.append(f"Gemini: {response.status_code} - {error_text}")
-            print(f"   ⚠️ Gemini error: {response.status_code}")
-
-    except Exception as e:
-        _last_errors.append(f"Gemini: {str(e)[:200]}")
-        print(f"   ⚠️ Gemini error: {e}")
-
-    return None
-
-
-def generate_with_vertex(image_data, prompt, token, project_id):
-    """Generate using Vertex AI REST API with OAuth2"""
-    global _last_errors
-
-    # Clean base64
-    if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
-        mime_type = 'image/png' if 'png' in image_data.lower() else 'image/jpeg'
-    else:
-        base64_clean = image_data
-        mime_type = 'image/jpeg'
-
-    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-    missing_padding = len(base64_clean) % 4
-    if missing_padding:
-        base64_clean += '=' * (4 - missing_padding)
-
-    models_to_try = [
-        ('gemini-2.0-flash-exp', 'us-central1'),
-    ]
-
-    for model_name, location in models_to_try:
         try:
-            print(f"   Trying {model_name} via Vertex AI...")
-
-            url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_name}:generateContent"
-
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
-            }
-
-            payload = {
-                "contents": [{
-                    "role": "user",
-                    "parts": [
-                        {"text": prompt},
-                        {
-                            "inlineData": {
-                                "mimeType": mime_type,
-                                "data": base64_clean
-                            }
-                        }
-                    ]
-                }],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"]
-                }
-            }
-
             response = requests.post(url, headers=headers, json=payload, timeout=120)
 
             if response.status_code == 200:
@@ -437,20 +244,299 @@ def generate_with_vertex(image_data, prompt, token, project_id):
                             for part in candidate["content"]["parts"]:
                                 if "inlineData" in part:
                                     img_data = part["inlineData"]["data"]
-                                    img_mime = part["inlineData"].get("mimeType", "image/png")
-                                    print(f"   ✅ Vertex AI success!")
-                                    return f"data:{img_mime};base64,{img_data}"
+                                    img_bytes = base64.b64decode(img_data)
+                                    bg_image = Image.open(io.BytesIO(img_bytes))
+                                    print("   ✅ AI Background generated")
+                                    return bg_image.convert('RGBA')
 
-                _last_errors.append(f"{model_name}: No image in response")
-            else:
-                error_text = response.text[:300]
-                _last_errors.append(f"{model_name}: {response.status_code} - {error_text}")
+            error_msg = f"Background gen failed: {response.status_code}"
+            _last_errors.append(error_msg)
+            print(f"   ⚠️ {error_msg}")
 
         except Exception as e:
-            _last_errors.append(f"{model_name}: {str(e)[:200]}")
+            _last_errors.append(f"Background error: {str(e)[:100]}")
+            print(f"   ⚠️ Background error: {e}")
 
-    return None
+    # Fallback: Create gradient background
+    print("   ↪ Using gradient fallback...")
+    return create_gradient_background(theme, dimensions)
 
+
+def create_gradient_background(theme, dimensions):
+    """Create a gradient background as fallback"""
+    width, height = dimensions
+    theme_config = THEME_BACKGROUNDS.get(theme, THEME_BACKGROUNDS['black_friday'])
+
+    start_color = theme_config['gradient'][0]
+    end_color = theme_config['gradient'][1]
+
+    image = Image.new('RGBA', (width, height))
+    draw = ImageDraw.Draw(image)
+
+    for y in range(height):
+        ratio = y / height
+        r = int(start_color[0] + (end_color[0] - start_color[0]) * ratio)
+        g = int(start_color[1] + (end_color[1] - start_color[1]) * ratio)
+        b = int(start_color[2] + (end_color[2] - start_color[2]) * ratio)
+        draw.line([(0, y), (width, y)], fill=(r, g, b, 255))
+
+    return image
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 2: PLACE PRODUCT ON BACKGROUND WITH PROFESSIONAL STYLING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def place_product_on_background(background, product_image, theme, aspect_ratio):
+    """Place product on background with professional frame and shadow"""
+    global _last_errors
+
+    try:
+        theme_config = THEME_BACKGROUNDS.get(theme, THEME_BACKGROUNDS['black_friday'])
+        dimensions = ASPECT_DIMENSIONS.get(aspect_ratio, ASPECT_DIMENSIONS['1:1'])
+        width, height = dimensions
+
+        # Resize background
+        background = background.resize((width, height), Image.Resampling.LANCZOS)
+
+        # Calculate product size (55% of frame for good visibility)
+        product_max_size = int(min(width, height) * 0.55)
+
+        # Resize product maintaining aspect ratio
+        product_ratio = min(product_max_size / product_image.width,
+                           product_max_size / product_image.height)
+
+        new_width = int(product_image.width * product_ratio)
+        new_height = int(product_image.height * product_ratio)
+
+        product_resized = product_image.resize(
+            (new_width, new_height),
+            Image.Resampling.LANCZOS
+        )
+
+        # Create shadow effect
+        shadow_offset = 15
+        shadow_blur = 20
+
+        # Create shadow image
+        shadow = Image.new('RGBA', (new_width + shadow_blur*2, new_height + shadow_blur*2), (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow)
+        shadow_draw.rounded_rectangle(
+            [shadow_blur, shadow_blur, new_width + shadow_blur, new_height + shadow_blur],
+            radius=20,
+            fill=(0, 0, 0, 100)
+        )
+        shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
+
+        # Calculate center position
+        product_x = (width - new_width) // 2
+        product_y = (height - new_height) // 2
+
+        # Paste shadow
+        shadow_x = product_x - shadow_blur + shadow_offset
+        shadow_y = product_y - shadow_blur + shadow_offset
+        background.paste(shadow, (shadow_x, shadow_y), shadow)
+
+        # Add white/light frame around product
+        frame_padding = 8
+        frame_radius = 15
+
+        # Create frame
+        frame = Image.new('RGBA', (new_width + frame_padding*2, new_height + frame_padding*2), (0, 0, 0, 0))
+        frame_draw = ImageDraw.Draw(frame)
+        frame_draw.rounded_rectangle(
+            [0, 0, new_width + frame_padding*2, new_height + frame_padding*2],
+            radius=frame_radius + frame_padding,
+            fill=(255, 255, 255, 240)
+        )
+
+        # Paste frame
+        frame_x = product_x - frame_padding
+        frame_y = product_y - frame_padding
+        background.paste(frame, (frame_x, frame_y), frame)
+
+        # Paste product
+        if product_resized.mode == 'RGBA':
+            background.paste(product_resized, (product_x, product_y), product_resized)
+        else:
+            background.paste(product_resized, (product_x, product_y))
+
+        print("   ✅ Product placed with professional styling")
+        return background
+
+    except Exception as e:
+        print(f"   ⚠️ Product placement error: {e}")
+        _last_errors.append(f"Placement: {str(e)[:100]}")
+        return background
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 3: ADD PROMOTIONAL TEXT/BADGES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def add_promotional_elements(image, theme, discount, custom_note, theme_name_display=False):
+    """Add discount badges and promotional text"""
+    global _last_errors
+
+    try:
+        theme_config = THEME_BACKGROUNDS.get(theme, THEME_BACKGROUNDS['black_friday'])
+        draw = ImageDraw.Draw(image)
+        width, height = image.size
+
+        badge_color = theme_config.get('badge_color', '#FFFFFF')
+        badge_bg = theme_config.get('badge_bg', '#FF0000')
+
+        # Load fonts
+        font_size_large = max(52, width // 14)
+        font_size_medium = max(36, width // 20)
+
+        try:
+            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size_large)
+            font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size_medium)
+        except:
+            try:
+                font_large = ImageFont.truetype("arial.ttf", font_size_large)
+                font_medium = ImageFont.truetype("arial.ttf", font_size_medium)
+            except:
+                font_large = ImageFont.load_default()
+                font_medium = ImageFont.load_default()
+
+        # Add discount badge
+        if discount:
+            badge_text = f"{discount}%"
+            off_text = "OFF"
+
+            # Badge dimensions
+            text_bbox = draw.textbbox((0, 0), badge_text, font=font_large)
+            text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
+
+            off_bbox = draw.textbbox((0, 0), off_text, font=font_medium)
+            off_width = off_bbox[2] - off_bbox[0]
+
+            padding_x = 35
+            padding_y = 25
+            badge_width = max(text_width, off_width) + padding_x * 2
+            badge_height = text_height + 50 + padding_y * 2
+
+            # Position top-right
+            badge_x = width - badge_width - 40
+            badge_y = 40
+
+            # Draw badge background with slight rotation effect
+            draw.rounded_rectangle(
+                [badge_x, badge_y, badge_x + badge_width, badge_y + badge_height],
+                radius=20,
+                fill=badge_bg
+            )
+
+            # Draw percentage
+            text_x = badge_x + (badge_width - text_width) // 2
+            text_y = badge_y + padding_y
+            draw.text((text_x, text_y), badge_text, font=font_large, fill=badge_color)
+
+            # Draw "OFF"
+            off_x = badge_x + (badge_width - off_width) // 2
+            off_y = text_y + text_height + 5
+            draw.text((off_x, off_y), off_text, font=font_medium, fill=badge_color)
+
+            print(f"   ✅ Added {discount}% OFF badge")
+
+        # Add custom note at bottom
+        if custom_note and not discount:
+            text_bbox = draw.textbbox((0, 0), custom_note, font=font_medium)
+            text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
+
+            padding = 20
+            box_width = text_width + padding * 2
+            box_height = text_height + padding
+
+            box_x = (width - box_width) // 2
+            box_y = height - box_height - 50
+
+            # Draw background box
+            draw.rounded_rectangle(
+                [box_x, box_y, box_x + box_width, box_y + box_height],
+                radius=10,
+                fill=(0, 0, 0, 180)
+            )
+
+            # Draw text
+            text_x = box_x + padding
+            text_y = box_y + padding // 2
+            draw.text((text_x, text_y), custom_note, font=font_medium, fill='#FFFFFF')
+
+            print(f"   ✅ Added custom note")
+
+        # Add theme name if no discount and no custom note
+        if theme_name_display and not discount and not custom_note:
+            theme_display = theme_config.get('name', '').upper()
+            text_bbox = draw.textbbox((0, 0), theme_display, font=font_large)
+            text_width = text_bbox[2] - text_bbox[0]
+
+            text_x = (width - text_width) // 2
+            text_y = 50
+
+            # Draw with shadow
+            draw.text((text_x + 3, text_y + 3), theme_display, font=font_large, fill=(0, 0, 0, 100))
+            draw.text((text_x, text_y), theme_display, font=font_large, fill=badge_bg)
+
+        return image
+
+    except Exception as e:
+        print(f"   ⚠️ Text error: {e}")
+        _last_errors.append(f"Text: {str(e)[:100]}")
+        return image
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN HYBRID PIPELINE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def generate_creative_hybrid(image_data, theme, discount, custom_note, aspect_ratio, token, proj_id):
+    """Main hybrid generation pipeline"""
+    global _last_errors
+
+    print("\n   ═══════════════════════════════════════")
+    print("   🎨 HYBRID CREATIVE PIPELINE")
+    print("   ═══════════════════════════════════════")
+
+    # Decode product image
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+
+    product_bytes = base64.b64decode(base64_clean)
+    product_image = Image.open(io.BytesIO(product_bytes)).convert('RGBA')
+
+    # Step 1: Generate themed background
+    print("\n   📍 Step 1: Background Generation")
+    background = generate_themed_background(theme, aspect_ratio, token, proj_id)
+
+    # Step 2: Place product on background
+    print("\n   📍 Step 2: Product Placement")
+    composite = place_product_on_background(background, product_image, theme, aspect_ratio)
+
+    # Step 3: Add promotional elements
+    print("\n   📍 Step 3: Text Overlay")
+    final = add_promotional_elements(composite, theme, discount, custom_note, theme_name_display=True)
+
+    # Convert to base64
+    buffer = io.BytesIO()
+    final = final.convert('RGB')
+    final.save(buffer, format='PNG', quality=95)
+    buffer.seek(0)
+    result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    print("\n   ✅ HYBRID PIPELINE COMPLETE")
+    return f"data:image/png;base64,{result_base64}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HTTP HANDLER
+# ═══════════════════════════════════════════════════════════════════════════════
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -470,34 +556,25 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
 
             image_data = data.get('image', '')
-            mode = data.get('mode', 'auto')
             theme = data.get('theme', 'black_friday')
             discount = data.get('discount')
             custom_note = data.get('customNote', '')
-            manual_prompt = data.get('manualPrompt', '')
             output_count = min(4, max(1, int(data.get('outputCount', 2))))
             aspect_ratio = data.get('aspectRatio', '1:1')
-            is_edit = data.get('isEdit', False)
 
             print(f"\n{'='*60}")
-            print("🎨 CREATIVE STUDIO - Promotional Image Generation")
-            print(f"   Mode: {mode}")
+            print("🎨 CREATIVE STUDIO - HYBRID MODE")
             print(f"   Theme: {theme}")
             print(f"   Discount: {discount}")
             print(f"   Aspect Ratio: {aspect_ratio}")
-            print(f"   Custom Note: {custom_note[:50] if custom_note else '(none)'}")
             print(f"   Output Count: {output_count}")
-            print(f"   Is Edit: {is_edit}")
             print(f"{'='*60}")
 
             if not image_data:
                 raise ValueError("No image provided")
 
-            if mode == 'manual' and not manual_prompt:
-                raise ValueError("No prompt provided for manual mode")
-
-            # Build the creative prompt
-            prompt = build_creative_prompt(mode, theme, discount, custom_note, manual_prompt, aspect_ratio)
+            # Get fresh token
+            token = get_fresh_token()
 
             # Generate images
             generated_images = []
@@ -505,20 +582,19 @@ class handler(BaseHTTPRequestHandler):
             for i in range(output_count):
                 print(f"\n📸 Generating image {i+1}/{output_count}...")
 
-                result = None
-
-                # Try Gemini API first
-                result = generate_with_gemini(image_data, prompt)
-
-                # Fallback to Vertex AI
-                if not result:
-                    token = get_fresh_token()
-                    if token and project_id:
-                        result = generate_with_vertex(image_data, prompt, token, project_id)
+                result = generate_creative_hybrid(
+                    image_data=image_data,
+                    theme=theme,
+                    discount=discount,
+                    custom_note=custom_note,
+                    aspect_ratio=aspect_ratio,
+                    token=token,
+                    proj_id=project_id
+                )
 
                 if result:
                     generated_images.append(result)
-                    print(f"   ✅ Image {i+1} generated successfully")
+                    print(f"   ✅ Image {i+1} done")
                 else:
                     print(f"   ⚠️ Image {i+1} failed")
 
@@ -535,11 +611,11 @@ class handler(BaseHTTPRequestHandler):
                     'images': generated_images,
                     'output_count': len(generated_images),
                     'theme': theme,
-                    'method_used': 'Gemini Creative Studio'
+                    'method_used': 'Hybrid Creative Studio'
                 }).encode())
             else:
                 error_details = " | ".join(_last_errors) if _last_errors else "Unknown error"
-                raise Exception(f"All generation attempts failed: {error_details[:500]}")
+                raise Exception(f"Generation failed: {error_details[:500]}")
 
         except Exception as e:
             print(f"❌ ERROR: {e}")

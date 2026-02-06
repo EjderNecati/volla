@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Upload, Loader2, Download, X, Sparkles, AlertCircle,
     Bookmark, Check, Pencil, Gift, Tag, Percent
@@ -128,6 +128,43 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
     const fileInputRef = useRef(null);
 
+    // Project tracking for history (prevent duplicate projects)
+    const [currentProjectId, setCurrentProjectId] = useState(null);
+
+    // Load project data when resuming from history
+    useEffect(() => {
+        if (initialProject && initialProject.productInfo?.featureType === 'creative') {
+            console.log('🎨 Loading Creative project:', initialProject.id);
+
+            // IMPORTANT: Set project ID for reuse (prevents duplicate projects)
+            setCurrentProjectId(initialProject.id);
+
+            // Load source image
+            const sourceImg = initialProject.originalImage ||
+                initialProject.assets?.find(a => a.type === 'ORIGINAL')?.url;
+            if (sourceImg) {
+                setSourceImage(sourceImg);
+            }
+
+            // Load creative settings from productInfo
+            const info = initialProject.productInfo;
+            if (info.mode) setMode(info.mode);
+            if (info.theme) setSelectedTheme(info.theme);
+            if (info.discount) setSelectedDiscount(info.discount);
+            if (info.customNote) setCustomNote(info.customNote);
+            if (info.manualPrompt) setManualPrompt(info.manualPrompt);
+
+            // Load generated images from assets
+            const creativeAssets = initialProject.assets?.filter(a => a.type === 'CREATIVE') || [];
+            if (creativeAssets.length > 0) {
+                const imageUrls = creativeAssets.map(a => a.url);
+                setGeneratedImages(imageUrls);
+                setActiveImageIndex(imageUrls.length - 1);
+                console.log('🎨 Loaded', imageUrls.length, 'creative images');
+            }
+        }
+    }, [initialProject]);
+
     // Calculate credit cost
     const creditCost = outputCount * CREDIT_COST_PER_IMAGE;
 
@@ -208,7 +245,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 sourceImage,
                 images.map((img, idx) => ({
                     id: `creative_${Date.now()}_${idx}`,
-                    type: 'CREATIVE_STUDIO',
+                    type: 'CREATIVE',
                     url: img,
                     createdAt: Date.now(),
                     metadata: {
@@ -228,6 +265,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     manualPrompt: mode === 'manual' ? manualPrompt : null
                 }
             );
+
+            // IMPORTANT: Reuse existing project ID to prevent duplicate entries
+            if (currentProjectId) {
+                project.id = currentProjectId;
+                console.log('🎨 Updating existing Creative project:', currentProjectId);
+            } else {
+                setCurrentProjectId(project.id);
+                console.log('🎨 Creating new Creative project:', project.id);
+            }
+
             await saveProject(project);
             console.log('Creative project saved to history');
         } catch (err) {
@@ -336,6 +383,8 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         setManualPrompt('');
         setEditPrompt('');
         setError(null);
+        // Reset project ID so next session creates a new project
+        setCurrentProjectId(null);
     };
 
     // Download active image
@@ -598,19 +647,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 {/* ════════════════════════════════════════════════════════════
                     RIGHT PANEL - 60% - Canvas
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-5 overflow-hidden min-w-0">
+                <section className="flex-1 flex flex-col p-6 overflow-y-auto">
                     {/* Canvas Area */}
-                    <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex-1 flex items-center justify-center min-h-0">
-                            <div
-                                className="relative rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                                style={{
-                                    width: '100%',
-                                    maxWidth: aspectRatio === '9:16' ? '400px' : aspectRatio === '4:5' ? '500px' : '600px',
-                                    aspectRatio: aspectRatio === '1:1' ? '1/1' : aspectRatio === '4:5' ? '4/5' : '9/16',
-                                    maxHeight: 'calc(100vh - 280px)'
-                                }}
-                            >
+                    <div className="flex flex-col">
+                        <div
+                            className="relative rounded-2xl overflow-hidden mx-auto"
+                            style={{
+                                width: aspectRatio === '9:16' ? '253px' : aspectRatio === '4:5' ? '360px' : '450px',
+                                height: '450px'
+                            }}
+                        >
                                 {sourceImage ? (
                                     <>
                                         {/* Frosted Glass Background */}
@@ -620,13 +666,14 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                                 backgroundImage: `url(${getActiveImage()})`,
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center',
-                                                filter: 'blur(30px) brightness(0.5)'
+                                                filter: 'blur(30px) brightness(0.7)',
+                                                transform: 'scale(1.2)'
                                             }}
                                         />
-                                        <div className="absolute inset-0 bg-black/30" />
+                                        <div className="absolute inset-0 bg-black/20" />
 
                                         {/* Main Content */}
-                                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                                        <div className="relative h-full w-full flex items-center justify-center p-4">
                                             <img
                                                 src={getActiveImage()}
                                                 alt="Creative"
@@ -674,7 +721,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         )}
                                     </>
                                 ) : (
-                                    <div className="h-full flex items-center justify-center">
+                                    <div className="h-full flex items-center justify-center bg-[#F5F4F1] rounded-2xl border-2 border-dashed border-[#E8E7E4]">
                                         <div className="text-center text-[#8C8C8C]">
                                             <Sparkles size={48} className="mx-auto mb-4 opacity-30" />
                                             <p className="text-sm">
@@ -684,7 +731,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     </div>
                                 )}
                             </div>
-                        </div>
 
                         {/* Film Strip - Generated Images */}
                         {sourceImage && generatedImages.length > 0 && (

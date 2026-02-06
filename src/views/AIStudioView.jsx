@@ -222,26 +222,36 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             console.log('📂 Resuming project from history:', initialProject.id);
             setCurrentProjectId(initialProject.id);
 
-            // Check if this is a Motion project and switch to motion mode
-            if (initialProject.productInfo?.featureType === 'motion') {
+            // Check featureType and switch to the correct mode
+            const featureType = initialProject.productInfo?.featureType;
+            if (featureType === 'motion') {
                 console.log('🎬 Motion project detected, switching to Motion mode');
                 setStudioMode('motion');
-            }
+                // Motion mode handles its own state via initialProject prop
+            } else if (featureType === 'creative') {
+                console.log('🎨 Creative project detected, switching to Creative mode');
+                setStudioMode('creative');
+                // Creative mode handles its own state via initialProject prop
+            } else if (featureType === 'handsfree') {
+                console.log('⚡ Handsfree project detected, switching to Handsfree mode');
+                setStudioMode('handsfree');
+                // Handsfree mode handles its own state via initialProject prop
+            } else {
+                // Normal mode - load assets into session
+                if (initialProject.assets && initialProject.assets.length > 0) {
+                    setSessionAssets(initialProject.assets);
+                    setActiveAssetId(initialProject.assets[0].id);
+                }
 
-            // Load all assets
-            if (initialProject.assets && initialProject.assets.length > 0) {
-                setSessionAssets(initialProject.assets);
-                setActiveAssetId(initialProject.assets[0].id);
-            }
+                // Load SEO results (only for normal mode)
+                if (initialProject.seoResults) {
+                    setResults(initialProject.seoResults);
+                }
 
-            // Load SEO results
-            if (initialProject.seoResults) {
-                setResults(initialProject.seoResults);
-            }
-
-            // Load product info
-            if (initialProject.productInfo) {
-                setProductInfo(initialProject.productInfo);
+                // Load product info (only for normal mode)
+                if (initialProject.productInfo) {
+                    setProductInfo(initialProject.productInfo);
+                }
             }
 
             // Update marketplace from project
@@ -1223,6 +1233,7 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     marketplace={marketplace}
                     onBack={() => setStudioMode('standard')}
                     onNavigate={onNavigate}
+                    initialProject={initialProject?.productInfo?.featureType === 'handsfree' ? initialProject : null}
                 />
             ) : studioMode === 'motion' ? (
                 <MotionMode

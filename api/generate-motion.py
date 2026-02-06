@@ -75,6 +75,33 @@ def get_fresh_token():
         return None
 
 
+def build_edit_prompt(edit_instruction):
+    """
+    Build Veo prompt for video editing.
+    Takes the original video context and adds edit instructions.
+    """
+    prompt = f"""Professional product video showcase with smooth cinematic camera movement.
+
+CRITICAL REQUIREMENTS:
+- The product must remain IDENTICAL throughout the entire video
+- Preserve all textures, colors, logos, and details exactly as shown
+- Maintain perfect product integrity - no morphing, distortion, or alterations
+- Professional studio lighting with soft shadows
+- Clean, elegant composition
+- Smooth, cinematic camera motion
+- High-end commercial quality suitable for e-commerce
+
+EDIT INSTRUCTION (APPLY THIS CHANGE):
+{edit_instruction}
+
+The scene should stay exactly the same except for the requested edit above.
+Maintain the same camera movement and timing as a professional product video.
+
+STYLE: Premium product advertisement, luxury brand aesthetic, professional photography in motion."""
+
+    return prompt
+
+
 def build_motion_prompt(user_options, custom_directive=''):
     """
     Build Veo prompt from user selections.
@@ -375,6 +402,49 @@ class handler(BaseHTTPRequestHandler):
                     model_id = 'veo-3.1-fast-generate-001'
 
                 # Start the generation
+                result = start_video_generation(
+                    image_data, prompt, model_id, aspect_ratio, duration, token, project_id
+                )
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+
+            elif action == 'edit':
+                # Edit video - generates new video with edit instructions
+                image_data = data.get('image', '')
+                edit_prompt = data.get('editPrompt', '')
+                duration = data.get('duration', 6)
+                quality_mode = data.get('qualityMode', 'fast')
+                aspect_ratio = data.get('aspectRatio', '16:9')
+
+                print(f"   Edit prompt: {edit_prompt[:50]}...")
+                print(f"   Duration: {duration}s, Quality: {quality_mode}")
+                print(f"   Aspect: {aspect_ratio}")
+
+                if not image_data:
+                    raise ValueError("No image provided")
+                if not edit_prompt:
+                    raise ValueError("No edit prompt provided")
+
+                # Get fresh token
+                token = get_fresh_token()
+                if not token or not project_id:
+                    raise ValueError("OAuth2 authentication not available")
+
+                # Build edit prompt
+                prompt = build_edit_prompt(edit_prompt)
+                print(f"   Generated edit prompt: {prompt[:100]}...")
+
+                # Select model based on quality mode
+                if quality_mode == 'pro':
+                    model_id = 'veo-3.1-generate-001'
+                else:
+                    model_id = 'veo-3.1-fast-generate-001'
+
+                # Start the generation with edit prompt
                 result = start_video_generation(
                     image_data, prompt, model_id, aspect_ratio, duration, token, project_id
                 )

@@ -1489,6 +1489,49 @@ export const pollMotionGeneration = async (operationName, modelId) => {
   }
 };
 
+/**
+ * Start video editing with Veo 3.1
+ * Generates a new video with edit instructions applied
+ * @param {string} imageBase64 - Source image as base64
+ * @param {string} editPrompt - Edit instructions
+ * @param {object} options - Video options (duration, qualityMode, aspectRatio)
+ * @returns {Promise<{success: boolean, operation_name?: string, model_id?: string, error?: string}>}
+ */
+export const startMotionEdit = async (imageBase64, editPrompt, options = {}) => {
+  log('🎬 Motion Edit: Starting video edit...');
+
+  try {
+    // Compress image to avoid 413 Payload Too Large
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit',
+        image: compressedImage,
+        editPrompt: editPrompt,
+        duration: options.duration || 6,
+        qualityMode: options.qualityMode || 'fast',
+        aspectRatio: options.aspectRatio || '16:9'
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Edit start failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎬 Motion Edit: Edit started', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Motion edit failed:', error);
+    throw error;
+  }
+};
+
 
 // =====================================================
 // CREATIVE STUDIO - Promotional Image Generation

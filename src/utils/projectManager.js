@@ -17,10 +17,21 @@ const LIMITS = {
 };
 
 // =====================================================
+// HELPER: Check if URL is external (not base64)
+// =====================================================
+const isExternalUrl = (url) => url && (url.startsWith('http://') || url.startsWith('https://'));
+
+// =====================================================
 // HELPER: Compress Image
 // =====================================================
 export const compressImage = (base64Image, maxSizeKB = LIMITS.MAX_ASSET_SIZE_KB) => {
     return new Promise((resolve) => {
+        // Skip compression for external URLs (e.g., video URLs from API)
+        if (isExternalUrl(base64Image)) {
+            resolve(base64Image);
+            return;
+        }
+
         // If already small enough, return as-is
         const sizeKB = (base64Image.length * 3) / 4 / 1024;
         if (sizeKB <= maxSizeKB) {
