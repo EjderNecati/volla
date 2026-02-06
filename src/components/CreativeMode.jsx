@@ -404,9 +404,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         <>
             <div className="flex-1 flex min-h-0 bg-[#FAF9F6]">
                 {/* ════════════════════════════════════════════════════════════
-                    LEFT PANEL - 40% - Controls
+                    LEFT PANEL - 40% - Controls (Glassmorphism)
                 ════════════════════════════════════════════════════════════ */}
-                <aside className="w-[40%] min-w-[360px] max-w-[480px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
+                <aside className="w-[40%] min-w-[360px] max-w-[480px] glass-panel border-r border-[#E8E7E4]/60 overflow-y-auto">
                     <div className="p-5 space-y-4">
                         {/* Source Image Upload */}
                         <div className="space-y-2">
@@ -497,10 +497,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                             <button
                                                 key={theme.id}
                                                 onClick={() => setSelectedTheme(theme.id)}
-                                                className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border
+                                                className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border hover:scale-[1.02] active:scale-[0.98]
                                                     ${selectedTheme === theme.id
-                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-md'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4] hover:shadow-sm'
                                                     }`}
                                             >
                                                 {t(`creative.autoMode.themes.${theme.id}`) || theme.label}
@@ -520,10 +520,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                             <button
                                                 key={discount.id}
                                                 onClick={() => setSelectedDiscount(discount.id)}
-                                                className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border
+                                                className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border hover:scale-[1.02] active:scale-[0.98]
                                                     ${selectedDiscount === discount.id
-                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-md'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4] hover:shadow-sm'
                                                     }`}
                                             >
                                                 {discount.id === 'none'
@@ -612,11 +612,12 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             </div>
                         </div>
 
-                        {/* Generate Button */}
+                        {/* Generate Button with Pulse Glow */}
                         <button
                             onClick={handleGenerate}
                             disabled={!sourceImage || isGenerating || (mode === 'manual' && !manualPrompt.trim())}
-                            className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative"
+                            className={`w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative btn-shine
+                                ${sourceImage && !isGenerating ? 'animate-pulse-glow-pink hover:scale-[1.02]' : ''}`}
                         >
                             {isGenerating ? (
                                 <>
@@ -738,10 +739,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 {/* Original Source */}
                                 <button
                                     onClick={() => setActiveImageIndex(-1)}
-                                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
                                         activeImageIndex === -1
-                                            ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                                            : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                            ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg'
+                                            : 'border-[#E8E7E4] hover:border-[#1A1A1A] hover:shadow-md'
                                     }`}
                                 >
                                     <img src={sourceImage} alt="Original" className="w-full h-full object-cover" />
@@ -755,10 +756,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     <button
                                         key={idx}
                                         onClick={() => setActiveImageIndex(idx)}
-                                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
                                             activeImageIndex === idx
-                                                ? 'border-pink-500 ring-2 ring-pink-500/30'
-                                                : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                                ? 'border-pink-500 ring-2 ring-pink-500/30 shadow-lg'
+                                                : 'border-[#E8E7E4] hover:border-[#1A1A1A] hover:shadow-md'
                                         }`}
                                     >
                                         <img src={img} alt={`Generated ${idx + 1}`} className="w-full h-full object-cover" />

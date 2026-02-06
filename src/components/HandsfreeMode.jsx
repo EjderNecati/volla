@@ -82,10 +82,10 @@ const OptionGroup = ({ title, icon: Icon, options, selected, onSelect, columns =
                     <button
                         key={opt.id}
                         onClick={() => onSelect(opt.id)}
-                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border
+                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all text-center border hover:scale-[1.02] active:scale-[0.98]
                             ${selected === opt.id
-                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-md'
+                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4] hover:shadow-sm'
                             }`}
                     >
                         {translationKeyPrefix && t ? t(`${translationKeyPrefix}.${opt.id}`) : opt.label}
@@ -458,9 +458,9 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
         <>
             <div className="flex-1 flex min-h-0 bg-[#FAF9F6]">
                 {/* ════════════════════════════════════════════════════════════
-                LEFT PANEL - 40% - Prompt Generation
+                LEFT PANEL - 40% - Prompt Generation (Glassmorphism)
                 ════════════════════════════════════════════════════════════ */}
-                <aside className="w-[40%] min-w-[360px] max-w-[480px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
+                <aside className="w-[40%] min-w-[360px] max-w-[480px] glass-panel border-r border-[#E8E7E4]/60 overflow-y-auto">
                     <div className="p-5 space-y-4">
                         {/* Source Image Upload */}
                         <div className="space-y-2">
@@ -717,8 +717,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                                 {/* Original Source - Always first */}
                                 <button
                                     onClick={() => setActiveImageIndex(-1)}
-                                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                                        activeImageIndex === -1 ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
+                                        activeImageIndex === -1 ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg' : 'border-[#E8E7E4] hover:border-[#1A1A1A] hover:shadow-md'
                                     }`}
                                 >
                                     <img src={sourceImage} alt={t('aspectRatio.ratios.original')} className="w-full h-full object-cover" />
@@ -732,8 +732,8 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                                     <button
                                         key={idx}
                                         onClick={() => setActiveImageIndex(idx)}
-                                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                                            activeImageIndex === idx ? 'border-cyan-500 ring-2 ring-cyan-500/30' : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 active:scale-95 ${
+                                            activeImageIndex === idx ? 'border-cyan-500 ring-2 ring-cyan-500/30 shadow-lg' : 'border-[#E8E7E4] hover:border-[#1A1A1A] hover:shadow-md'
                                         }`}
                                     >
                                         <img src={img} alt={`${t('handsfree.generated')} ${idx + 1}`} className="w-full h-full object-cover" />
@@ -770,15 +770,16 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                                 )}
                             </div>
 
-                            {/* Generate/Edit Button */}
+                            {/* Generate/Edit Button with Pulse Glow */}
                             <button
                                 onClick={handleGenerateOrEditImage}
                                 disabled={!imagePrompt.trim() || isGeneratingImage}
-                                className={`w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative ${
-                                    isEditMode
+                                className={`w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative btn-shine
+                                    ${imagePrompt.trim() && !isGeneratingImage ? 'animate-pulse-glow-cyan hover:scale-[1.02]' : ''}
+                                    ${isEditMode
                                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
                                         : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600'
-                                }`}
+                                    }`}
                             >
                                 {isGeneratingImage ? (
                                     <>
