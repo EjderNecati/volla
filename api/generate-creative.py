@@ -348,24 +348,34 @@ Generate a stunning, professional promotional image that could be used for Insta
             contents=[generation_prompt, product_image]
         )
 
-        # Extract generated image
+        # Extract generated image from response
         for part in response.parts:
             if hasattr(part, 'inline_data') and part.inline_data is not None:
-                # Get image data
-                generated_image = part.as_image()
+                # Get raw image bytes from inline_data
+                image_bytes = part.inline_data.data
+                mime_type = part.inline_data.mime_type
+
+                print(f"   Got image: {mime_type}, {len(image_bytes)} bytes")
+
+                # Convert to PIL Image
+                pil_image = Image.open(io.BytesIO(image_bytes))
 
                 # Resize to exact dimensions if needed
-                if generated_image.size != dimensions:
-                    generated_image = generated_image.resize(dimensions, Image.Resampling.LANCZOS)
+                if pil_image.size != dimensions:
+                    pil_image = pil_image.resize(dimensions, Image.Resampling.LANCZOS)
 
                 # Convert to base64
                 buffer = io.BytesIO()
-                generated_image.save(buffer, format='PNG', quality=95)
+                pil_image.save(buffer, format='PNG', quality=95)
                 buffer.seek(0)
                 result_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
                 print(f"   Variation {variation_idx + 1} generated successfully")
                 return f"data:image/png;base64,{result_b64}"
+
+        # Check for text-only response (no image generated)
+        if response.text:
+            print(f"   Model returned text instead of image: {response.text[:200]}...")
 
         raise Exception("No image in response")
 
