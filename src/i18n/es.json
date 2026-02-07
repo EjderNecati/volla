@@ -58,6 +58,21 @@
         "settings": "Configuración",
         "openStudio": "Abrir Estudio"
     },
+    "sidebar": {
+        "modes": "Modos de Estudio",
+        "collapse": "Colapsar",
+        "expand": "Expandir"
+    },
+    "modes": {
+        "standard": "Estudio",
+        "handsfree": "Manos Libres",
+        "motion": "Movimiento",
+        "creative": "Creativo",
+        "standardDesc": "Fotografía de productos con IA",
+        "handsfreeDesc": "Arquitecto de prompts profesional",
+        "motionDesc": "Generación de imagen a video",
+        "creativeDesc": "Creador de imágenes promocionales"
+    },
     "app": {
         "name": "Volla",
         "tagline": "Escáner de Productos IA",
@@ -78,7 +93,65 @@
         "moreTools": "Más Herramientas",
         "untitledProject": "Proyecto Sin Título",
         "aiStudioDescription": "Suite completa de fotografía de productos",
-        "textAnalysisDescription": "Optimización SEO para listados de productos"
+        "textAnalysisDescription": "Optimización SEO para listados de productos",
+        "heroTitle": "Estudio de Fotografía de Productos con IA",
+        "heroSubtitle": "Transforma tus productos en imanes de ventas",
+        "featuredModes": "Explorar Modos de Estudio",
+        "howToUse": "Cómo Usar",
+        "tryNow": "Probar Ahora",
+        "tutorial": {
+            "step1Title": "Subir Producto",
+            "step1Desc": "Sube cualquier foto de producto",
+            "step2Title": "Elegir Tipo",
+            "step2Desc": "Vida Real, Tomas o Estudio",
+            "step3Title": "Generar",
+            "step3Desc": "Obtén fotos IA en segundos",
+            "standard": {
+                "step1Title": "Subir Producto",
+                "step1Desc": "Sube cualquier foto de producto desde tu dispositivo",
+                "step2Title": "Elegir Tipo",
+                "step2Desc": "Selecciona modo Vida Real, Tomas o Estudio",
+                "step3Title": "Generar",
+                "step3Desc": "Obtén fotos optimizadas con IA en segundos"
+            },
+            "handsfree": {
+                "step1Title": "Subir Producto",
+                "step1Desc": "Sube tu imagen de producto",
+                "step2Title": "Seleccionar Ángulo",
+                "step2Desc": "Elige ángulo de cámara y escala de toma",
+                "step3Title": "Obtener Prompt",
+                "step3Desc": "Copia el prompt profesional generado"
+            },
+            "motion": {
+                "step1Title": "Subir Imagen",
+                "step1Desc": "Añade una imagen de producto para animar",
+                "step2Title": "Configurar Movimiento",
+                "step2Desc": "Elige movimiento de cámara y velocidad",
+                "step3Title": "Generar Video",
+                "step3Desc": "Crea video cinematográfico de producto"
+            },
+            "creative": {
+                "step1Title": "Subir Producto",
+                "step1Desc": "Añade tu imagen de producto",
+                "step2Title": "Elegir Tema",
+                "step2Desc": "Selecciona tema promocional y descuento",
+                "step3Title": "Generar",
+                "step3Desc": "Obtén imágenes promocionales con overlays"
+            }
+        },
+        "stats": {
+            "title": "Tu Uso",
+            "credits": "Créditos",
+            "generated": "Generados Este Mes",
+            "projects": "Proyectos"
+        }
+    },
+    "welcome": {
+        "title": "Bienvenido a {{mode}}",
+        "uploadToStart": "Sube una imagen para empezar a crear",
+        "examples": "Ejemplos de Salida",
+        "proTips": "Consejos Pro",
+        "getStarted": "Comenzar"
     },
     "handsfree": {
         "title": "Arquitecto de Prompts",

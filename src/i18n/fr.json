@@ -57,6 +57,21 @@
         "settings": "Paramètres",
         "openStudio": "Ouvrir Studio"
     },
+    "sidebar": {
+        "modes": "Modes Studio",
+        "collapse": "Réduire",
+        "expand": "Développer"
+    },
+    "modes": {
+        "standard": "Studio",
+        "handsfree": "Mains Libres",
+        "motion": "Mouvement",
+        "creative": "Créatif",
+        "standardDesc": "Photographie de produits par IA",
+        "handsfreeDesc": "Architecte de prompts professionnel",
+        "motionDesc": "Génération image vers vidéo",
+        "creativeDesc": "Créateur d'images promotionnelles"
+    },
     "app": {
         "name": "Volla",
         "tagline": "Scanner de Produits IA",
@@ -77,7 +92,65 @@
         "moreTools": "Plus d'Outils",
         "untitledProject": "Projet Sans Titre",
         "aiStudioDescription": "Suite complète de photographie de produits",
-        "textAnalysisDescription": "Optimisation SEO pour les annonces de produits"
+        "textAnalysisDescription": "Optimisation SEO pour les annonces de produits",
+        "heroTitle": "Studio Photo Produit IA",
+        "heroSubtitle": "Transformez vos produits en aimants à ventes",
+        "featuredModes": "Explorer les Modes Studio",
+        "howToUse": "Comment Utiliser",
+        "tryNow": "Essayer Maintenant",
+        "tutorial": {
+            "step1Title": "Télécharger le Produit",
+            "step1Desc": "Téléchargez n'importe quelle photo de produit",
+            "step2Title": "Choisir le Type",
+            "step2Desc": "Vie Réelle, Prises ou Studio",
+            "step3Title": "Générer",
+            "step3Desc": "Obtenez des photos IA en secondes",
+            "standard": {
+                "step1Title": "Télécharger le Produit",
+                "step1Desc": "Téléchargez n'importe quelle photo de produit",
+                "step2Title": "Choisir le Type",
+                "step2Desc": "Sélectionnez le mode Vie Réelle, Prises ou Studio",
+                "step3Title": "Générer",
+                "step3Desc": "Obtenez des photos optimisées IA en secondes"
+            },
+            "handsfree": {
+                "step1Title": "Télécharger le Produit",
+                "step1Desc": "Téléchargez votre image de produit",
+                "step2Title": "Sélectionner l'Angle",
+                "step2Desc": "Choisissez l'angle de caméra et l'échelle de prise",
+                "step3Title": "Obtenir le Prompt",
+                "step3Desc": "Copiez le prompt professionnel généré"
+            },
+            "motion": {
+                "step1Title": "Télécharger l'Image",
+                "step1Desc": "Ajoutez une image de produit à animer",
+                "step2Title": "Configurer le Mouvement",
+                "step2Desc": "Choisissez le mouvement de caméra et la vitesse",
+                "step3Title": "Générer la Vidéo",
+                "step3Desc": "Créez une vidéo produit cinématographique"
+            },
+            "creative": {
+                "step1Title": "Télécharger le Produit",
+                "step1Desc": "Ajoutez votre image de produit",
+                "step2Title": "Choisir le Thème",
+                "step2Desc": "Sélectionnez le thème promotionnel et la remise",
+                "step3Title": "Générer",
+                "step3Desc": "Obtenez des images promotionnelles avec overlays"
+            }
+        },
+        "stats": {
+            "title": "Votre Utilisation",
+            "credits": "Crédits",
+            "generated": "Générés Ce Mois",
+            "projects": "Projets"
+        }
+    },
+    "welcome": {
+        "title": "Bienvenue dans {{mode}}",
+        "uploadToStart": "Téléchargez une image pour commencer à créer",
+        "examples": "Exemples de Sortie",
+        "proTips": "Conseils Pro",
+        "getStarted": "Commencer"
     },
     "handsfree": {
         "title": "Architecte de Prompts",

@@ -583,11 +583,11 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
 
     return (
         <>
-            <div className="flex-1 flex min-h-0 bg-[#FAF9F6]">
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 bg-[#FAF9F6]">
                 {/* ════════════════════════════════════════════════════════════
-                    LEFT PANEL - 40% - Controls (Glassmorphism)
+                    LEFT PANEL - Full width on mobile, 40% on desktop
                 ════════════════════════════════════════════════════════════ */}
-                <aside className="w-[40%] min-w-[360px] max-w-[480px] glass-panel border-r border-[#E8E7E4]/60 overflow-y-auto">
+                <aside className="w-full md:w-[40%] md:min-w-[360px] md:max-w-[480px] glass-panel md:border-r border-b md:border-b-0 border-[#E8E7E4]/60 overflow-y-auto max-h-[50vh] md:max-h-none">
                     <div className="p-5 space-y-4">
                         {/* Source Image Upload */}
                         <div className="space-y-2">
@@ -763,14 +763,13 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 </aside>
 
                 {/* ════════════════════════════════════════════════════════════
-                    RIGHT PANEL - 60% - Video Canvas
+                    RIGHT PANEL - Full width on mobile, 60% on desktop
                 ════════════════════════════════════════════════════════════ */}
-                <section className="flex-1 flex flex-col p-6 overflow-y-auto">
+                <section className="flex-1 flex flex-col p-4 md:p-6 overflow-y-auto">
                     {/* Video Canvas Area */}
                     <div className="flex flex-col">
                         <div
-                            className="relative rounded-2xl overflow-hidden"
-                            style={{ height: '450px' }}
+                            className="relative rounded-2xl overflow-hidden h-[300px] md:h-[450px]"
                         >
                             {sourceImage ? (
                                 <>

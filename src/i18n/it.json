@@ -57,6 +57,21 @@
         "settings": "Impostazioni",
         "openStudio": "Apri Studio"
     },
+    "sidebar": {
+        "modes": "Modalità Studio",
+        "collapse": "Comprimi",
+        "expand": "Espandi"
+    },
+    "modes": {
+        "standard": "Studio",
+        "handsfree": "Mani Libere",
+        "motion": "Movimento",
+        "creative": "Creativo",
+        "standardDesc": "Fotografia di prodotti con IA",
+        "handsfreeDesc": "Architetto di prompt professionale",
+        "motionDesc": "Generazione da immagine a video",
+        "creativeDesc": "Creatore di immagini promozionali"
+    },
     "app": {
         "name": "Volla",
         "tagline": "Scanner Prodotti AI",
@@ -77,7 +92,65 @@
         "moreTools": "Altri Strumenti",
         "untitledProject": "Progetto Senza Titolo",
         "aiStudioDescription": "Suite completa per fotografia prodotti",
-        "textAnalysisDescription": "Ottimizzazione SEO per inserzioni prodotti"
+        "textAnalysisDescription": "Ottimizzazione SEO per inserzioni prodotti",
+        "heroTitle": "Studio Fotografico Prodotti IA",
+        "heroSubtitle": "Trasforma i tuoi prodotti in calamite per le vendite",
+        "featuredModes": "Esplora le Modalità Studio",
+        "howToUse": "Come Usare",
+        "tryNow": "Prova Ora",
+        "tutorial": {
+            "step1Title": "Carica Prodotto",
+            "step1Desc": "Carica qualsiasi foto di prodotto",
+            "step2Title": "Scegli Tipo",
+            "step2Desc": "Vita Reale, Scatti o Studio",
+            "step3Title": "Genera",
+            "step3Desc": "Ottieni foto IA in secondi",
+            "standard": {
+                "step1Title": "Carica Prodotto",
+                "step1Desc": "Carica qualsiasi foto di prodotto dal tuo dispositivo",
+                "step2Title": "Scegli Tipo",
+                "step2Desc": "Seleziona modalità Vita Reale, Scatti o Studio",
+                "step3Title": "Genera",
+                "step3Desc": "Ottieni foto ottimizzate IA in secondi"
+            },
+            "handsfree": {
+                "step1Title": "Carica Prodotto",
+                "step1Desc": "Carica la tua immagine di prodotto",
+                "step2Title": "Seleziona Angolo",
+                "step2Desc": "Scegli angolo della fotocamera e scala dello scatto",
+                "step3Title": "Ottieni Prompt",
+                "step3Desc": "Copia il prompt professionale generato"
+            },
+            "motion": {
+                "step1Title": "Carica Immagine",
+                "step1Desc": "Aggiungi un'immagine di prodotto da animare",
+                "step2Title": "Imposta Movimento",
+                "step2Desc": "Scegli movimento della fotocamera e velocità",
+                "step3Title": "Genera Video",
+                "step3Desc": "Crea video cinematografico del prodotto"
+            },
+            "creative": {
+                "step1Title": "Carica Prodotto",
+                "step1Desc": "Aggiungi la tua immagine di prodotto",
+                "step2Title": "Scegli Tema",
+                "step2Desc": "Seleziona tema promozionale e sconto",
+                "step3Title": "Genera",
+                "step3Desc": "Ottieni immagini promozionali con overlay"
+            }
+        },
+        "stats": {
+            "title": "Il Tuo Utilizzo",
+            "credits": "Crediti",
+            "generated": "Generati Questo Mese",
+            "projects": "Progetti"
+        }
+    },
+    "welcome": {
+        "title": "Benvenuto in {{mode}}",
+        "uploadToStart": "Carica un'immagine per iniziare a creare",
+        "examples": "Esempi di Output",
+        "proTips": "Consigli Pro",
+        "getStarted": "Inizia"
     },
     "handsfree": {
         "title": "Architetto Prompt",

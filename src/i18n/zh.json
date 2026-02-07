@@ -58,6 +58,21 @@
         "settings": "设置",
         "openStudio": "打开工作室"
     },
+    "sidebar": {
+        "modes": "工作室模式",
+        "collapse": "收起",
+        "expand": "展开"
+    },
+    "modes": {
+        "standard": "工作室",
+        "handsfree": "免提",
+        "motion": "动态",
+        "creative": "创意",
+        "standardDesc": "AI驱动的产品摄影",
+        "handsfreeDesc": "专业提示词构建器",
+        "motionDesc": "图像到视频生成",
+        "creativeDesc": "促销图片创建器"
+    },
     "app": {
         "name": "Volla",
         "tagline": "AI产品扫描器",
@@ -78,7 +93,65 @@
         "moreTools": "更多工具",
         "untitledProject": "未命名项目",
         "aiStudioDescription": "全方位产品摄影套件",
-        "textAnalysisDescription": "产品列表SEO优化"
+        "textAnalysisDescription": "产品列表SEO优化",
+        "heroTitle": "AI产品摄影工作室",
+        "heroSubtitle": "将您的产品变成销售磁铁",
+        "featuredModes": "探索工作室模式",
+        "howToUse": "使用方法",
+        "tryNow": "立即试用",
+        "tutorial": {
+            "step1Title": "上传产品",
+            "step1Desc": "上传任何产品照片",
+            "step2Title": "选择类型",
+            "step2Desc": "实景、拍摄或工作室",
+            "step3Title": "生成",
+            "step3Desc": "几秒钟内获取AI照片",
+            "standard": {
+                "step1Title": "上传产品",
+                "step1Desc": "从您的设备上传任何产品照片",
+                "step2Title": "选择类型",
+                "step2Desc": "选择实景、拍摄或工作室模式",
+                "step3Title": "生成",
+                "step3Desc": "几秒钟内获取AI优化照片"
+            },
+            "handsfree": {
+                "step1Title": "上传产品",
+                "step1Desc": "上传您的产品图片",
+                "step2Title": "选择角度",
+                "step2Desc": "选择相机角度和镜头比例",
+                "step3Title": "获取提示词",
+                "step3Desc": "复制生成的专业提示词"
+            },
+            "motion": {
+                "step1Title": "上传图片",
+                "step1Desc": "添加要制作动画的产品图片",
+                "step2Title": "设置动作",
+                "step2Desc": "选择相机移动和速度",
+                "step3Title": "生成视频",
+                "step3Desc": "创建电影级产品视频"
+            },
+            "creative": {
+                "step1Title": "上传产品",
+                "step1Desc": "添加您的产品图片",
+                "step2Title": "选择主题",
+                "step2Desc": "选择促销主题和折扣",
+                "step3Title": "生成",
+                "step3Desc": "获取带叠加效果的促销图片"
+            }
+        },
+        "stats": {
+            "title": "您的使用情况",
+            "credits": "积分",
+            "generated": "本月生成",
+            "projects": "项目"
+        }
+    },
+    "welcome": {
+        "title": "欢迎来到{{mode}}",
+        "uploadToStart": "上传图片开始创建",
+        "examples": "输出示例",
+        "proTips": "专业提示",
+        "getStarted": "开始"
     },
     "handsfree": {
         "title": "提示词构建器",

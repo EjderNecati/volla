@@ -58,6 +58,21 @@
         "settings": "Einstellungen",
         "openStudio": "Studio öffnen"
     },
+    "sidebar": {
+        "modes": "Studio-Modi",
+        "collapse": "Einklappen",
+        "expand": "Ausklappen"
+    },
+    "modes": {
+        "standard": "Studio",
+        "handsfree": "Freihändig",
+        "motion": "Bewegung",
+        "creative": "Kreativ",
+        "standardDesc": "KI-gesteuerte Produktfotografie",
+        "handsfreeDesc": "Professioneller Prompt-Architekt",
+        "motionDesc": "Bild-zu-Video-Generierung",
+        "creativeDesc": "Werbebild-Ersteller"
+    },
     "app": {
         "name": "Volla",
         "tagline": "KI Produkt-Scanner",
@@ -78,7 +93,65 @@
         "moreTools": "Weitere Tools",
         "untitledProject": "Unbenanntes Projekt",
         "aiStudioDescription": "Komplettes Produktfotografie-Paket",
-        "textAnalysisDescription": "SEO-Optimierung für Produktlistings"
+        "textAnalysisDescription": "SEO-Optimierung für Produktlistings",
+        "heroTitle": "KI Produktfotografie Studio",
+        "heroSubtitle": "Verwandeln Sie Ihre Produkte in Verkaufsmagneten",
+        "featuredModes": "Studio-Modi erkunden",
+        "howToUse": "Anleitung",
+        "tryNow": "Jetzt testen",
+        "tutorial": {
+            "step1Title": "Produkt hochladen",
+            "step1Desc": "Laden Sie ein beliebiges Produktfoto hoch",
+            "step2Title": "Typ auswählen",
+            "step2Desc": "Real Life, Shots oder Studio",
+            "step3Title": "Generieren",
+            "step3Desc": "Erhalten Sie KI-Fotos in Sekunden",
+            "standard": {
+                "step1Title": "Produkt hochladen",
+                "step1Desc": "Laden Sie ein beliebiges Produktfoto hoch",
+                "step2Title": "Typ auswählen",
+                "step2Desc": "Real Life, Shots oder Studio-Modus wählen",
+                "step3Title": "Generieren",
+                "step3Desc": "Erhalten Sie KI-optimierte Fotos in Sekunden"
+            },
+            "handsfree": {
+                "step1Title": "Produkt hochladen",
+                "step1Desc": "Laden Sie Ihr Produktbild hoch",
+                "step2Title": "Winkel wählen",
+                "step2Desc": "Kamerawinkel und Bildausschnitt wählen",
+                "step3Title": "Prompt erhalten",
+                "step3Desc": "Professionellen Prompt kopieren"
+            },
+            "motion": {
+                "step1Title": "Bild hochladen",
+                "step1Desc": "Produktbild zum Animieren hinzufügen",
+                "step2Title": "Bewegung einstellen",
+                "step2Desc": "Kamerabewegung und Geschwindigkeit wählen",
+                "step3Title": "Video erstellen",
+                "step3Desc": "Kinematisches Produktvideo erstellen"
+            },
+            "creative": {
+                "step1Title": "Produkt hochladen",
+                "step1Desc": "Ihr Produktbild hinzufügen",
+                "step2Title": "Thema wählen",
+                "step2Desc": "Werbe-Thema und Rabatt auswählen",
+                "step3Title": "Generieren",
+                "step3Desc": "Werbebilder mit Overlays erhalten"
+            }
+        },
+        "stats": {
+            "title": "Ihre Nutzung",
+            "credits": "Guthaben",
+            "generated": "Diesen Monat generiert",
+            "projects": "Projekte"
+        }
+    },
+    "welcome": {
+        "title": "Willkommen bei {{mode}}",
+        "uploadToStart": "Laden Sie ein Bild hoch, um zu beginnen",
+        "examples": "Beispielausgaben",
+        "proTips": "Profi-Tipps",
+        "getStarted": "Loslegen"
     },
     "handsfree": {
         "title": "Prompt Architekt",

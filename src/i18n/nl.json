@@ -57,6 +57,21 @@
         "settings": "Instellingen",
         "openStudio": "Studio Openen"
     },
+    "sidebar": {
+        "modes": "Studio Modi",
+        "collapse": "Inklappen",
+        "expand": "Uitklappen"
+    },
+    "modes": {
+        "standard": "Studio",
+        "handsfree": "Handsfree",
+        "motion": "Beweging",
+        "creative": "Creatief",
+        "standardDesc": "AI-aangedreven productfotografie",
+        "handsfreeDesc": "Professionele prompt architect",
+        "motionDesc": "Afbeelding naar video generatie",
+        "creativeDesc": "Promotionele afbeelding maker"
+    },
     "app": {
         "name": "Volla",
         "tagline": "AI Product Scanner",
@@ -77,7 +92,65 @@
         "moreTools": "Meer Tools",
         "untitledProject": "Naamloos Project",
         "aiStudioDescription": "Complete productfotografie suite",
-        "textAnalysisDescription": "SEO-optimalisatie voor productadvertenties"
+        "textAnalysisDescription": "SEO-optimalisatie voor productadvertenties",
+        "heroTitle": "AI Productfotografie Studio",
+        "heroSubtitle": "Transformeer je producten in verkoopsmagneten",
+        "featuredModes": "Verken Studio Modi",
+        "howToUse": "Hoe te Gebruiken",
+        "tryNow": "Nu Proberen",
+        "tutorial": {
+            "step1Title": "Product Uploaden",
+            "step1Desc": "Upload elke productfoto",
+            "step2Title": "Type Kiezen",
+            "step2Desc": "Real Life, Shots of Studio",
+            "step3Title": "Genereren",
+            "step3Desc": "Krijg AI-foto's in seconden",
+            "standard": {
+                "step1Title": "Product Uploaden",
+                "step1Desc": "Upload elke productfoto van je apparaat",
+                "step2Title": "Type Kiezen",
+                "step2Desc": "Selecteer Real Life, Shots of Studio modus",
+                "step3Title": "Genereren",
+                "step3Desc": "Krijg AI-geoptimaliseerde foto's in seconden"
+            },
+            "handsfree": {
+                "step1Title": "Product Uploaden",
+                "step1Desc": "Upload je productafbeelding",
+                "step2Title": "Hoek Selecteren",
+                "step2Desc": "Kies camerahoek en opnameschaal",
+                "step3Title": "Prompt Krijgen",
+                "step3Desc": "Kopieer de gegenereerde professionele prompt"
+            },
+            "motion": {
+                "step1Title": "Afbeelding Uploaden",
+                "step1Desc": "Voeg een productafbeelding toe om te animeren",
+                "step2Title": "Beweging Instellen",
+                "step2Desc": "Kies camerabeweging en snelheid",
+                "step3Title": "Video Genereren",
+                "step3Desc": "Maak een cinematische productvideo"
+            },
+            "creative": {
+                "step1Title": "Product Uploaden",
+                "step1Desc": "Voeg je productafbeelding toe",
+                "step2Title": "Thema Kiezen",
+                "step2Desc": "Selecteer promotioneel thema en korting",
+                "step3Title": "Genereren",
+                "step3Desc": "Krijg promotionele afbeeldingen met overlays"
+            }
+        },
+        "stats": {
+            "title": "Jouw Gebruik",
+            "credits": "Tegoed",
+            "generated": "Gegenereerd Deze Maand",
+            "projects": "Projecten"
+        }
+    },
+    "welcome": {
+        "title": "Welkom bij {{mode}}",
+        "uploadToStart": "Upload een afbeelding om te beginnen met maken",
+        "examples": "Voorbeelduitvoer",
+        "proTips": "Pro Tips",
+        "getStarted": "Beginnen"
     },
     "handsfree": {
         "title": "Prompt Architect",

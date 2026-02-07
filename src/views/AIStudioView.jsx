@@ -47,7 +47,17 @@ const MARKETPLACE_COLORS = {
  * - SEO Results display (Title, Tags, Description, Price)
  * - Generate Shots, Real Life from any active asset
  */
-export default function AIStudioView({ initialAsset = null, initialProject = null, marketplace: propMarketplace, onMarketplaceSelect, onClearLoaded, onBack, onNavigate }) {
+export default function AIStudioView({
+    initialAsset = null,
+    initialProject = null,
+    marketplace: propMarketplace,
+    onMarketplaceSelect,
+    onClearLoaded,
+    onBack,
+    onNavigate,
+    studioMode: propStudioMode,
+    onModeChange
+}) {
     // ═══════════════════════════════════════════════════════════════════
     // LOCAL MARKETPLACE STATE (falls back to prop)
     // ═══════════════════════════════════════════════════════════════════
@@ -67,9 +77,12 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
     // Dragon animation removed
 
     // ═══════════════════════════════════════════════════════════════════
-    // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion'
+    // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion' | 'creative'
+    // Use prop if provided (from sidebar), otherwise use internal state
     // ═══════════════════════════════════════════════════════════════════
-    const [studioMode, setStudioMode] = useState('standard');
+    const [internalStudioMode, setInternalStudioMode] = useState('standard');
+    const studioMode = propStudioMode || internalStudioMode;
+    const setStudioMode = onModeChange || setInternalStudioMode;
 
     // ═══════════════════════════════════════════════════════════════════
     // NEW: GENERATION CONFIGURATION STATE (for 3-panel layout)
@@ -1151,8 +1164,8 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
             {/* Header */}
             <header className="px-6 py-3 border-b border-[#E8E7E4] bg-white">
                 <div className="flex items-center justify-between">
-                    {/* Left: Back + Mode Switch */}
-                    <div className="flex items-center gap-2">
+                    {/* Left: Back + Current Mode Indicator */}
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => onNavigate?.('home')}
                             className="p-2 hover:bg-[#F5F4F1] rounded-lg transition-colors"
@@ -1161,47 +1174,23 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                             <ArrowLeft size={18} className="text-[#5C5C5C]" />
                         </button>
 
-                        {/* Mode Switch */}
-                        <div className="inline-flex bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg p-0.5">
-                            <button
-                                onClick={() => setStudioMode('standard')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${studioMode === 'standard'
-                                    ? 'bg-white shadow text-[#1A1A1A]'
-                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
-                                    }`}
-                            >
-                                {t('studio.normal')}
-                            </button>
-                            <button
-                                onClick={() => setStudioMode('handsfree')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'handsfree'
-                                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow'
-                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
-                                    }`}
-                            >
-                                <Zap size={12} />
-                                {t('studio.handsfree')}
-                            </button>
-                            <button
-                                onClick={() => setStudioMode('motion')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'motion'
-                                    ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow'
-                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
-                                    }`}
-                            >
-                                <Video size={12} />
-                                {t('studio.motion') || 'Motion'}
-                            </button>
-                            <button
-                                onClick={() => setStudioMode('creative')}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${studioMode === 'creative'
-                                    ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow'
-                                    : 'text-[#5C5C5C] hover:text-[#1A1A1A]'
-                                    }`}
-                            >
-                                <Sparkles size={12} />
-                                {t('studio.creative') || 'Creative'}
-                            </button>
+                        {/* Current Mode Badge */}
+                        <div className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                            studioMode === 'handsfree' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white' :
+                            studioMode === 'motion' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' :
+                            studioMode === 'creative' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' :
+                            'bg-gradient-to-r from-[#E06847] to-[#C85A3D] text-white'
+                        }`}>
+                            {studioMode === 'handsfree' ? <Zap size={12} /> :
+                             studioMode === 'motion' ? <Video size={12} /> :
+                             studioMode === 'creative' ? <Sparkles size={12} /> :
+                             <Sparkles size={12} />}
+                            <span>
+                                {studioMode === 'handsfree' ? t('studio.handsfree') :
+                                 studioMode === 'motion' ? (t('studio.motion') || 'Motion') :
+                                 studioMode === 'creative' ? (t('studio.creative') || 'Creative') :
+                                 t('studio.normal')}
+                            </span>
                         </div>
                     </div>
 
@@ -1248,11 +1237,11 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     initialProject={initialProject?.productInfo?.featureType === 'creative' ? initialProject : null}
                 />
             ) : (
-                <main className="flex-1 flex min-h-0">
+                <main className="flex-1 flex flex-col md:flex-row min-h-0">
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    {/* LEFT PANEL - 30% - Upload & Configuration */}
+                    {/* LEFT PANEL - Full width on mobile, 30% on desktop */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <aside className="w-[30%] min-w-[320px] max-w-[400px] bg-white border-r border-[#E8E7E4] overflow-y-auto">
+                    <aside className="w-full md:w-[30%] md:min-w-[320px] md:max-w-[400px] bg-white md:border-r border-b md:border-b-0 border-[#E8E7E4] overflow-y-auto max-h-[40vh] md:max-h-none">
                         <div className="p-5 space-y-5">
                             {/* Upload Zone */}
                             {renderUploadZone()}
@@ -1379,9 +1368,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     </aside>
 
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    {/* CENTER CANVAS - 50% - Main Display */}
+                    {/* CENTER CANVAS - Full width on mobile, flexible on desktop */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <section className="flex-1 bg-[#FAF9F6] p-6 flex flex-col overflow-y-auto">
+                    <section className="flex-1 bg-[#FAF9F6] p-4 md:p-6 flex flex-col overflow-y-auto">
                         {/* Error Display */}
                         {error && (
                             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
@@ -1404,9 +1393,9 @@ export default function AIStudioView({ initialAsset = null, initialProject = nul
                     </section>
 
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    {/* RIGHT PANEL - 30% - SEO Results (same width as left panel for alignment) */}
+                    {/* RIGHT PANEL - Hidden on mobile (SEO in separate tab), 30% on desktop */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <aside className="w-[30%] min-w-[320px] max-w-[400px] bg-white border-l border-[#E8E7E4] flex flex-col">
+                    <aside className="hidden md:flex w-full md:w-[30%] md:min-w-[320px] md:max-w-[400px] bg-white md:border-l border-t md:border-t-0 border-[#E8E7E4] flex-col">
                         <div className="p-5 flex-1 flex flex-col overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-semibold text-[#1A1A1A] flex items-center gap-2">

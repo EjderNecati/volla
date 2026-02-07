@@ -18,7 +18,7 @@ const MARKETPLACE_COLORS = {
     shopify: '#96BF48'
 };
 
-export default function UserProfilePanel({ marketplace, onNavigate }) {
+export default function UserProfilePanel({ marketplace, onNavigate, collapsed = false, onExpandSidebar }) {
     const { t } = useTranslation();
     const { user, signOut, isAuthenticated } = useAuth();
     const { subscription, credits } = useCredits();
@@ -55,14 +55,17 @@ export default function UserProfilePanel({ marketplace, onNavigate }) {
     // If not authenticated, show sign-in prompt
     if (!isAuthenticated) {
         return (
-            <div className="p-3 border-t border-[#E8E7E4]">
+            <div className={collapsed ? 'p-2' : 'p-3'}>
                 <button
                     onClick={() => onNavigate('login')}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-medium transition-all hover:opacity-90"
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl text-white font-medium transition-all hover:opacity-90
+                        ${collapsed ? 'p-2.5' : 'py-3 px-4'}
+                    `}
                     style={{ backgroundColor: primaryColor }}
+                    title={collapsed ? t('nav.signIn') || 'Sign In' : undefined}
                 >
-                    <User className="w-4 h-4" />
-                    <span>{t('nav.signIn') || 'Sign In'}</span>
+                    <User className={collapsed ? 'w-5 h-5' : 'w-4 h-4'} />
+                    {!collapsed && <span>{t('nav.signIn') || 'Sign In'}</span>}
                 </button>
             </div>
         );
@@ -72,11 +75,22 @@ export default function UserProfilePanel({ marketplace, onNavigate }) {
         <div className="relative" ref={panelRef}>
             {/* Trigger Button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all border ${isOpen
-                    ? 'bg-white border-[#E8E7E4] shadow-sm'
-                    : 'border-transparent hover:bg-white hover:border-[#E8E7E4]'
-                    }`}
+                onClick={() => {
+                    // When collapsed, expand the sidebar instead of opening dropdown
+                    if (collapsed && onExpandSidebar) {
+                        onExpandSidebar();
+                    } else {
+                        setIsOpen(!isOpen);
+                    }
+                }}
+                className={`w-full flex items-center gap-3 rounded-xl transition-all border
+                    ${collapsed ? 'p-2 justify-center' : 'p-3'}
+                    ${isOpen
+                        ? 'bg-white border-[#E8E7E4] shadow-sm'
+                        : 'border-transparent hover:bg-white hover:border-[#E8E7E4]'
+                    }
+                `}
+                title={collapsed ? (user.displayName || user.email?.split('@')[0] || 'User') : undefined}
             >
                 {/* Avatar */}
                 <div className="relative">
@@ -84,11 +98,11 @@ export default function UserProfilePanel({ marketplace, onNavigate }) {
                         <img
                             src={user.photoURL}
                             alt={user.displayName || 'User'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                            className={`rounded-full object-cover border-2 border-white shadow-sm ${collapsed ? 'w-8 h-8' : 'w-10 h-10'}`}
                         />
                     ) : (
                         <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                            className={`rounded-full flex items-center justify-center text-white font-bold ${collapsed ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm'}`}
                             style={{ backgroundColor: primaryColor }}
                         >
                             {(user.displayName || user.email || 'U')[0].toUpperCase()}
@@ -97,28 +111,32 @@ export default function UserProfilePanel({ marketplace, onNavigate }) {
                     {/* Plan Badge */}
                     {subscription?.plan !== 'free' && (
                         <div
-                            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
+                            className={`absolute -bottom-1 -right-1 rounded-full flex items-center justify-center border-2 border-white ${collapsed ? 'w-4 h-4' : 'w-5 h-5'}`}
                             style={{ backgroundColor: primaryColor }}
                         >
-                            <Crown className="w-2.5 h-2.5 text-white" />
+                            <Crown className={collapsed ? 'w-2 h-2 text-white' : 'w-2.5 h-2.5 text-white'} />
                         </div>
                     )}
                 </div>
 
-                {/* User Info */}
-                <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-[#1A1A1A] truncate">
-                        {user.displayName || user.email?.split('@')[0] || 'User'}
-                    </p>
-                    <p className="text-xs text-[#8C8C8C] truncate">
-                        {planInfo.name} • {credits} credits
-                    </p>
-                </div>
+                {/* User Info - hidden when collapsed */}
+                {!collapsed && (
+                    <div className="flex-1 text-left min-w-0">
+                        <p className="text-sm font-medium text-[#1A1A1A] truncate">
+                            {user.displayName || user.email?.split('@')[0] || 'User'}
+                        </p>
+                        <p className="text-xs text-[#8C8C8C] truncate">
+                            {planInfo.name} • {credits} credits
+                        </p>
+                    </div>
+                )}
 
-                {/* Chevron */}
-                <ChevronDown
-                    className={`w-4 h-4 text-[#8C8C8C] transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                />
+                {/* Chevron - hidden when collapsed */}
+                {!collapsed && (
+                    <ChevronDown
+                        className={`w-4 h-4 text-[#8C8C8C] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                )}
             </button>
 
             {/* Dropdown Panel */}

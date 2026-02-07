@@ -1,8 +1,9 @@
 import React from 'react';
-import { Home, FileText, Sparkles, Clock, Settings, Zap, FolderOpen } from 'lucide-react';
+import { Home, FileText, Clock, FolderOpen, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import CreditDisplay from './CreditDisplay';
 import UserProfilePanel from './UserProfilePanel';
+import ModeNavSection from './sidebar/ModeNavSection';
 
 // Marketplace color configuration
 const MARKETPLACE_COLORS = {
@@ -14,11 +15,20 @@ const MARKETPLACE_COLORS = {
 /**
  * Desktop Sidebar Navigation (>= 768px)
  * Dynamic colors based on selected marketplace
+ * Collapsible with mode selection icons
  */
-export default function Sidebar({ activeTab, onNavigate, marketplace }) {
+export default function Sidebar({
+    activeTab,
+    onNavigate,
+    marketplace,
+    studioMode = 'standard',
+    onModeChange,
+    collapsed = false,
+    onCollapsedChange
+}) {
     const { t } = useTranslation();
 
-    // Get marketplace-specific colors (default to Etsy orange-red)
+    // Get marketplace-specific colors (default to Volla orange-red)
     const color = MARKETPLACE_COLORS[marketplace] || { primary: '#E06847', hover: '#C85A3D' };
 
     const menuItems = [
@@ -29,29 +39,39 @@ export default function Sidebar({ activeTab, onNavigate, marketplace }) {
     ];
 
     return (
-        <aside className="fixed left-0 top-0 h-full w-64 bg-[#FAF9F6] border-r border-[#E8E7E4] flex flex-col z-50">
+        <aside
+            className={`
+                fixed left-0 top-0 h-full bg-[#FAF9F6] border-r border-[#E8E7E4]
+                flex flex-col z-50 transition-all duration-300
+                ${collapsed ? 'w-16' : 'w-64'}
+            `}
+        >
             {/* Logo + Credits */}
-            <div className="p-5 border-b border-[#E8E7E4]">
-                <h1 className="text-2xl font-bold text-[#1A1A1A] tracking-tight font-poppins mb-2">
-                    VOLLA
-                </h1>
-                <CreditDisplay onClick={() => onNavigate('pricing')} />
+            <div className={`border-b border-[#E8E7E4] ${collapsed ? 'px-2 py-3' : 'p-5'}`}>
+                {collapsed ? (
+                    <div className="w-10 h-10 rounded-xl bg-[#1A1A1A] flex items-center justify-center mx-auto">
+                        <span className="text-white font-bold text-lg">V</span>
+                    </div>
+                ) : (
+                    <>
+                        <h1 className="text-2xl font-bold text-[#1A1A1A] tracking-tight font-poppins mb-2">
+                            VOLLA
+                        </h1>
+                        <CreditDisplay onClick={() => onNavigate('pricing')} />
+                    </>
+                )}
             </div>
 
-            {/* Primary Action - Open Studio (dynamic marketplace color) */}
-            <div className="p-4">
-                <button
-                    onClick={() => onNavigate('studio')}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold transition-all text-white hover:shadow-md"
-                    style={{ backgroundColor: color.primary }}
-                >
-                    <Sparkles className="w-5 h-5" />
-                    <span>{t('nav.openStudio')}</span>
-                </button>
-            </div>
+            {/* Mode Navigation Section */}
+            <ModeNavSection
+                selectedMode={studioMode}
+                onModeSelect={onModeChange}
+                onNavigate={onNavigate}
+                collapsed={collapsed}
+            />
 
             {/* Menu Links - dynamic active color */}
-            <nav className="flex-1 px-3 py-2">
+            <nav className={`flex-1 py-2 ${collapsed ? 'px-2' : 'px-3'}`}>
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
@@ -59,22 +79,59 @@ export default function Sidebar({ activeTab, onNavigate, marketplace }) {
                         <button
                             key={item.id}
                             onClick={() => onNavigate(item.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 mb-1 rounded-xl transition-all ${isActive
-                                ? 'bg-white border border-[#E8E7E4] font-medium shadow-sm'
-                                : 'text-[#5C5C5C] hover:bg-white hover:border hover:border-[#E8E7E4] hover:text-[#1A1A1A]'
-                                }`}
+                            className={`
+                                w-full flex items-center gap-3 mb-1 rounded-xl transition-all
+                                ${collapsed ? 'p-2.5 justify-center' : 'px-4 py-3'}
+                                ${isActive
+                                    ? 'bg-white border border-[#E8E7E4] font-medium shadow-sm'
+                                    : 'text-[#5C5C5C] hover:bg-white hover:border hover:border-[#E8E7E4] hover:text-[#1A1A1A]'
+                                }
+                            `}
                             style={{ color: isActive ? color.primary : undefined }}
+                            title={collapsed ? t(item.labelKey) : undefined}
                         >
-                            <Icon className="w-5 h-5" style={{ color: isActive ? color.primary : undefined }} />
-                            <span>{t(item.labelKey)}</span>
+                            <Icon
+                                className={collapsed ? 'w-5 h-5' : 'w-5 h-5'}
+                                style={{ color: isActive ? color.primary : undefined }}
+                            />
+                            {!collapsed && <span>{t(item.labelKey)}</span>}
                         </button>
                     );
                 })}
             </nav>
 
+            {/* Collapse Toggle Button */}
+            {onCollapsedChange && (
+                <div className={`border-t border-[#E8E7E4] ${collapsed ? 'p-2' : 'px-3 py-2'}`}>
+                    <button
+                        onClick={() => onCollapsedChange(!collapsed)}
+                        className={`
+                            w-full flex items-center gap-2 rounded-xl py-2.5 text-[#8C8C8C]
+                            hover:bg-[#F5F4F1] hover:text-[#5C5C5C] transition-all
+                            ${collapsed ? 'justify-center px-2.5' : 'px-4'}
+                        `}
+                        title={collapsed ? t('sidebar.expand') || 'Expand' : t('sidebar.collapse') || 'Collapse'}
+                    >
+                        {collapsed ? (
+                            <PanelLeft className="w-5 h-5" />
+                        ) : (
+                            <>
+                                <PanelLeftClose className="w-5 h-5" />
+                                <span className="text-sm">{t('sidebar.collapse') || 'Collapse'}</span>
+                            </>
+                        )}
+                    </button>
+                </div>
+            )}
+
             {/* Bottom - User Profile Panel */}
             <div className="border-t border-[#E8E7E4]">
-                <UserProfilePanel marketplace={marketplace} onNavigate={onNavigate} />
+                <UserProfilePanel
+                    marketplace={marketplace}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    onExpandSidebar={collapsed && onCollapsedChange ? () => onCollapsedChange(false) : undefined}
+                />
             </div>
         </aside>
     );

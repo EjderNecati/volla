@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Trash2, Check, Globe, Database } from 'lucide-react';
+import { Settings, Trash2, Check, Globe, Database, Coins, Crown, Zap, LogOut } from 'lucide-react';
 import { deleteAllProjects, getStorageUsage } from '../utils/projectManager';
 import { useTranslation } from '../i18n';
+import { useCredits } from '../contexts/CreditContext';
+import { useAuth } from '../contexts/AuthContext';
+import { PLANS } from '../utils/creditManager';
 
 // Marketplace color configuration
 const MARKETPLACE_COLORS = {
@@ -14,14 +17,29 @@ const MARKETPLACE_COLORS = {
  * SettingsView - User configuration
  * Clean version: Language selector and Project management only
  */
-export default function SettingsView({ marketplace }) {
+export default function SettingsView({ marketplace, onNavigate }) {
     const { t, currentLanguage, setLanguage, availableLanguages } = useTranslation();
+    const { credits, subscription } = useCredits();
+    const { user, signOut, isAuthenticated } = useAuth();
 
     const [storageUsage, setStorageUsage] = useState(null);
     const [cleared, setCleared] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // Get marketplace-specific colors (default to Volla primary)
     const color = MARKETPLACE_COLORS[marketplace] || { primary: '#E06847', hover: '#C85A3D' };
+    const planInfo = PLANS[subscription?.plan] || PLANS.free;
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        try {
+            await signOut();
+        } catch (err) {
+            console.error('Logout failed:', err);
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
 
     useEffect(() => {
         // Load storage usage
@@ -90,6 +108,97 @@ export default function SettingsView({ marketplace }) {
                         {t('settings.selectLanguage')}
                     </p>
                 </div>
+
+                {/* Credits & Account Section - Visible on Mobile for easy access */}
+                {isAuthenticated && (
+                    <div className="bg-white border border-[#E8E7E4] rounded-2xl p-6 mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Coins className="w-5 h-5" style={{ color: color.primary }} />
+                            <h3 className="font-semibold text-[#1A1A1A]">{t('settings.creditsAccount') || 'Credits & Account'}</h3>
+                        </div>
+
+                        {/* User Info */}
+                        <div className="flex items-center gap-3 mb-4 p-3 bg-[#F5F4F1] rounded-xl">
+                            {user?.photoURL ? (
+                                <img
+                                    src={user.photoURL}
+                                    alt={user.displayName || 'User'}
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                                />
+                            ) : (
+                                <div
+                                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                                    style={{ backgroundColor: color.primary }}
+                                >
+                                    {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <p className="font-medium text-[#1A1A1A]">
+                                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                                </p>
+                                <p className="text-xs text-[#8C8C8C]">{user?.email}</p>
+                            </div>
+                            {subscription?.plan !== 'free' && (
+                                <div
+                                    className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                                    style={{ backgroundColor: `${color.primary}15`, color: color.primary }}
+                                >
+                                    <Crown className="w-3 h-3" />
+                                    {planInfo.name}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Credits Display */}
+                        <div className="bg-[#F5F4F1] rounded-xl p-4 mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-[#5C5C5C]">{t('profile.credits') || 'Credits'}</span>
+                                <div
+                                    className="flex items-center gap-1 text-sm font-bold px-2 py-0.5 rounded-full"
+                                    style={{ backgroundColor: `${color.primary}15`, color: color.primary }}
+                                >
+                                    <Zap className="w-3 h-3" />
+                                    {credits}
+                                </div>
+                            </div>
+                            <div className="h-2 bg-[#E8E7E4] rounded-full overflow-hidden mb-2">
+                                <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{
+                                        width: `${Math.min(100, (credits / (planInfo.credits || 20)) * 100)}%`,
+                                        backgroundColor: color.primary
+                                    }}
+                                />
+                            </div>
+                            <p className="text-xs text-[#8C8C8C]">
+                                {planInfo.name} • {credits} / {planInfo.credits || 20} {t('credits.creditsUnit') || 'credits'}
+                            </p>
+                        </div>
+
+                        {/* Upgrade / Manage Plan Button */}
+                        <button
+                            onClick={() => onNavigate && onNavigate('pricing')}
+                            className="w-full py-3 rounded-xl font-medium text-white transition-all mb-3"
+                            style={{ backgroundColor: color.primary }}
+                        >
+                            {subscription?.plan === 'free'
+                                ? (t('profile.upgrade') || 'Upgrade Plan')
+                                : (t('profile.managePlan') || 'Manage Plan')
+                            }
+                        </button>
+
+                        {/* Logout Button */}
+                        <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 border-2 border-red-300 text-red-500 hover:bg-red-50 disabled:opacity-50"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            {isLoggingOut ? (t('profile.loggingOut') || 'Logging out...') : (t('profile.logout') || 'Log Out')}
+                        </button>
+                    </div>
+                )}
 
                 {/* Storage Management Section */}
                 <div className="bg-white border border-[#E8E7E4] rounded-2xl p-6">

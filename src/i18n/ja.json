@@ -57,6 +57,21 @@
         "settings": "設定",
         "openStudio": "スタジオを開く"
     },
+    "sidebar": {
+        "modes": "スタジオモード",
+        "collapse": "折りたたむ",
+        "expand": "展開する"
+    },
+    "modes": {
+        "standard": "スタジオ",
+        "handsfree": "ハンズフリー",
+        "motion": "モーション",
+        "creative": "クリエイティブ",
+        "standardDesc": "AI搭載の商品撮影",
+        "handsfreeDesc": "プロフェッショナルプロンプトアーキテクト",
+        "motionDesc": "画像から動画への生成",
+        "creativeDesc": "プロモーション画像クリエイター"
+    },
     "app": {
         "name": "Volla",
         "tagline": "AI製品スキャナー",
@@ -77,7 +92,65 @@
         "moreTools": "その他のツール",
         "untitledProject": "無題のプロジェクト",
         "aiStudioDescription": "完全な製品撮影スイート",
-        "textAnalysisDescription": "製品リスティングのSEO最適化"
+        "textAnalysisDescription": "製品リスティングのSEO最適化",
+        "heroTitle": "AI商品撮影スタジオ",
+        "heroSubtitle": "あなたの商品を売上マグネットに変える",
+        "featuredModes": "スタジオモードを探索",
+        "howToUse": "使い方",
+        "tryNow": "今すぐ試す",
+        "tutorial": {
+            "step1Title": "商品をアップロード",
+            "step1Desc": "任意の商品写真をアップロード",
+            "step2Title": "タイプを選択",
+            "step2Desc": "リアルライフ、ショット、またはスタジオ",
+            "step3Title": "生成",
+            "step3Desc": "数秒でAI写真を取得",
+            "standard": {
+                "step1Title": "商品をアップロード",
+                "step1Desc": "デバイスから商品写真をアップロード",
+                "step2Title": "タイプを選択",
+                "step2Desc": "リアルライフ、ショット、またはスタジオモードを選択",
+                "step3Title": "生成",
+                "step3Desc": "数秒でAI最適化写真を取得"
+            },
+            "handsfree": {
+                "step1Title": "商品をアップロード",
+                "step1Desc": "商品画像をアップロード",
+                "step2Title": "アングルを選択",
+                "step2Desc": "カメラアングルとショットスケールを選択",
+                "step3Title": "プロンプトを取得",
+                "step3Desc": "プロフェッショナルなプロンプトをコピー"
+            },
+            "motion": {
+                "step1Title": "画像をアップロード",
+                "step1Desc": "アニメーション用の商品画像を追加",
+                "step2Title": "動きを設定",
+                "step2Desc": "カメラの動きと速度を選択",
+                "step3Title": "ビデオを生成",
+                "step3Desc": "シネマティックな商品ビデオを作成"
+            },
+            "creative": {
+                "step1Title": "商品をアップロード",
+                "step1Desc": "商品画像を追加",
+                "step2Title": "テーマを選択",
+                "step2Desc": "プロモーションテーマと割引を選択",
+                "step3Title": "生成",
+                "step3Desc": "オーバーレイ付きプロモーション画像を取得"
+            }
+        },
+        "stats": {
+            "title": "あなたの使用状況",
+            "credits": "クレジット",
+            "generated": "今月生成",
+            "projects": "プロジェクト"
+        }
+    },
+    "welcome": {
+        "title": "{{mode}}へようこそ",
+        "uploadToStart": "画像をアップロードして作成を開始",
+        "examples": "出力例",
+        "proTips": "プロのヒント",
+        "getStarted": "始める"
     },
     "handsfree": {
         "title": "プロンプトアーキテクト",

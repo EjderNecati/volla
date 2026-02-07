@@ -44,6 +44,7 @@ function AppContent() {
     const [marketplace, setMarketplace] = useState('etsy');
     const [loadedAsset, setLoadedAsset] = useState(null);
     const [loadedProject, setLoadedProject] = useState(null);
+    const [studioMode, setStudioMode] = useState('standard'); // 'standard' | 'handsfree' | 'motion' | 'creative'
 
     // URL sync
     useEffect(() => {
@@ -68,6 +69,10 @@ function AppContent() {
         setLoadedProject(project);
         if (project?.marketplace) {
             setMarketplace(project.marketplace);
+        }
+        // Set studio mode based on project feature type
+        if (project?.productInfo?.featureType) {
+            setStudioMode(project.productInfo.featureType);
         }
     };
 
@@ -119,6 +124,8 @@ function AppContent() {
                         onLoadProject={handleLoadProject}
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
+                        studioMode={studioMode}
+                        onModeChange={setStudioMode}
                     />
                 );
             case 'studio':
@@ -130,6 +137,8 @@ function AppContent() {
                         onNavigate={handleNavigate}
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
+                        studioMode={studioMode}
+                        onModeChange={setStudioMode}
                     />
                 );
             case 'analysis':
@@ -159,13 +168,21 @@ function AppContent() {
                         onLoadProject={handleLoadProject}
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
+                        studioMode={studioMode}
+                        onModeChange={setStudioMode}
                     />
                 );
         }
     };
 
     return (
-        <Layout activeTab={currentRoute} onNavigate={handleNavigate} marketplace={marketplace}>
+        <Layout
+            activeTab={currentRoute}
+            onNavigate={handleNavigate}
+            marketplace={marketplace}
+            studioMode={studioMode}
+            onModeChange={setStudioMode}
+        >
             {renderView()}
         </Layout>
     );
