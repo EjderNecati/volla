@@ -389,8 +389,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             });
 
             if (result.success && result.images && result.images.length > 0) {
-                setGeneratedImages(result.images);
-                setActiveImageIndex(0);
+                // Append new images to existing ones (don't replace!)
+                setGeneratedImages(prev => [...prev, ...result.images]);
+                // Set active to first newly generated image
+                setActiveImageIndex(generatedImages.length);
                 saveCreativeToHistory(result.images);
             } else {
                 throw new Error(result.error || 'Generation failed');
