@@ -85,6 +85,21 @@
         "tagline": "AI Ürün Tarayıcı",
         "version": "v2.0"
     },
+    "sidebar": {
+        "modes": "Stüdyo Modları",
+        "collapse": "Daralt",
+        "expand": "Genişlet"
+    },
+    "modes": {
+        "standard": "Stüdyo",
+        "handsfree": "Eller Serbest",
+        "motion": "Video",
+        "creative": "Kreatif",
+        "standardDesc": "SEO optimizasyonlu AI ürün fotoğrafçılığı",
+        "handsfreeDesc": "Özel çekimler için profesyonel prompt mimarı",
+        "motionDesc": "Görsellerden sinematik ürün videoları oluştur",
+        "creativeDesc": "Tema ve indirimlerle promosyon görselleri"
+    },
     "home": {
         "welcomeBack": "Tekrar hoş geldiniz",
         "quickTools": "Hızlı araçlar ve son çalışmalar",
@@ -95,12 +110,70 @@
         "uploadProductPhoto": "Ürün Fotoğrafı Yükle",
         "getAIOptimized": "{{marketplace}} için AI optimize edilmiş fotoğraflar alın",
         "recentProjects": "Son Projeler",
-        "viewAll": "Tümünü Gör →",
+        "viewAll": "Tümünü Gör",
         "noRecentProjects": "Henüz son proje yok",
         "moreTools": "Diğer Araçlar",
         "untitledProject": "İsimsiz Proje",
         "aiStudioDescription": "Tam kapsamlı ürün fotoğrafçılığı paketi",
-        "textAnalysisDescription": "Ürün listeleri için SEO optimizasyonu"
+        "textAnalysisDescription": "Ürün listeleri için SEO optimizasyonu",
+        "heroTitle": "AI Ürün Fotoğraf Stüdyosu",
+        "heroSubtitle": "AI destekli fotoğrafçılık ile ürünlerinizi satış mıknatısına dönüştürün",
+        "featuredModes": "Stüdyo Modlarını Keşfet",
+        "howToUse": "Nasıl Kullanılır",
+        "tryNow": "Şimdi Dene",
+        "tutorial": {
+            "step1Title": "Ürün Yükle",
+            "step1Desc": "Cihazınızdan herhangi bir ürün fotoğrafı atın",
+            "step2Title": "Tip Seçin",
+            "step2Desc": "Real Life, Shots veya Stüdyo seçin",
+            "step3Title": "Oluştur",
+            "step3Desc": "Saniyeler içinde AI optimize fotoğraflar alın",
+            "standard": {
+                "step1Title": "Ürün Yükle",
+                "step1Desc": "Cihazınızdan herhangi bir ürün fotoğrafı atın",
+                "step2Title": "Tip Seçin",
+                "step2Desc": "Real Life, Shots veya Stüdyo modunu seçin",
+                "step3Title": "Oluştur",
+                "step3Desc": "Saniyeler içinde AI optimize fotoğraflar alın"
+            },
+            "handsfree": {
+                "step1Title": "Ürün Yükle",
+                "step1Desc": "Ürün görselinizi yükleyin",
+                "step2Title": "Açı Seçin",
+                "step2Desc": "Kamera açısı ve çekim ölçeği seçin",
+                "step3Title": "Prompt Al",
+                "step3Desc": "Profesyonel promptu kopyalayın"
+            },
+            "motion": {
+                "step1Title": "Görsel Yükle",
+                "step1Desc": "Canlandırmak için bir ürün görseli ekleyin",
+                "step2Title": "Hareket Ayarla",
+                "step2Desc": "Kamera hareketi ve hızı seçin",
+                "step3Title": "Video Oluştur",
+                "step3Desc": "Sinematik ürün videosu yaratın"
+            },
+            "creative": {
+                "step1Title": "Ürün Yükle",
+                "step1Desc": "Ürün görselinizi ekleyin",
+                "step2Title": "Tema Seçin",
+                "step2Desc": "Promosyon teması ve indirim seçin",
+                "step3Title": "Oluştur",
+                "step3Desc": "Özel efektli promosyon görselleri alın"
+            }
+        },
+        "stats": {
+            "title": "Kullanımınız",
+            "credits": "Kredi",
+            "generated": "Bu Ay",
+            "projects": "Projeler"
+        }
+    },
+    "welcome": {
+        "title": "{{mode}} Moduna Hoş Geldiniz",
+        "uploadToStart": "Oluşturmaya başlamak için bir görsel yükleyin",
+        "examples": "Örnek Çıktılar",
+        "proTips": "Pro İpuçları",
+        "getStarted": "Başla"
     },
     "handsfree": {
         "title": "Prompt Mimarı",
@@ -235,6 +308,49 @@
             "placeholder": "Yapılacak değişiklikleri tarif edin...",
             "selectFirst": "Düzenlemek için oluşturulmuş bir görsel seçin...",
             "button": "Düzenle"
+        },
+        "trustBadges": {
+            "title": "Güven Rozetleri",
+            "rating": "Puan",
+            "shipping": "Ücretsiz Kargo",
+            "sold": "Satış Sayısı",
+            "secure": "Güvenli"
+        },
+        "urgency": {
+            "title": "Aciliyet Zamanlayıcı",
+            "description": "Flash Sale, Black Friday vb. için geri sayım veya stok uyarısı gösterir."
+        },
+        "effects": {
+            "title": "Görsel Efektler",
+            "glow": "Işıma",
+            "sparkles": "Parıltı",
+            "reflection": "Yansıma",
+            "decorations": "Süslemeler"
+        },
+        "socialProof": {
+            "title": "Sosyal Kanıt",
+            "showBadge": "Rozet Göster",
+            "types": {
+                "best_seller": "En Çok Satan",
+                "top_rated": "En Yüksek Puan",
+                "limited_edition": "Sınırlı Sürüm",
+                "trending": "Trend",
+                "new_arrival": "Yeni Ürün",
+                "editor_choice": "Editör Seçimi"
+            }
+        },
+        "priceTag": {
+            "title": "Fiyat Etiketi",
+            "showPrice": "Fiyat Göster",
+            "originalPrice": "Orijinal",
+            "salePrice": "İndirimli"
+        },
+        "advanced": {
+            "title": "Gelişmiş",
+            "autoDetect": "AI Otomatik Algılama",
+            "autoDetectDesc": "Ürün kategorisini otomatik algıla",
+            "customCta": "Özel CTA Metni",
+            "customCtaPlaceholder": "Tema varsayılanı için boş bırakın"
         },
         "errors": {
             "noImage": "Lütfen önce bir görsel yükleyin",

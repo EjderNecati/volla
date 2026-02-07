@@ -166,6 +166,49 @@
             "selectFirst": "Select a generated image to edit...",
             "button": "Edit"
         },
+        "trustBadges": {
+            "title": "Trust Badges",
+            "rating": "Rating",
+            "shipping": "Free Shipping",
+            "sold": "Sold Count",
+            "secure": "Secure"
+        },
+        "urgency": {
+            "title": "Urgency Timer",
+            "description": "Shows countdown timer or stock warning for Flash Sale, Black Friday, etc."
+        },
+        "effects": {
+            "title": "Visual Effects",
+            "glow": "Glow",
+            "sparkles": "Sparkles",
+            "reflection": "Reflection",
+            "decorations": "Decorations"
+        },
+        "socialProof": {
+            "title": "Social Proof",
+            "showBadge": "Show Badge",
+            "types": {
+                "best_seller": "Best Seller",
+                "top_rated": "Top Rated",
+                "limited_edition": "Limited Edition",
+                "trending": "Trending",
+                "new_arrival": "New Arrival",
+                "editor_choice": "Editor's Choice"
+            }
+        },
+        "priceTag": {
+            "title": "Price Tag",
+            "showPrice": "Show Price",
+            "originalPrice": "Original",
+            "salePrice": "Sale"
+        },
+        "advanced": {
+            "title": "Advanced",
+            "autoDetect": "AI Auto-Detect",
+            "autoDetectDesc": "Auto-detect product category",
+            "customCta": "Custom CTA Text",
+            "customCtaPlaceholder": "Leave empty for theme default"
+        },
         "errors": {
             "noImage": "Please upload an image first",
             "noPrompt": "Please enter a prompt",
@@ -195,6 +238,21 @@
         "tagline": "AI Product Scanner",
         "version": "v2.0"
     },
+    "sidebar": {
+        "modes": "Studio Modes",
+        "collapse": "Collapse",
+        "expand": "Expand"
+    },
+    "modes": {
+        "standard": "Studio",
+        "handsfree": "Handsfree",
+        "motion": "Motion",
+        "creative": "Creative",
+        "standardDesc": "AI-powered product photography with SEO optimization",
+        "handsfreeDesc": "Professional prompt architect for custom shots",
+        "motionDesc": "Transform images into cinematic product videos",
+        "creativeDesc": "Promotional graphics with themes and discounts"
+    },
     "home": {
         "welcomeBack": "Welcome back",
         "quickTools": "Quick tools and recent work",
@@ -205,12 +263,70 @@
         "uploadProductPhoto": "Upload Product Photo",
         "getAIOptimized": "Get AI-optimized photos for {{marketplace}}",
         "recentProjects": "Recent Projects",
-        "viewAll": "View All →",
+        "viewAll": "View All",
         "noRecentProjects": "No recent projects yet",
         "moreTools": "More Tools",
         "untitledProject": "Untitled Project",
         "aiStudioDescription": "Full product photography suite",
-        "textAnalysisDescription": "SEO optimization for product listings"
+        "textAnalysisDescription": "SEO optimization for product listings",
+        "heroTitle": "AI Product Photography Studio",
+        "heroSubtitle": "Transform your products into sales magnets with AI-powered photography",
+        "featuredModes": "Explore Studio Modes",
+        "howToUse": "How to Use",
+        "tryNow": "Try Now",
+        "tutorial": {
+            "step1Title": "Upload Product",
+            "step1Desc": "Drop any product photo from your device",
+            "step2Title": "Choose Type",
+            "step2Desc": "Select Real Life, Shots, or Studio",
+            "step3Title": "Generate",
+            "step3Desc": "Get AI-optimized photos in seconds",
+            "standard": {
+                "step1Title": "Upload Product",
+                "step1Desc": "Drop any product photo from your device",
+                "step2Title": "Choose Type",
+                "step2Desc": "Select Real Life, Shots, or Studio mode",
+                "step3Title": "Generate",
+                "step3Desc": "Get AI-optimized photos in seconds"
+            },
+            "handsfree": {
+                "step1Title": "Upload Product",
+                "step1Desc": "Upload your product image",
+                "step2Title": "Select Angle",
+                "step2Desc": "Choose camera angle and shot scale",
+                "step3Title": "Get Prompt",
+                "step3Desc": "Copy the generated professional prompt"
+            },
+            "motion": {
+                "step1Title": "Upload Image",
+                "step1Desc": "Add a product image to animate",
+                "step2Title": "Set Motion",
+                "step2Desc": "Choose camera movement and speed",
+                "step3Title": "Generate Video",
+                "step3Desc": "Create cinematic product video"
+            },
+            "creative": {
+                "step1Title": "Upload Product",
+                "step1Desc": "Add your product image",
+                "step2Title": "Choose Theme",
+                "step2Desc": "Select promotional theme and discount",
+                "step3Title": "Generate",
+                "step3Desc": "Get promotional images with overlays"
+            }
+        },
+        "stats": {
+            "title": "Your Usage",
+            "credits": "Credits",
+            "generated": "This Month",
+            "projects": "Projects"
+        }
+    },
+    "welcome": {
+        "title": "Welcome to {{mode}}",
+        "uploadToStart": "Upload an image to start creating",
+        "examples": "Example Outputs",
+        "proTips": "Pro Tips",
+        "getStarted": "Get Started"
     },
     "handsfree": {
         "title": "Prompt Architect",

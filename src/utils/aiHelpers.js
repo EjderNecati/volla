@@ -1539,12 +1539,22 @@ export const startMotionEdit = async (imageBase64, editPrompt, options = {}) => 
 
 /**
  * Generate promotional/marketing images with themes
+ * CREATIVE STUDIO v4.0 - ULTIMATE WORLD-CLASS Features:
+ * - Trust Badges (Rating, Shipping, Sold Count with dynamic values)
+ * - Urgency Elements (Timer with hours/minutes, Stock Warning)
+ * - Social Proof Badges (Best Seller, Top Rated, Limited Edition, etc.)
+ * - Price Tag with Original/Sale price display
+ * - Seasonal Decorations (Snowflakes, Hearts, Confetti, Pumpkins)
+ * - 3D Badge Effects (Gradient, Glow, Shadows)
+ * - Product Effects (Sparkles, Glow, Reflection)
+ * - AI Auto-detect product category
+ * - Custom CTA text support
  * @param {string} imageBase64 - Source image as base64
  * @param {object} creativeOptions - Creative settings
  * @returns {Promise<{success: boolean, images?: string[], error?: string}>}
  */
 export const generateCreativeImage = async (imageBase64, creativeOptions) => {
-  log('🎨 Creative Studio: Starting generation...');
+  log('🎨 Creative Studio v4.0: Starting ULTIMATE generation...');
 
   try {
     // Compress image to avoid 413 Payload Too Large
@@ -1562,7 +1572,35 @@ export const generateCreativeImage = async (imageBase64, creativeOptions) => {
         manualPrompt: creativeOptions.manualPrompt || '',
         outputCount: creativeOptions.outputCount || 2,
         aspectRatio: creativeOptions.aspectRatio || '1:1',
-        isEdit: creativeOptions.isEdit || false
+        isEdit: creativeOptions.isEdit || false,
+        // v4.0 Trust Badges
+        showTrustBadges: creativeOptions.showTrustBadges !== false,
+        showRating: creativeOptions.showRating !== false,
+        showShipping: creativeOptions.showShipping !== false,
+        showSoldCount: creativeOptions.showSoldCount || false,
+        soldCount: creativeOptions.soldCount || '1000+',
+        rating: creativeOptions.rating || 4.9,
+        // v4.0 Urgency
+        showUrgency: creativeOptions.showUrgency !== false,
+        timerHours: creativeOptions.timerHours || 6,
+        timerMinutes: creativeOptions.timerMinutes || 30,
+        stockLeft: creativeOptions.stockLeft || 5,
+        // v4.0 Product Effects
+        showProductGlow: creativeOptions.showProductGlow !== false,
+        showSparkles: creativeOptions.showSparkles !== false,
+        showReflection: creativeOptions.showReflection || false,
+        showDecorations: creativeOptions.showDecorations !== false,
+        // v4.0 Social Proof
+        showSocialProof: creativeOptions.showSocialProof || false,
+        socialProofType: creativeOptions.socialProofType || 'best_seller',
+        // v4.0 Price Tag
+        showPriceTag: creativeOptions.showPriceTag || false,
+        originalPrice: creativeOptions.originalPrice || '',
+        salePrice: creativeOptions.salePrice || '',
+        // v4.0 Custom CTA
+        ctaText: creativeOptions.ctaText || '',
+        // v4.0 AI Auto-detect
+        autoDetect: creativeOptions.autoDetect || false
       })
     });
 
@@ -1572,7 +1610,7 @@ export const generateCreativeImage = async (imageBase64, creativeOptions) => {
     }
 
     const data = await response.json();
-    log('🎨 Creative Studio: Generation complete', data);
+    log('🎨 Creative Studio v4.0: ULTIMATE generation complete', data);
     return data;
 
   } catch (error) {
