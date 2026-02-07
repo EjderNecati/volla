@@ -1,17 +1,16 @@
 """
-Creative Studio Mode - PROFESSIONAL AD GENERATOR v5.0
-=================================================================
-Complete rewrite focused on OUTPUT QUALITY over features.
+Creative Studio v6.0 - PROFESSIONAL AD CREATIVE GENERATOR
+==========================================================
+Complete redesign focused on IMPACTFUL, PROFESSIONAL output.
 
-DESIGN PHILOSOPHY:
-- Clean, minimalist backgrounds (PIL-generated, not AI)
-- Modern badge designs (pill shapes, subtle gradients)
-- Professional typography
-- Proper composition (rule of thirds, breathing room)
-- Subtle effects (no sparkle bombardment)
-- Premium product integration
+KEY PRINCIPLES:
+1. AI-generated BEAUTIFUL backgrounds (not flat gradients)
+2. BIG, impactful headline text
+3. LARGE discount badges that grab attention
+4. Professional product integration
+5. Clear call-to-action
 
-Product is 100% preserved - we never modify the product image.
+Product image is 100% preserved.
 """
 
 import os
@@ -19,23 +18,47 @@ import io
 import json
 import base64
 import traceback
+import requests
 import random
 import math
 from http.server import BaseHTTPRequestHandler
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
 print("=" * 60)
-print("🎨 Creative Studio v5.0 - PROFESSIONAL Ad Generator")
+print("🎨 Creative Studio v6.0 - PROFESSIONAL Ad Generator")
 print("=" * 60)
 
-# Get credentials
+# Credentials
 GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "")
 GOOGLE_API_KEY = os.environ.get("VERTEX_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+oauth2_token = None
+project_id = None
+
+try:
+    if GOOGLE_CREDENTIALS_JSON:
+        from google.oauth2 import service_account
+        import google.auth.transport.requests
+
+        creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+        project_id = creds_dict.get("project_id", "")
+
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        oauth2_token = credentials.token
+        print(f"✅ OAuth2 ready: {project_id}")
+except Exception as e:
+    print(f"⚠️ OAuth2 failed: {e}")
 
 _last_errors = []
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ASPECT RATIO DIMENSIONS
+# DIMENSIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ASPECT_DIMENSIONS = {
@@ -45,200 +68,187 @@ ASPECT_DIMENSIONS = {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MODERN THEME CONFIGURATIONS - Clean, Professional
+# THEME CONFIGURATIONS - Professional Ad Styles
 # ═══════════════════════════════════════════════════════════════════════════════
 
 THEMES = {
     'black_friday': {
         'name': 'Black Friday',
-        'bg_gradient': [(15, 15, 18), (25, 25, 30)],
-        'accent': (255, 215, 0),  # Gold
-        'accent_dark': (218, 165, 32),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (180, 180, 180),
+        'headline': 'BLACK FRIDAY',
+        'subheadline': 'MEGA SALE',
+        'bg_prompt': 'Luxurious Black Friday sale background. Deep black with elegant gold particle effects, bokeh lights, and subtle golden shimmer. Premium luxury brand aesthetic. Professional advertising photography backdrop. Rich dark velvet texture with gold dust particles floating. 8K quality, studio lighting. Empty center for product placement. No text, no products.',
+        'bg_fallback': [(10, 10, 12), (25, 22, 15)],
+        'headline_color': (255, 215, 0),
         'badge_bg': (255, 215, 0),
         'badge_text': (0, 0, 0),
         'cta_bg': (255, 215, 0),
         'cta_text': (0, 0, 0),
         'cta_label': 'SHOP NOW',
-        'glow_color': (255, 215, 0, 30),
-        'pattern': 'diagonal_lines'
+        'accent': (255, 215, 0),
+    },
+    'flash_sale': {
+        'name': 'Flash Sale',
+        'headline': '⚡ FLASH SALE',
+        'subheadline': 'LIMITED TIME',
+        'bg_prompt': 'Dynamic Flash Sale background. Bold red gradient with energetic lightning bolt effects, speed lines, and electric sparks. High energy, urgent feeling. Modern e-commerce advertisement style. Vibrant red to orange gradient with motion blur effects. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(200, 30, 30), (255, 100, 50)],
+        'headline_color': (255, 255, 255),
+        'badge_bg': (255, 235, 59),
+        'badge_text': (200, 30, 30),
+        'cta_bg': (255, 255, 255),
+        'cta_text': (200, 30, 30),
+        'cta_label': 'BUY NOW',
+        'accent': (255, 235, 59),
     },
     'valentines': {
         'name': "Valentine's Day",
-        'bg_gradient': [(255, 240, 245), (255, 220, 230)],
-        'accent': (219, 39, 119),  # Pink
-        'accent_dark': (190, 24, 93),
-        'text_primary': (60, 30, 40),
-        'text_secondary': (120, 80, 90),
+        'headline': "VALENTINE'S",
+        'subheadline': 'SPECIAL',
+        'bg_prompt': 'Romantic Valentine sale background. Soft pink and rose gradient with floating hearts bokeh, gentle sparkles, and romantic atmosphere. Luxury perfume advertisement style. Blush pink silk texture with soft lighting. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(255, 220, 230), (255, 180, 200)],
+        'headline_color': (190, 30, 90),
         'badge_bg': (219, 39, 119),
         'badge_text': (255, 255, 255),
         'cta_bg': (219, 39, 119),
         'cta_text': (255, 255, 255),
         'cta_label': 'GIFT NOW',
-        'glow_color': (219, 39, 119, 25),
-        'pattern': 'none'
+        'accent': (219, 39, 119),
     },
     'christmas': {
         'name': 'Christmas',
-        'bg_gradient': [(25, 45, 35), (45, 25, 25)],
-        'accent': (255, 215, 0),  # Gold
-        'accent_dark': (200, 160, 0),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (200, 200, 200),
+        'headline': '🎄 CHRISTMAS',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Magical Christmas sale background. Rich red and green with golden bokeh lights, snowflakes, and festive sparkle. Warm cozy holiday atmosphere. Coca-Cola advertisement quality. Deep red velvet with gold accents. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(120, 20, 20), (20, 80, 40)],
+        'headline_color': (255, 215, 0),
         'badge_bg': (180, 30, 30),
         'badge_text': (255, 255, 255),
         'cta_bg': (34, 139, 34),
         'cta_text': (255, 255, 255),
         'cta_label': 'GET YOURS',
-        'glow_color': (255, 215, 0, 25),
-        'pattern': 'none'
+        'accent': (255, 215, 0),
     },
     'summer_sale': {
         'name': 'Summer Sale',
-        'bg_gradient': [(0, 180, 216), (255, 200, 87)],
-        'accent': (255, 107, 53),  # Orange
-        'accent_dark': (220, 80, 30),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (255, 255, 255, 200),
+        'headline': '☀️ SUMMER',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Fresh Summer sale background. Bright turquoise to sunny yellow gradient with tropical vibes, palm leaf shadows, and beach atmosphere. Resort advertisement quality. Ocean blue meets sunshine yellow. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(0, 180, 210), (255, 200, 100)],
+        'headline_color': (255, 255, 255),
         'badge_bg': (255, 107, 53),
         'badge_text': (255, 255, 255),
         'cta_bg': (255, 255, 255),
         'cta_text': (0, 150, 180),
         'cta_label': 'COOL DEALS',
-        'glow_color': (255, 255, 255, 40),
-        'pattern': 'none'
+        'accent': (255, 107, 53),
     },
     'new_year': {
         'name': 'New Year',
-        'bg_gradient': [(10, 15, 40), (25, 25, 60)],
-        'accent': (255, 215, 0),  # Gold
-        'accent_dark': (200, 170, 0),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (180, 180, 200),
+        'headline': '🎆 NEW YEAR',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Glamorous New Year celebration background. Midnight blue with gold confetti, champagne bubbles, and firework sparkles. Luxury party atmosphere. Premium celebration aesthetic. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(10, 15, 45), (30, 30, 80)],
+        'headline_color': (255, 215, 0),
         'badge_bg': (255, 215, 0),
-        'badge_text': (20, 20, 50),
+        'badge_text': (20, 20, 60),
         'cta_bg': (255, 215, 0),
-        'cta_text': (20, 20, 50),
+        'cta_text': (20, 20, 60),
         'cta_label': 'CELEBRATE',
-        'glow_color': (255, 215, 0, 30),
-        'pattern': 'subtle_sparkle'
-    },
-    'flash_sale': {
-        'name': 'Flash Sale',
-        'bg_gradient': [(220, 38, 38), (239, 68, 68)],
-        'accent': (255, 235, 59),  # Yellow
-        'accent_dark': (230, 210, 40),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (255, 255, 255, 200),
-        'badge_bg': (255, 235, 59),
-        'badge_text': (180, 30, 30),
-        'cta_bg': (255, 255, 255),
-        'cta_text': (220, 38, 38),
-        'cta_label': 'BUY NOW',
-        'glow_color': (255, 235, 59, 40),
-        'pattern': 'none'
+        'accent': (255, 215, 0),
     },
     'mothers_day': {
         'name': "Mother's Day",
-        'bg_gradient': [(245, 230, 245), (255, 220, 235)],
-        'accent': (147, 51, 234),  # Purple
-        'accent_dark': (124, 40, 200),
-        'text_primary': (60, 30, 60),
-        'text_secondary': (100, 70, 100),
+        'headline': "💐 MOTHER'S DAY",
+        'subheadline': 'SPECIAL',
+        'bg_prompt': 'Elegant Mother Day background. Soft lavender to blush pink gradient with delicate flower petals, gentle bokeh, and warm loving atmosphere. Luxury gift brand aesthetic. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(240, 220, 245), (255, 210, 230)],
+        'headline_color': (120, 40, 140),
         'badge_bg': (147, 51, 234),
         'badge_text': (255, 255, 255),
         'cta_bg': (219, 39, 119),
         'cta_text': (255, 255, 255),
         'cta_label': 'FOR MOM',
-        'glow_color': (147, 51, 234, 25),
-        'pattern': 'none'
+        'accent': (147, 51, 234),
     },
     'easter': {
         'name': 'Easter',
-        'bg_gradient': [(240, 253, 244), (254, 243, 199)],
-        'accent': (74, 222, 128),  # Green
-        'accent_dark': (34, 197, 94),
-        'text_primary': (40, 60, 40),
-        'text_secondary': (80, 100, 80),
+        'headline': '🐣 EASTER',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Fresh Easter spring background. Soft pastel green and yellow gradient with subtle flower patterns, spring sunshine, and fresh atmosphere. Light and airy feeling. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(230, 250, 240), (255, 250, 220)],
+        'headline_color': (50, 120, 80),
         'badge_bg': (251, 191, 36),
         'badge_text': (60, 40, 0),
         'cta_bg': (74, 222, 128),
         'cta_text': (255, 255, 255),
         'cta_label': 'SPRING DEALS',
-        'glow_color': (74, 222, 128, 30),
-        'pattern': 'none'
+        'accent': (74, 222, 128),
     },
     'halloween': {
         'name': 'Halloween',
-        'bg_gradient': [(20, 10, 30), (40, 20, 50)],
-        'accent': (249, 115, 22),  # Orange
-        'accent_dark': (234, 88, 12),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (200, 180, 200),
+        'headline': '🎃 HALLOWEEN',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Spooky Halloween sale background. Deep purple and black with orange accents, mysterious fog, subtle bat silhouettes. Fun spooky atmosphere, not scary. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(30, 15, 45), (50, 25, 60)],
+        'headline_color': (249, 115, 22),
         'badge_bg': (249, 115, 22),
         'badge_text': (0, 0, 0),
         'cta_bg': (147, 51, 234),
         'cta_text': (255, 255, 255),
         'cta_label': 'SPOOKY DEALS',
-        'glow_color': (249, 115, 22, 30),
-        'pattern': 'none'
+        'accent': (249, 115, 22),
     },
     'cyber_monday': {
         'name': 'Cyber Monday',
-        'bg_gradient': [(10, 15, 25), (20, 30, 50)],
-        'accent': (0, 255, 255),  # Cyan
-        'accent_dark': (0, 200, 200),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (150, 200, 220),
+        'headline': '💻 CYBER MONDAY',
+        'subheadline': 'TECH DEALS',
+        'bg_prompt': 'Futuristic Cyber Monday background. Dark blue tech aesthetic with neon cyan grid lines, digital particles, and holographic effects. Matrix-style modern technology vibe. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(10, 20, 35), (20, 40, 60)],
+        'headline_color': (0, 255, 255),
         'badge_bg': (0, 255, 255),
         'badge_text': (0, 30, 50),
         'cta_bg': (0, 255, 255),
         'cta_text': (0, 30, 50),
         'cta_label': 'TECH DEALS',
-        'glow_color': (0, 255, 255, 30),
-        'pattern': 'grid'
+        'accent': (0, 255, 255),
     },
     'spring_sale': {
         'name': 'Spring Sale',
-        'bg_gradient': [(240, 253, 250), (236, 254, 255)],
-        'accent': (20, 184, 166),  # Teal
-        'accent_dark': (13, 148, 136),
-        'text_primary': (30, 60, 60),
-        'text_secondary': (70, 100, 100),
+        'headline': '🌸 SPRING',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Fresh Spring sale background. Light mint green to soft pink gradient with cherry blossom petals, fresh morning dew feeling. Clean and refreshing atmosphere. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(235, 250, 245), (255, 240, 245)],
+        'headline_color': (20, 150, 140),
         'badge_bg': (20, 184, 166),
         'badge_text': (255, 255, 255),
         'cta_bg': (244, 114, 182),
         'cta_text': (255, 255, 255),
         'cta_label': 'FRESH DEALS',
-        'glow_color': (20, 184, 166, 30),
-        'pattern': 'none'
+        'accent': (244, 114, 182),
     },
     'back_to_school': {
         'name': 'Back to School',
-        'bg_gradient': [(30, 58, 138), (59, 130, 246)],
-        'accent': (251, 191, 36),  # Yellow
-        'accent_dark': (245, 158, 11),
-        'text_primary': (255, 255, 255),
-        'text_secondary': (200, 220, 255),
+        'headline': '📚 BACK TO SCHOOL',
+        'subheadline': 'SALE',
+        'bg_prompt': 'Fun Back to School background. Bright blue with yellow accents, subtle notebook paper texture, pencil and ruler patterns. Educational but exciting feeling. 8K quality. Empty center. No text, no products.',
+        'bg_fallback': [(40, 80, 160), (80, 140, 220)],
+        'headline_color': (255, 255, 255),
         'badge_bg': (251, 191, 36),
         'badge_text': (30, 50, 100),
         'cta_bg': (255, 255, 255),
-        'cta_text': (30, 58, 138),
+        'cta_text': (40, 80, 160),
         'cta_label': 'LEARN MORE',
-        'glow_color': (251, 191, 36, 30),
-        'pattern': 'none'
+        'accent': (251, 191, 36),
     }
 }
 
-# Social proof types
 SOCIAL_PROOF = {
-    'best_seller': {'label': 'BEST SELLER', 'icon': '★'},
-    'top_rated': {'label': 'TOP RATED', 'icon': '★'},
-    'limited_edition': {'label': 'LIMITED', 'icon': '◆'},
-    'trending': {'label': 'TRENDING', 'icon': '↗'},
-    'new_arrival': {'label': 'NEW', 'icon': '✦'},
-    'editor_choice': {'label': "EDITOR'S PICK", 'icon': '♛'}
+    'best_seller': '🏆 BEST SELLER',
+    'top_rated': '⭐ TOP RATED',
+    'limited_edition': '💎 LIMITED EDITION',
+    'trending': '🔥 TRENDING',
+    'new_arrival': '✨ NEW ARRIVAL',
+    'editor_choice': '👑 EDITOR\'S PICK'
 }
 
 
@@ -247,137 +257,145 @@ SOCIAL_PROOF = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_font(size, bold=True):
-    """Load font with fallbacks"""
+    """Load a font with fallbacks"""
     font_paths = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
+        "C:/Windows/Fonts/arialbd.ttf",
         "C:/Windows/Fonts/arial.ttf",
-        "C:/Windows/Fonts/arialbd.ttf"
     ]
-
     for path in font_paths:
         try:
             return ImageFont.truetype(path, size)
         except:
             continue
-
     return ImageFont.load_default()
 
 
+def get_fresh_token():
+    """Get fresh OAuth2 token"""
+    global oauth2_token
+    try:
+        if GOOGLE_CREDENTIALS_JSON:
+            from google.oauth2 import service_account
+            import google.auth.transport.requests
+
+            creds_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+            credentials = service_account.Credentials.from_service_account_info(
+                creds_dict,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            auth_req = google.auth.transport.requests.Request()
+            credentials.refresh(auth_req)
+            oauth2_token = credentials.token
+            return oauth2_token
+    except:
+        pass
+    return oauth2_token
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# BACKGROUND GENERATION - Clean, Professional PIL-based
+# BACKGROUND GENERATION - AI + Fallback
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def create_gradient_background(theme_config, dimensions):
-    """Create a clean gradient background"""
+def generate_ai_background(theme_config, dimensions, token, proj_id):
+    """Generate beautiful background using Gemini"""
+    width, height = dimensions
+    prompt = theme_config['bg_prompt']
+
+    print(f"   🎨 Generating AI background...")
+
+    if not token or not proj_id:
+        print(f"   ⚠️ No credentials, using fallback")
+        return create_fallback_background(theme_config, dimensions)
+
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{proj_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Adjust aspect ratio hint
+    if width == height:
+        aspect = "1:1"
+    elif width < height:
+        aspect = "9:16" if height / width > 1.5 else "3:4"
+    else:
+        aspect = "16:9"
+
+    payload = {
+        "instances": [{"prompt": prompt}],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect,
+            "safetyFilterLevel": "block_few",
+            "personGeneration": "dont_allow"
+        }
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+
+        if response.status_code == 200:
+            result = response.json()
+            if "predictions" in result and len(result["predictions"]) > 0:
+                img_b64 = result["predictions"][0].get("bytesBase64Encoded")
+                if img_b64:
+                    img_bytes = base64.b64decode(img_b64)
+                    bg = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
+                    bg = bg.resize(dimensions, Image.Resampling.LANCZOS)
+                    print(f"   ✅ AI background generated")
+                    return bg
+
+        print(f"   ⚠️ AI failed ({response.status_code}), using fallback")
+    except Exception as e:
+        print(f"   ⚠️ AI error: {e}")
+
+    return create_fallback_background(theme_config, dimensions)
+
+
+def create_fallback_background(theme_config, dimensions):
+    """Create gradient fallback background"""
     width, height = dimensions
     image = Image.new('RGBA', (width, height))
     draw = ImageDraw.Draw(image)
 
-    start_color = theme_config['bg_gradient'][0]
-    end_color = theme_config['bg_gradient'][1]
+    colors = theme_config['bg_fallback']
+    start = colors[0]
+    end = colors[1]
 
-    # Smooth gradient
     for y in range(height):
         ratio = y / height
-        r = int(start_color[0] + (end_color[0] - start_color[0]) * ratio)
-        g = int(start_color[1] + (end_color[1] - start_color[1]) * ratio)
-        b = int(start_color[2] + (end_color[2] - start_color[2]) * ratio)
+        r = int(start[0] + (end[0] - start[0]) * ratio)
+        g = int(start[1] + (end[1] - start[1]) * ratio)
+        b = int(start[2] + (end[2] - start[2]) * ratio)
         draw.line([(0, y), (width, y)], fill=(r, g, b, 255))
 
-    return image
-
-
-def add_subtle_pattern(image, pattern_type, theme_config):
-    """Add subtle background patterns"""
-    if pattern_type == 'none':
-        return image
-
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
+    # Add subtle noise/texture
     accent = theme_config['accent']
+    for _ in range(50):
+        x = random.randint(0, width)
+        y = random.randint(0, height)
+        size = random.randint(2, 5)
+        opacity = random.randint(10, 40)
+        draw.ellipse([x-size, y-size, x+size, y+size], fill=(*accent, opacity))
 
-    if pattern_type == 'diagonal_lines':
-        # Subtle diagonal lines
-        for i in range(-height, width + height, 80):
-            draw.line([(i, 0), (i + height, height)],
-                     fill=(*accent[:3], 8), width=1)
-
-    elif pattern_type == 'grid':
-        # Tech grid pattern
-        for x in range(0, width, 60):
-            draw.line([(x, 0), (x, height)], fill=(*accent[:3], 12), width=1)
-        for y in range(0, height, 60):
-            draw.line([(0, y), (width, y)], fill=(*accent[:3], 12), width=1)
-
-    elif pattern_type == 'subtle_sparkle':
-        # Very subtle sparkles (only a few)
-        for _ in range(8):
-            x = random.randint(50, width - 50)
-            y = random.randint(50, height - 50)
-            size = random.randint(2, 4)
-            draw.ellipse([x-size, y-size, x+size, y+size],
-                        fill=(*accent[:3], random.randint(30, 60)))
-
+    print(f"   ✅ Fallback background created")
     return image
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PRODUCT PLACEMENT - Professional Integration
+# PRODUCT PLACEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def create_soft_shadow(product_image, blur=30, opacity=80, offset_y=20):
-    """Create a professional soft shadow"""
-    width, height = product_image.size
-
-    # Create shadow from alpha channel
-    if product_image.mode != 'RGBA':
-        product_image = product_image.convert('RGBA')
-
-    # Create shadow layer
-    shadow = Image.new('RGBA', (width + blur*2, height + blur*2 + offset_y), (0, 0, 0, 0))
-
-    # Get alpha channel and create shadow
-    alpha = product_image.split()[3]
-    shadow_base = Image.new('RGBA', product_image.size, (0, 0, 0, opacity))
-    shadow_base.putalpha(alpha)
-
-    # Paste shadow with offset
-    shadow.paste(shadow_base, (blur, blur + offset_y), shadow_base)
-
-    # Blur the shadow
-    shadow = shadow.filter(ImageFilter.GaussianBlur(blur))
-
-    return shadow, blur
-
-
-def create_product_glow(product_image, glow_color, glow_size=40):
-    """Create subtle glow around product"""
-    if product_image.mode != 'RGBA':
-        product_image = product_image.convert('RGBA')
-
-    width, height = product_image.size
-    glow = Image.new('RGBA', (width + glow_size*2, height + glow_size*2), (0, 0, 0, 0))
-
-    # Create glow from alpha
-    alpha = product_image.split()[3]
-    glow_base = Image.new('RGBA', product_image.size, glow_color)
-    glow_base.putalpha(alpha)
-
-    glow.paste(glow_base, (glow_size, glow_size), glow_base)
-    glow = glow.filter(ImageFilter.GaussianBlur(glow_size))
-
-    return glow
-
-
-def place_product(background, product_image, theme_config, options, layout_variant):
-    """Place product with professional effects"""
+def place_product(background, product_image, theme_config, layout_idx):
+    """Place product with professional shadow and frame"""
     width, height = background.size
 
-    # Product sizing - different for each layout variant
-    scale_factors = [0.45, 0.42, 0.48, 0.40, 0.44, 0.46]
-    scale = scale_factors[layout_variant % len(scale_factors)]
+    # Scale based on layout
+    scales = [0.38, 0.40, 0.42, 0.36, 0.38, 0.40]
+    scale = scales[layout_idx % len(scales)]
 
     product_max = int(min(width, height) * scale)
     ratio = min(product_max / product_image.width, product_max / product_image.height)
@@ -387,45 +405,34 @@ def place_product(background, product_image, theme_config, options, layout_varia
 
     product_resized = product_image.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
-    # Position variants
-    positions = [
-        (0.5, 0.48),   # Center
-        (0.35, 0.50),  # Left
-        (0.65, 0.50),  # Right
-        (0.5, 0.42),   # Top-center
-        (0.5, 0.55),   # Bottom-center
-        (0.45, 0.48),  # Slight left
-    ]
-    pos = positions[layout_variant % len(positions)]
+    # Position - center-bottom area (leave top for headline)
+    product_x = (width - new_w) // 2
+    product_y = int(height * 0.35)  # Lower position to leave room for headline
 
-    product_x = int(width * pos[0] - new_w / 2)
-    product_y = int(height * pos[1] - new_h / 2)
+    # Create shadow
+    shadow_blur = 30
+    shadow_opacity = 80
+    shadow = Image.new('RGBA', (new_w + shadow_blur*2, new_h + shadow_blur*2 + 20), (0, 0, 0, 0))
 
-    # Clamp to safe area
-    margin = 40
-    product_x = max(margin, min(product_x, width - new_w - margin))
-    product_y = max(margin, min(product_y, height - new_h - margin))
+    if product_resized.mode == 'RGBA':
+        alpha = product_resized.split()[3]
+        shadow_base = Image.new('RGBA', product_resized.size, (0, 0, 0, shadow_opacity))
+        shadow_base.putalpha(alpha)
+        shadow.paste(shadow_base, (shadow_blur, shadow_blur + 20), shadow_base)
+        shadow = shadow.filter(ImageFilter.GaussianBlur(shadow_blur))
 
-    # Add subtle glow if enabled
-    if options.get('showProductGlow', True):
-        glow_color = theme_config['glow_color']
-        glow = create_product_glow(product_resized, glow_color, glow_size=35)
-        background.paste(glow, (product_x - 35, product_y - 35), glow)
+    # Paste shadow
+    background.paste(shadow, (product_x - shadow_blur, product_y - shadow_blur), shadow)
 
-    # Add soft shadow
-    shadow, blur = create_soft_shadow(product_resized, blur=25, opacity=60, offset_y=15)
-    background.paste(shadow, (product_x - blur, product_y - blur), shadow)
-
-    # Add white background/frame for product
-    frame_padding = 12
-    frame = Image.new('RGBA', (new_w + frame_padding*2, new_h + frame_padding*2), (255, 255, 255, 250))
+    # White frame/card behind product
+    frame_padding = 15
+    frame = Image.new('RGBA', (new_w + frame_padding*2, new_h + frame_padding*2), (0, 0, 0, 0))
     frame_draw = ImageDraw.Draw(frame)
-
-    # Rounded corners for frame
-    radius = 16
-    frame_draw.rounded_rectangle([0, 0, new_w + frame_padding*2, new_h + frame_padding*2],
-                                  radius=radius, fill=(255, 255, 255, 250))
-
+    frame_draw.rounded_rectangle(
+        [0, 0, new_w + frame_padding*2, new_h + frame_padding*2],
+        radius=20,
+        fill=(255, 255, 255, 250)
+    )
     background.paste(frame, (product_x - frame_padding, product_y - frame_padding), frame)
 
     # Paste product
@@ -438,11 +445,58 @@ def place_product(background, product_image, theme_config, options, layout_varia
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MODERN BADGE DESIGN - Pill Shape, Clean
+# HEADLINE TEXT - BIG AND IMPACTFUL
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_discount_badge(image, discount, theme_config, position='top_right'):
-    """Draw modern pill-shaped discount badge"""
+def draw_headline(image, theme_config, discount):
+    """Draw BIG headline at top"""
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+
+    headline = theme_config['headline']
+    subheadline = theme_config['subheadline']
+    color = theme_config['headline_color']
+
+    # Main headline - BIG
+    headline_size = int(width * 0.09)  # 9% of width = BIG
+    headline_font = load_font(headline_size)
+
+    bbox = draw.textbbox((0, 0), headline, font=headline_font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+
+    x = (width - text_w) // 2
+    y = int(height * 0.06)
+
+    # Text shadow
+    shadow_offset = 3
+    draw.text((x + shadow_offset, y + shadow_offset), headline, font=headline_font, fill=(0, 0, 0, 100))
+
+    # Main text
+    draw.text((x, y), headline, font=headline_font, fill=color)
+
+    # Subheadline
+    sub_size = int(width * 0.05)
+    sub_font = load_font(sub_size)
+
+    bbox2 = draw.textbbox((0, 0), subheadline, font=sub_font)
+    sub_w = bbox2[2] - bbox2[0]
+
+    sub_x = (width - sub_w) // 2
+    sub_y = y + text_h + 10
+
+    draw.text((sub_x + 2, sub_y + 2), subheadline, font=sub_font, fill=(0, 0, 0, 80))
+    draw.text((sub_x, sub_y), subheadline, font=sub_font, fill=color)
+
+    return image
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISCOUNT BADGE - LARGE AND PROMINENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def draw_discount_badge(image, discount, theme_config, layout_idx):
+    """Draw LARGE discount badge"""
     if not discount:
         return image
 
@@ -450,170 +504,108 @@ def draw_discount_badge(image, discount, theme_config, position='top_right'):
     width, height = image.size
 
     badge_text = f"-{discount}%"
-    font = load_font(32)
+
+    # LARGE badge font
+    badge_size = int(width * 0.07)
+    font = load_font(badge_size)
 
     bbox = draw.textbbox((0, 0), badge_text, font=font)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
 
-    # Pill dimensions
-    padding_x = 24
-    padding_y = 14
-    badge_w = text_w + padding_x * 2
-    badge_h = text_h + padding_y * 2
+    # Badge dimensions
+    padding = 25
+    badge_w = text_w + padding * 2
+    badge_h = text_h + padding * 2
 
-    # Position
-    margin = 30
-    positions = {
-        'top_right': (width - badge_w - margin, margin),
-        'top_left': (margin, margin),
-        'top_center': ((width - badge_w) / 2, margin)
-    }
-    x, y = positions.get(position, positions['top_right'])
+    # Position - top right area but visible
+    positions = [
+        (width - badge_w - 30, int(height * 0.22)),
+        (30, int(height * 0.22)),
+        (width - badge_w - 30, int(height * 0.18)),
+    ]
+    x, y = positions[layout_idx % len(positions)]
+
+    badge_bg = theme_config['badge_bg']
+    badge_text_color = theme_config['badge_text']
 
     # Shadow
-    shadow_offset = 4
-    draw.rounded_rectangle(
-        [x + shadow_offset, y + shadow_offset, x + badge_w + shadow_offset, y + badge_h + shadow_offset],
-        radius=badge_h // 2,
-        fill=(0, 0, 0, 40)
-    )
+    draw.ellipse([x + 4, y + 4, x + badge_w + 4, y + badge_h + 4], fill=(0, 0, 0, 60))
 
-    # Main badge
-    badge_color = theme_config['badge_bg']
-    draw.rounded_rectangle(
-        [x, y, x + badge_w, y + badge_h],
-        radius=badge_h // 2,
-        fill=badge_color
-    )
+    # Badge circle
+    draw.ellipse([x, y, x + badge_w, y + badge_h], fill=badge_bg)
 
-    # Subtle highlight
-    draw.rounded_rectangle(
-        [x + 2, y + 2, x + badge_w - 4, y + badge_h // 2],
-        radius=badge_h // 4,
-        fill=(*badge_color[:3], 80) if len(badge_color) == 3 else (255, 255, 255, 40)
-    )
+    # Highlight
+    highlight_size = badge_w * 0.7
+    draw.ellipse([x + 5, y + 5, x + highlight_size, y + highlight_size * 0.5],
+                 fill=(255, 255, 255, 80))
 
     # Text
-    text_color = theme_config['badge_text']
-    text_x = x + (badge_w - text_w) / 2
-    text_y = y + (badge_h - text_h) / 2 - 2
-    draw.text((text_x, text_y), badge_text, font=font, fill=text_color)
-
-    return image
-
-
-def draw_social_proof_badge(image, badge_type, theme_config, position='top_left'):
-    """Draw modern social proof badge"""
-    if badge_type not in SOCIAL_PROOF:
-        return image
-
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
-
-    badge_info = SOCIAL_PROOF[badge_type]
-    label = badge_info['label']
-    icon = badge_info['icon']
-
-    font = load_font(14)
-    icon_font = load_font(12)
-
-    full_text = f"{icon} {label}"
-    bbox = draw.textbbox((0, 0), full_text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
-
-    padding_x = 16
-    padding_y = 10
-    badge_w = text_w + padding_x * 2
-    badge_h = text_h + padding_y * 2
-
-    margin = 30
-    x = margin
-    y = margin + 80  # Below discount badge
-
-    # Dark semi-transparent background
-    draw.rounded_rectangle(
-        [x, y, x + badge_w, y + badge_h],
-        radius=6,
-        fill=(0, 0, 0, 180)
-    )
-
-    # Text
-    text_x = x + padding_x
-    text_y = y + padding_y - 2
-    draw.text((text_x, text_y), full_text, font=font, fill=(255, 255, 255))
+    text_x = x + (badge_w - text_w) // 2
+    text_y = y + (badge_h - text_h) // 2 - 3
+    draw.text((text_x, text_y), badge_text, font=font, fill=badge_text_color)
 
     return image
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CTA BUTTON - Modern, Clean
+# CTA BUTTON
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_cta_button(image, theme_config, custom_text=None, position='bottom_center'):
-    """Draw modern CTA button"""
+def draw_cta_button(image, theme_config, custom_text=None):
+    """Draw CTA button at bottom"""
     draw = ImageDraw.Draw(image)
     width, height = image.size
 
     cta_text = custom_text if custom_text else theme_config['cta_label']
-    font = load_font(18)
+
+    # Font size
+    font_size = int(width * 0.035)
+    font = load_font(font_size)
 
     bbox = draw.textbbox((0, 0), cta_text, font=font)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
 
-    padding_x = 32
-    padding_y = 16
+    # Button dimensions
+    padding_x = 40
+    padding_y = 18
     btn_w = text_w + padding_x * 2
     btn_h = text_h + padding_y * 2
 
-    margin = 40
-    positions = {
-        'bottom_center': ((width - btn_w) / 2, height - btn_h - margin),
-        'bottom_right': (width - btn_w - margin, height - btn_h - margin),
-        'bottom_left': (margin, height - btn_h - margin)
-    }
-    x, y = positions.get(position, positions['bottom_center'])
+    # Position - bottom center
+    x = (width - btn_w) // 2
+    y = height - btn_h - 50
+
+    cta_bg = theme_config['cta_bg']
+    cta_text_color = theme_config['cta_text']
 
     # Shadow
-    shadow_offset = 4
-    draw.rounded_rectangle(
-        [x + shadow_offset, y + shadow_offset, x + btn_w + shadow_offset, y + btn_h + shadow_offset],
-        radius=btn_h // 2,
-        fill=(0, 0, 0, 50)
-    )
+    draw.rounded_rectangle([x + 3, y + 3, x + btn_w + 3, y + btn_h + 3],
+                          radius=btn_h // 2, fill=(0, 0, 0, 60))
 
-    # Button background
-    btn_color = theme_config['cta_bg']
-    draw.rounded_rectangle(
-        [x, y, x + btn_w, y + btn_h],
-        radius=btn_h // 2,
-        fill=btn_color
-    )
+    # Button
+    draw.rounded_rectangle([x, y, x + btn_w, y + btn_h],
+                          radius=btn_h // 2, fill=cta_bg)
 
     # Highlight
-    draw.rounded_rectangle(
-        [x + 3, y + 3, x + btn_w - 6, y + btn_h // 2],
-        radius=btn_h // 4,
-        fill=(255, 255, 255, 50)
-    )
+    draw.rounded_rectangle([x + 3, y + 3, x + btn_w - 6, y + btn_h // 2],
+                          radius=btn_h // 4, fill=(255, 255, 255, 60))
 
     # Text
-    text_color = theme_config['cta_text']
-    text_x = x + (btn_w - text_w) / 2
-    text_y = y + (btn_h - text_h) / 2 - 2
-    draw.text((text_x, text_y), cta_text, font=font, fill=text_color)
+    text_x = x + (btn_w - text_w) // 2
+    text_y = y + (btn_h - text_h) // 2 - 2
+    draw.text((text_x, text_y), cta_text, font=font, fill=cta_text_color)
 
     return image
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRUST BADGES - Minimal, Clean
+# TRUST BADGES
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def draw_trust_badges(image, theme_config, options):
-    """Draw minimal trust badges"""
+    """Draw trust badges at bottom"""
     if not options.get('showTrustBadges', True):
         return image
 
@@ -621,14 +613,11 @@ def draw_trust_badges(image, theme_config, options):
     width, height = image.size
 
     badges = []
-
     if options.get('showRating', True):
         rating = options.get('rating', 4.9)
         badges.append(f"★ {rating}")
-
     if options.get('showShipping', True):
         badges.append("Free Shipping")
-
     if options.get('showSoldCount', False):
         sold = options.get('soldCount', '1000+')
         badges.append(f"{sold} Sold")
@@ -636,212 +625,176 @@ def draw_trust_badges(image, theme_config, options):
     if not badges:
         return image
 
-    font = load_font(12)
-    margin = 30
-    y = height - 35
+    font = load_font(14)
+    y = height - 30
 
-    # Calculate total width
-    total_width = 0
+    total_w = 0
     badge_data = []
-    for badge_text in badges:
-        bbox = draw.textbbox((0, 0), badge_text, font=font)
-        w = bbox[2] - bbox[0] + 20
-        badge_data.append((badge_text, w))
-        total_width += w + 8
+    for text in badges:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        w = bbox[2] - bbox[0] + 24
+        badge_data.append((text, w))
+        total_w += w + 10
 
-    # Center the badges
-    x = (width - total_width) / 2
+    x = (width - total_w) // 2
 
-    for badge_text, badge_w in badge_data:
-        # Background
-        draw.rounded_rectangle(
-            [x, y, x + badge_w, y + 24],
-            radius=4,
-            fill=(0, 0, 0, 150)
-        )
-
-        # Text
-        bbox = draw.textbbox((0, 0), badge_text, font=font)
-        text_w = bbox[2] - bbox[0]
-        draw.text((x + (badge_w - text_w) / 2, y + 5), badge_text, font=font, fill=(255, 255, 255))
-
-        x += badge_w + 8
+    for text, w in badge_data:
+        draw.rounded_rectangle([x, y, x + w, y + 22], radius=4, fill=(0, 0, 0, 180))
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        draw.text((x + (w - tw) // 2, y + 4), text, font=font, fill=(255, 255, 255))
+        x += w + 10
 
     return image
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PRICE TAG - Clean Design
+# SOCIAL PROOF BADGE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_price_tag(image, theme_config, original_price, sale_price, position='bottom_right'):
-    """Draw clean price tag"""
-    if not original_price and not sale_price:
+def draw_social_proof(image, badge_type, theme_config):
+    """Draw social proof badge"""
+    if badge_type not in SOCIAL_PROOF:
         return image
 
     draw = ImageDraw.Draw(image)
     width, height = image.size
 
-    price_font = load_font(28)
-    small_font = load_font(14)
+    text = SOCIAL_PROOF[badge_type]
+    font = load_font(14)
 
-    # Determine display
-    if sale_price and original_price:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+
+    badge_w = text_w + 24
+    badge_h = 30
+
+    x = 30
+    y = int(height * 0.28)
+
+    # Dark background
+    draw.rounded_rectangle([x, y, x + badge_w, y + badge_h], radius=6, fill=(0, 0, 0, 200))
+
+    # Text
+    draw.text((x + 12, y + 7), text, font=font, fill=(255, 255, 255))
+
+    return image
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRICE TAG
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def draw_price_tag(image, theme_config, orig_price, sale_price):
+    """Draw price tag"""
+    if not orig_price and not sale_price:
+        return image
+
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+
+    price_font = load_font(32)
+    small_font = load_font(16)
+    accent = theme_config['accent']
+
+    if sale_price and orig_price:
         main_text = f"${sale_price}"
-        strike_text = f"${original_price}"
+        strike_text = f"${orig_price}"
     else:
-        main_text = f"${original_price or sale_price}"
+        main_text = f"${orig_price or sale_price}"
         strike_text = None
 
     bbox = draw.textbbox((0, 0), main_text, font=price_font)
     main_w = bbox[2] - bbox[0]
-    main_h = bbox[3] - bbox[1]
 
-    tag_w = main_w + 40
-    tag_h = 70 if strike_text else 50
+    tag_w = main_w + 50
+    tag_h = 75 if strike_text else 55
 
-    margin = 30
-    x = width - tag_w - margin
-    y = height - tag_h - 70
+    x = width - tag_w - 30
+    y = height - tag_h - 90
 
     # Background
-    draw.rounded_rectangle(
-        [x, y, x + tag_w, y + tag_h],
-        radius=12,
-        fill=(0, 0, 0, 200)
-    )
+    draw.rounded_rectangle([x, y, x + tag_w, y + tag_h], radius=12, fill=(0, 0, 0, 220))
 
     if strike_text:
-        # Original price with strikethrough
         bbox2 = draw.textbbox((0, 0), strike_text, font=small_font)
-        strike_w = bbox2[2] - bbox2[0]
-        strike_x = x + (tag_w - strike_w) / 2
-        draw.text((strike_x, y + 8), strike_text, font=small_font, fill=(180, 180, 180))
-        draw.line([(strike_x - 2, y + 18), (strike_x + strike_w + 2, y + 18)],
-                  fill=(180, 180, 180), width=1)
-
-        # Sale price
-        draw.text((x + (tag_w - main_w) / 2, y + 28), main_text, font=price_font,
-                  fill=theme_config['accent'])
+        sw = bbox2[2] - bbox2[0]
+        sx = x + (tag_w - sw) // 2
+        draw.text((sx, y + 8), strike_text, font=small_font, fill=(150, 150, 150))
+        draw.line([(sx - 2, y + 18), (sx + sw + 2, y + 18)], fill=(150, 150, 150), width=1)
+        draw.text((x + (tag_w - main_w) // 2, y + 30), main_text, font=price_font, fill=accent)
     else:
-        draw.text((x + (tag_w - main_w) / 2, y + (tag_h - main_h) / 2),
-                  main_text, font=price_font, fill=(255, 255, 255))
+        draw.text((x + (tag_w - main_w) // 2, y + (tag_h - 32) // 2), main_text, font=price_font, fill=(255, 255, 255))
 
     return image
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# URGENCY TIMER - Minimal
+# MAIN PIPELINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_urgency_timer(image, theme_config, options):
-    """Draw minimal urgency timer"""
-    if not options.get('showUrgency', False):
-        return image
-
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
-
-    hours = options.get('timerHours', 6)
-    mins = options.get('timerMinutes', 30)
-
-    timer_text = f"⏱ {hours:02d}:{mins:02d}:00"
-    font = load_font(14)
-
-    bbox = draw.textbbox((0, 0), timer_text, font=font)
-    text_w = bbox[2] - bbox[0]
-
-    x = (width - text_w - 24) / 2
-    y = 30
-
-    # Background
-    draw.rounded_rectangle(
-        [x, y, x + text_w + 24, y + 28],
-        radius=14,
-        fill=(220, 38, 38, 220)
-    )
-
-    draw.text((x + 12, y + 6), timer_text, font=font, fill=(255, 255, 255))
-
-    return image
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# MAIN GENERATION PIPELINE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def generate_creative_v5(image_data, theme, discount, custom_note, aspect_ratio, layout_index, options):
-    """Main v5 generation pipeline - focused on quality"""
-    global _last_errors
-
+def generate_creative_v6(image_data, theme, discount, aspect_ratio, layout_idx, options, token, proj_id):
+    """Main v6 generation pipeline"""
     theme_config = THEMES.get(theme, THEMES['black_friday'])
     dimensions = ASPECT_DIMENSIONS.get(aspect_ratio, ASPECT_DIMENSIONS['1:1'])
 
     print(f"\n   ═══════════════════════════════════════")
-    print(f"   🎨 CREATIVE v5.0 - Layout {layout_index + 1}")
-    print(f"   Theme: {theme_config['name']}")
+    print(f"   🎨 CREATIVE v6.0 - {theme_config['name']}")
+    print(f"   Layout: {layout_idx + 1}")
     print(f"   ═══════════════════════════════════════")
 
-    # Decode product image
+    # Decode product
     if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
+        b64 = image_data.split('base64,')[1]
     else:
-        base64_clean = image_data
+        b64 = image_data
 
-    product_bytes = base64.b64decode(base64_clean)
+    product_bytes = base64.b64decode(b64)
     product_image = Image.open(io.BytesIO(product_bytes)).convert('RGBA')
 
-    # Step 1: Create clean gradient background
-    print("   📍 Step 1: Creating background...")
-    background = create_gradient_background(theme_config, dimensions)
+    # Step 1: Generate background
+    print("\n   📍 Step 1: Background")
+    background = generate_ai_background(theme_config, dimensions, token, proj_id)
 
-    # Step 2: Add subtle pattern
-    pattern = theme_config.get('pattern', 'none')
-    background = add_subtle_pattern(background, pattern, theme_config)
+    # Step 2: Draw headline
+    print("   📍 Step 2: Headline")
+    background = draw_headline(background, theme_config, discount)
 
     # Step 3: Place product
-    print("   📍 Step 2: Placing product...")
-    composite, product_bounds = place_product(background, product_image, theme_config, options, layout_index)
+    print("   📍 Step 3: Product")
+    composite, bounds = place_product(background, product_image, theme_config, layout_idx)
 
-    # Step 4: Add discount badge
-    print("   📍 Step 3: Adding elements...")
+    # Step 4: Discount badge
+    print("   📍 Step 4: Badge")
     if discount:
-        badge_positions = ['top_right', 'top_left', 'top_right', 'top_center', 'top_right', 'top_left']
-        composite = draw_discount_badge(composite, discount, theme_config,
-                                        badge_positions[layout_index % len(badge_positions)])
+        composite = draw_discount_badge(composite, discount, theme_config, layout_idx)
 
-    # Step 5: Add social proof
+    # Step 5: Social proof
     if options.get('showSocialProof', False):
-        composite = draw_social_proof_badge(composite, options.get('socialProofType', 'best_seller'),
-                                            theme_config)
+        composite = draw_social_proof(composite, options.get('socialProofType', 'best_seller'), theme_config)
 
-    # Step 6: Add urgency timer
-    composite = draw_urgency_timer(composite, theme_config, options)
-
-    # Step 7: Add price tag
+    # Step 6: Price tag
     if options.get('showPriceTag', False):
         composite = draw_price_tag(composite, theme_config,
                                    options.get('originalPrice', ''),
                                    options.get('salePrice', ''))
 
-    # Step 8: Add trust badges
+    # Step 7: Trust badges
     composite = draw_trust_badges(composite, theme_config, options)
 
-    # Step 9: Add CTA button
-    cta_positions = ['bottom_center', 'bottom_right', 'bottom_left', 'bottom_center', 'bottom_center', 'bottom_right']
-    composite = draw_cta_button(composite, theme_config,
-                                options.get('ctaText', '') or None,
-                                cta_positions[layout_index % len(cta_positions)])
+    # Step 8: CTA
+    print("   📍 Step 5: CTA")
+    composite = draw_cta_button(composite, theme_config, options.get('ctaText', '') or None)
 
     # Convert to base64
     buffer = io.BytesIO()
     composite = composite.convert('RGB')
     composite.save(buffer, format='PNG', quality=95)
     buffer.seek(0)
-    result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    result_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-    print(f"   ✅ Layout {layout_index + 1} complete")
-    return f"data:image/png;base64,{result_base64}"
+    print(f"   ✅ Layout {layout_idx + 1} complete")
+    return f"data:image/png;base64,{result_b64}"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -857,9 +810,6 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        global _last_errors
-        _last_errors = []
-
         try:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -868,11 +818,9 @@ class handler(BaseHTTPRequestHandler):
             image_data = data.get('image', '')
             theme = data.get('theme', 'black_friday')
             discount = data.get('discount')
-            custom_note = data.get('customNote', '')
             output_count = min(4, max(1, int(data.get('outputCount', 2))))
             aspect_ratio = data.get('aspectRatio', '1:1')
 
-            # v5 options
             options = {
                 'showTrustBadges': data.get('showTrustBadges', True),
                 'showRating': data.get('showRating', True),
@@ -880,11 +828,6 @@ class handler(BaseHTTPRequestHandler):
                 'showSoldCount': data.get('showSoldCount', False),
                 'soldCount': data.get('soldCount', '1000+'),
                 'rating': data.get('rating', 4.9),
-                'showUrgency': data.get('showUrgency', False),
-                'timerHours': data.get('timerHours', 6),
-                'timerMinutes': data.get('timerMinutes', 30),
-                'stockLeft': data.get('stockLeft', 5),
-                'showProductGlow': data.get('showProductGlow', True),
                 'showSocialProof': data.get('showSocialProof', False),
                 'socialProofType': data.get('socialProofType', 'best_seller'),
                 'showPriceTag': data.get('showPriceTag', False),
@@ -894,47 +837,38 @@ class handler(BaseHTTPRequestHandler):
             }
 
             print(f"\n{'='*60}")
-            print("🎨 CREATIVE STUDIO v5.0 - Professional Ad Generator")
+            print("🎨 CREATIVE STUDIO v6.0")
             print(f"   Theme: {theme}")
             print(f"   Discount: {discount}")
-            print(f"   Output Count: {output_count}")
+            print(f"   Count: {output_count}")
             print(f"{'='*60}")
 
             if not image_data:
                 raise ValueError("No image provided")
 
-            generated_images = []
+            token = get_fresh_token()
 
+            generated = []
             for i in range(output_count):
-                print(f"\n📸 Generating image {i+1}/{output_count}...")
-
-                result = generate_creative_v5(
-                    image_data=image_data,
-                    theme=theme,
-                    discount=discount,
-                    custom_note=custom_note,
-                    aspect_ratio=aspect_ratio,
-                    layout_index=i,
-                    options=options
+                print(f"\n📸 Generating {i+1}/{output_count}...")
+                result = generate_creative_v6(
+                    image_data, theme, discount, aspect_ratio, i, options, token, project_id
                 )
-
                 if result:
-                    generated_images.append(result)
+                    generated.append(result)
 
-            if generated_images:
-                print(f"\n✅ Generated {len(generated_images)} professional creatives")
-
+            if generated:
+                print(f"\n✅ Generated {len(generated)} creatives")
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-
                 self.wfile.write(json.dumps({
                     'success': True,
-                    'images': generated_images,
-                    'output_count': len(generated_images),
+                    'images': generated,
+                    'output_count': len(generated),
                     'theme': theme,
-                    'method_used': 'Creative Studio v5.0 - Professional'
+                    'method_used': 'Creative Studio v6.0'
                 }).encode())
             else:
                 raise Exception("Generation failed")
@@ -942,14 +876,11 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"❌ ERROR: {e}")
             traceback.print_exc()
-
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-
             self.wfile.write(json.dumps({
                 'success': False,
-                'error': str(e),
-                'method_used': 'Error'
+                'error': str(e)
             }).encode())
