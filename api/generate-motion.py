@@ -684,11 +684,16 @@ Return JSON ONLY:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_directive, retry_count=0):
-    """Gemini 3 Pro analyzes product and creates optimized shot plan."""
+    """
+    Gemini analyzes product and creates SPECIFIC Veo prompt.
+    Returns a clean, safe prompt tailored to this exact product and shot type.
+    """
     if not genai_client:
+        print("   ⚠️ Director AI not available")
         return None
 
     shot_config = SHOT_TYPES.get(shot_type, SHOT_TYPES['hero_reveal'])
+    safe_instruction = SAFE_CAMERA_INSTRUCTIONS.get(shot_type, SAFE_CAMERA_INSTRUCTIONS['hero_reveal'])
 
     if 'base64,' in image_data:
         b64 = image_data.split('base64,')[1]
@@ -702,51 +707,66 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
         print(f"   ⚠️ Image decode failed: {e}")
         return None
 
-    # Add strictness based on retry count
-    strictness = ""
-    if retry_count > 0:
-        strictness = f"""
-CRITICAL: This is retry #{retry_count}. Previous attempts failed quality check.
-BE EXTREMELY STRICT about:
-- Product MUST NOT move, rotate, morph, or distort in ANY way
-- Use more conservative camera movements
-- Emphasize product preservation above all else
-"""
+    # Shot-specific rules
+    shot_rules = {
+        'environment_motion': 'CAMERA MUST NOT MOVE AT ALL. Only background elements like light, shadows, or air can have subtle movement. Product is completely static.',
+        'static_breathe': 'Camera has only tiny 1-2% breathing motion. Product does not move at all.',
+        'hero_reveal': 'Camera slowly pushes in toward product. Product stays perfectly still.',
+        'hero_spotlight': 'Camera is static. Only light moves across the product surface.',
+        'cinematic_orbit': 'Camera orbits around the product. Product stays in center, does not rotate.',
+        'dolly_showcase': 'Camera moves forward toward product. Product is stationary.',
+        'macro_texture': 'Camera pulls back from close-up. Product does not move.',
+        'detail_explorer': 'Camera zooms to details. Product stays in place.',
+        'rack_focus': 'Camera is static. Only focus changes.',
+        'vertigo_zoom': 'Dolly zoom effect. Product stays same size in frame.',
+        'whip_pan_multi': 'Fast camera pans between angles.',
+        'crash_zoom': 'Fast zoom to product detail.',
+    }
 
-    analysis_prompt = f"""You are an expert video director for product commercials.
+    specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
 
-PRODUCT IMAGE: [Attached]
+    analysis_prompt = f"""Look at this product image. Write a simple video description.
 
-SHOT TYPE: {shot_config['name']}
-INSTRUCTIONS:
-{shot_config['camera_instruction']}
+SHOT TYPE: {shot_type}
+CAMERA RULE: {specific_rule}
+DURATION: {duration} seconds
+SPEED: {speed}
 
-SPECS: {duration} seconds, {speed} speed
-CUSTOM: {custom_directive or 'None'}
+Write a SHORT video prompt (max 100 words) that describes:
+1. What the product looks like (color, material, shape)
+2. The camera movement (following the CAMERA RULE exactly)
+3. The lighting (natural, soft)
 
-{strictness}
+RULES:
+- Use only simple, safe words
+- No words like: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking
+- Keep it factual and technical
+- Product must look exactly like the source image
 
-Create a PRECISE video prompt that:
-1. Describes exact camera movements with timing
-2. STRICTLY preserves product appearance
-3. Uses professional cinematography terms
-4. Includes EXPLICIT warnings about what NOT to do
+Example format:
+"A [product description] sits on a clean surface. [Camera movement description]. Natural soft lighting. Product remains unchanged throughout."
 
-ABSOLUTE RULES:
-- Product NEVER morphs, distorts, or changes
-- All textures/colors/logos stay IDENTICAL
-- Camera moves, product stays true to source
+Write the prompt:"""
 
-Write the final Veo prompt:"""
-
-    print(f"   📍 Director AI planning (attempt {retry_count + 1})...")
+    print(f"   📍 Director AI analyzing product...")
 
     try:
         response = genai_client.models.generate_content(
-            model="gemini-3-pro-preview",
+            model="gemini-2.0-flash",  # Use flash for speed
             contents=[analysis_prompt, product_image]
         )
-        return response.text
+        director_output = response.text.strip()
+
+        # Clean up the output - remove quotes if present
+        if director_output.startswith('"') and director_output.endswith('"'):
+            director_output = director_output[1:-1]
+
+        # Sanitize to remove any trigger words
+        director_output = sanitize_prompt(director_output)
+
+        print(f"   ✅ Director AI: {director_output[:100]}...")
+        return director_output
+
     except Exception as e:
         print(f"   ⚠️ Director failed: {e}")
         return None
@@ -830,40 +850,41 @@ SAFE_CAMERA_INSTRUCTIONS = {
 
 
 def build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan=None, retry_count=0):
-    """Build Veo prompt - Google content-filter safe version."""
-    # director_plan and retry_count kept for API compatibility
-    del director_plan, retry_count  # Not used - simple prompts avoid content filter
+    """Build Veo prompt - uses Director AI output when available."""
+    # Suppress unused parameter warnings
+    _ = retry_count
 
     speed_map = {
-        'slow': 'slow smooth motion',
-        'normal': 'natural pace',
-        'fast': 'energetic movement'
+        'slow': 'slow motion',
+        'normal': 'normal speed',
+        'fast': 'fast motion'
     }
-    speed_text = speed_map.get(speed, 'natural pace')
+    speed_text = speed_map.get(speed, 'normal speed')
 
-    # Use safe camera instruction instead of original
+    # If Director AI provided a custom prompt, use it (already sanitized)
+    if director_plan:
+        prompt = f"""{director_plan}
+
+Duration: {duration} seconds, {speed_text}.
+Product must look exactly like source image throughout."""
+
+        print(f"   📝 Using Director AI prompt ({len(prompt)} chars)")
+        return prompt
+
+    # Fallback: use generic safe prompt
     safe_instruction = SAFE_CAMERA_INSTRUCTIONS.get(shot_type, SAFE_CAMERA_INSTRUCTIONS['hero_reveal'])
-
-    # Sanitize custom directive
     safe_custom = sanitize_prompt(custom_directive) if custom_directive else ''
 
-    # DON'T use director_plan - it often contains trigger words
-    # Keep prompt simple and safe
-
-    prompt = f"""Clean product video, {speed_text}, {duration} seconds.
+    prompt = f"""Product video, {speed_text}, {duration} seconds.
 
 Camera: {safe_instruction}
 
-Style:
-- Product looks exactly like source image
-- Natural daylight, soft shadows
-- Simple clean background
-- Professional commercial look
-- Real photography style
+Style: Natural lighting, clean background, professional look.
+Product looks exactly like source image.
 
-{f'Note: {safe_custom}' if safe_custom else ''}"""
+{f'{safe_custom}' if safe_custom else ''}"""
 
-    print(f"   📝 Safe prompt built ({len(prompt)} chars)")
+    print(f"   📝 Using fallback prompt ({len(prompt)} chars)")
     return prompt
 
 
