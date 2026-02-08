@@ -1346,10 +1346,8 @@ class handler(BaseHTTPRequestHandler):
                 duration = data.get('duration', 6)
                 quality_mode = data.get('qualityMode', 'fast')
                 aspect_ratio = data.get('aspectRatio', '16:9')
-                custom_directive = data.get('customDirective', '')
-                retry_count = data.get('retryCount', 0)
 
-                print(f"   Shot: {shot_type}, Retry: {retry_count}")
+                print(f"   Shot: {shot_type}, Duration: {duration}s")
 
                 if not image_data:
                     raise ValueError("No image provided")
@@ -1358,15 +1356,8 @@ class handler(BaseHTTPRequestHandler):
                 if not token or not project_id:
                     raise ValueError("OAuth2 not available")
 
-                # Stage 1: Director AI
-                director_plan = director_analyze_and_plan(
-                    image_data, shot_type, speed, duration, custom_directive, retry_count
-                )
-
-                # Stage 2: Build prompt
-                prompt = build_motion_prompt(
-                    shot_type, speed, duration, custom_directive, director_plan, retry_count
-                )
+                # Build prompt directly - no Director AI (causes issues)
+                prompt = build_motion_prompt(shot_type, speed, duration, None, None, 0)
 
                 # Stage 3: Start generation
                 model_id = 'veo-3.1-generate-001' if quality_mode == 'pro' else 'veo-3.1-fast-generate-001'
