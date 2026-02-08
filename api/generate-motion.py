@@ -1040,6 +1040,12 @@ If there's visible morphing or distortion, that's a FAILURE."""
 
 def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration, token, proj_id):
     """Start Veo 3.1 video generation."""
+    # Veo only supports 16:9 and 9:16 - convert others
+    valid_ratios = ['16:9', '9:16']
+    if aspect_ratio not in valid_ratios:
+        print(f"   ⚠️ Invalid aspect ratio {aspect_ratio}, defaulting to 16:9")
+        aspect_ratio = '16:9'
+
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
         mime_type = 'image/png' if 'png' in image_data.lower() else 'image/jpeg'
