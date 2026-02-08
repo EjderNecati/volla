@@ -65,6 +65,9 @@
     "motion": {
         "title": "Motion",
         "subtitle": "AI-powered video generation from product images",
+        "aiRecommendation": "AI Recommendation",
+        "shotType": "Shot Type",
+        "generateSequence": "Generate Sequence",
         "sourceImage": "Source Image",
         "uploadImage": "Upload Image",
         "uploadFirst": "Upload an image to get started",

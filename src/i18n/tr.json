@@ -208,6 +208,9 @@
     "motion": {
         "title": "Hareket",
         "subtitle": "Ürün görsellerinden AI destekli video üretimi",
+        "aiRecommendation": "AI Önerisi",
+        "shotType": "Çekim Tipi",
+        "generateSequence": "Dizi Oluştur",
         "sourceImage": "Kaynak Görsel",
         "uploadImage": "Görsel Yükle",
         "uploadFirst": "Başlamak için bir görsel yükleyin",

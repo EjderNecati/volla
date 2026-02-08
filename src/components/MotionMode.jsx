@@ -1079,7 +1079,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     <>
                                         <p className="text-[10px] text-violet-700 mb-2">
                                             <span className="font-medium">{aiRecommendation.product_name || 'Product'}</span>
-                                            {aiRecommendation.category && ` • ${aiRecommendation.category}`}
+                                            {aiRecommendation.category && ` • ${aiRecommendation.category.charAt(0).toUpperCase() + aiRecommendation.category.slice(1).replace(/_/g, ' ')}`}
                                         </p>
                                         <div className="flex flex-wrap gap-1">
                                             {aiRecommendation.recommended_shots?.slice(0, 3).map((shot, idx) => (
