@@ -445,7 +445,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     }, [sourceImage, marketplace, cameraMovement, speed, duration, qualityMode, aspectRatio, customDirective, currentProjectId]);
 
     // Start polling for video completion with simulated progress
-    const startPolling = useCallback((opName, modId) => {
+    const startPolling = useCallback((opName, modId, cropToSquare = false) => {
         setPollingStatus('Processing video...');
         setProgress(5); // Start at 5%
 
@@ -457,7 +457,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
             pollCount++;
 
             try {
-                const result = await pollMotionGeneration(opName, modId);
+                const result = await pollMotionGeneration(opName, modId, cropToSquare);
 
                 if (result.status === 'COMPLETE') {
                     clearInterval(pollingIntervalRef.current);
@@ -535,7 +535,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                 if (retryResult.success && retryResult.operation_name) {
                                     setOperationName(retryResult.operation_name);
                                     setModelId(retryResult.model_id);
-                                    startPolling(retryResult.operation_name, retryResult.model_id);
+                                    startPolling(retryResult.operation_name, retryResult.model_id, retryResult.crop_to_square || aspectRatio === '1:1');
                                 } else {
                                     throw new Error('Retry failed to start');
                                 }
@@ -867,7 +867,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 if (result.success && result.operation_name) {
                     setOperationName(result.operation_name);
                     setModelId(result.model_id);
-                    startPolling(result.operation_name, result.model_id);
+                    startPolling(result.operation_name, result.model_id, result.crop_to_square || aspectRatio === '1:1');
                 } else {
                     throw new Error(result.error || 'Failed to start generation');
                 }
@@ -939,7 +939,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 setOperationName(result.operation_name);
                 setModelId(result.model_id);
                 // Reuse the same polling mechanism
-                startPolling(result.operation_name, result.model_id);
+                startPolling(result.operation_name, result.model_id, result.crop_to_square || aspectRatio === '1:1');
                 // Note: isEditing will be cleared when polling completes (in startPolling)
             } else {
                 throw new Error(result.error || 'Failed to start edit');

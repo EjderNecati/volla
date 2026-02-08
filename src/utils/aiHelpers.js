@@ -1526,9 +1526,10 @@ export const startMotionGeneration = async (imageBase64, motionOptions) => {
  * Poll for video generation completion
  * @param {string} operationName - The operation name from startMotionGeneration
  * @param {string} modelId - The model ID used for generation
+ * @param {boolean} cropToSquare - Whether to crop video to 1:1 when complete
  * @returns {Promise<{success: boolean, status: string, progress?: number, video_url?: string, error?: string}>}
  */
-export const pollMotionGeneration = async (operationName, modelId) => {
+export const pollMotionGeneration = async (operationName, modelId, cropToSquare = false) => {
   log('🎬 Motion: Polling for completion...');
 
   try {
@@ -1538,7 +1539,8 @@ export const pollMotionGeneration = async (operationName, modelId) => {
       body: JSON.stringify({
         action: 'poll',
         operationName: operationName,
-        modelId: modelId
+        modelId: modelId,
+        cropToSquare: cropToSquare
       })
     });
 

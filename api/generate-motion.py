@@ -1038,13 +1038,61 @@ If there's visible morphing or distortion, that's a FAILURE."""
 # VEO 3.1 VIDEO GENERATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def crop_video_to_square(video_path, output_path):
+    """Crop video to 1:1 square aspect ratio using FFmpeg."""
+    try:
+        # Get video dimensions first
+        probe_cmd = [
+            'ffprobe', '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=width,height',
+            '-of', 'csv=p=0',
+            video_path
+        ]
+        result = subprocess.run(probe_cmd, capture_output=True, timeout=30)
+        dims = result.stdout.decode().strip().split(',')
+        if len(dims) >= 2:
+            width, height = int(dims[0]), int(dims[1])
+        else:
+            width, height = 1920, 1080  # Default
+
+        # Calculate crop dimensions (center crop)
+        size = min(width, height)
+        x_offset = (width - size) // 2
+        y_offset = (height - size) // 2
+
+        # Crop to square
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', video_path,
+            '-vf', f'crop={size}:{size}:{x_offset}:{y_offset}',
+            '-c:a', 'copy',
+            output_path
+        ]
+
+        print(f"   ✂️ Cropping video to 1:1 ({size}x{size})...")
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+
+        if result.returncode == 0:
+            print(f"   ✅ Video cropped to 1:1")
+            return output_path
+        else:
+            print(f"   ⚠️ Crop failed: {result.stderr.decode()[:200]}")
+            return video_path
+
+    except Exception as e:
+        print(f"   ⚠️ Crop error: {e}")
+        return video_path
+
+
 def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration, token, proj_id):
     """Start Veo 3.1 video generation."""
-    # Veo only supports 16:9 and 9:16 - convert others
+    # Veo only supports 16:9 and 9:16 - store original for post-processing
+    original_aspect = aspect_ratio
     valid_ratios = ['16:9', '9:16']
     if aspect_ratio not in valid_ratios:
-        print(f"   ⚠️ Invalid aspect ratio {aspect_ratio}, defaulting to 16:9")
-        aspect_ratio = '16:9'
+        print(f"   ⚠️ Aspect ratio {aspect_ratio} not native, will crop after generation")
+        aspect_ratio = '16:9'  # Generate in 16:9, crop later
 
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
@@ -1090,7 +1138,13 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
             operation_name = result.get('name')
             if operation_name:
                 print(f"   ✅ Operation started")
-                return {'success': True, 'operation_name': operation_name, 'model_id': model_id, 'status': 'PENDING'}
+                return {
+                    'success': True,
+                    'operation_name': operation_name,
+                    'model_id': model_id,
+                    'status': 'PENDING',
+                    'crop_to_square': original_aspect == '1:1'  # Flag for post-processing
+                }
 
         # Log the actual error response
         error_body = response.text[:500] if response.text else 'No response body'
@@ -1102,8 +1156,8 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
         return {'success': False, 'error': str(e)}
 
 
-def poll_operation(operation_name, model_id, token, proj_id):
-    """Poll for video generation completion."""
+def poll_operation(operation_name, model_id, token, proj_id, crop_to_square=False):
+    """Poll for video generation completion. Optionally crop to 1:1 when done."""
     url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{proj_id}/locations/us-central1/publishers/google/models/{model_id}:fetchPredictOperation"
 
     headers = {
@@ -1141,11 +1195,32 @@ def poll_operation(operation_name, model_id, token, proj_id):
                 if videos:
                     video = videos[0]
                     print(f"   📊 Video keys: {list(video.keys())}")
+                    video_url = None
                     if video.get('gcsUri'):
-                        return {'success': True, 'status': 'COMPLETE', 'video_url': video['gcsUri']}
+                        video_url = video['gcsUri']
                     elif video.get('bytesBase64Encoded'):
                         mime = video.get('mimeType', 'video/mp4')
-                        return {'success': True, 'status': 'COMPLETE', 'video_url': f"data:{mime};base64,{video['bytesBase64Encoded']}"}
+                        video_url = f"data:{mime};base64,{video['bytesBase64Encoded']}"
+
+                    if video_url:
+                        # Crop to 1:1 if requested
+                        if crop_to_square and video_url.startswith('data:'):
+                            print("   ✂️ Cropping video to 1:1...")
+                            video_path = download_video_to_temp(video_url)
+                            if video_path:
+                                output_path = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
+                                cropped_path = crop_video_to_square(video_path, output_path)
+                                # Convert back to base64
+                                with open(cropped_path, 'rb') as f:
+                                    cropped_bytes = f.read()
+                                video_url = f"data:video/mp4;base64,{base64.b64encode(cropped_bytes).decode('utf-8')}"
+                                # Cleanup
+                                if os.path.exists(video_path):
+                                    os.unlink(video_path)
+                                if cropped_path != video_path and os.path.exists(cropped_path):
+                                    os.unlink(cropped_path)
+
+                        return {'success': True, 'status': 'COMPLETE', 'video_url': video_url}
                     elif video.get('videoUri'):
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video['videoUri']}
                     elif video.get('uri'):
@@ -1394,6 +1469,7 @@ class handler(BaseHTTPRequestHandler):
             elif action == 'poll':
                 operation_name = data.get('operationName', '')
                 model_id = data.get('modelId', 'veo-3.1-fast-generate-001')
+                crop_to_square = data.get('cropToSquare', False)
 
                 if not operation_name:
                     raise ValueError("No operation name")
@@ -1402,7 +1478,7 @@ class handler(BaseHTTPRequestHandler):
                 if not token:
                     raise ValueError("OAuth2 not available")
 
-                result = poll_operation(operation_name, model_id, token, project_id)
+                result = poll_operation(operation_name, model_id, token, project_id, crop_to_square)
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
