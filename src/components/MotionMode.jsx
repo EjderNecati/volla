@@ -13,18 +13,28 @@ import {
     Crown,
     Pencil,
     Bookmark,
-    Check
+    Check,
+    Sparkles,
+    Music,
+    Volume2,
+    VolumeX,
+    Lightbulb,
+    Film,
+    Plus,
+    X,
+    Wand2
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
-import { startMotionGeneration, pollMotionGeneration, startMotionEdit } from '../utils/aiHelpers';
+import { startMotionGeneration, pollMotionGeneration, startMotionEdit, qualityCheckMotion, getSmartRecommendation, addMusicToVideo, stitchVideoSequence } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
 import { addToLibrary } from '../utils/libraryManager';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
 import SourceSelectionModal from './SourceSelectionModal';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MOTION STUDIO v2.0 - PROFESSIONAL CINEMATOGRAPHY
+// MOTION STUDIO v4.0 - WORLD-CLASS VIDEO ENGINE
+// Features: Smart Recommendation, Multi-Shot Sequence, Background Music, Quality Gate
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Shot type categories for organized display
@@ -100,6 +110,37 @@ const VIDEO_ASPECT_RATIOS = [
     { id: '16:9', label: '16:9' },
     { id: '9:16', label: '9:16' },
     { id: '1:1', label: '1:1' }
+];
+
+// Music library (synced with backend)
+const MUSIC_LIBRARY = {
+    elegant_piano: { name: 'Elegant Piano', mood: 'luxury', icon: '🎹' },
+    upbeat_corporate: { name: 'Upbeat', mood: 'energetic', icon: '🎸' },
+    cinematic_epic: { name: 'Cinematic', mood: 'dramatic', icon: '🎬' },
+    soft_ambient: { name: 'Ambient', mood: 'calm', icon: '🌊' },
+    tech_modern: { name: 'Tech', mood: 'modern', icon: '🤖' },
+    fashion_groove: { name: 'Groove', mood: 'stylish', icon: '💃' }
+};
+
+// Sequence presets with shot configurations
+const SEQUENCE_PRESETS = [
+    { id: 'single', label: 'Single Shot', icon: '📷', description: 'One professional shot', shots: [] },
+    { id: 'custom', label: 'Custom Sequence', icon: '🎨', description: 'Build your own shot sequence', shots: [], isCustom: true },
+    { id: 'product_showcase', label: 'Product Showcase', icon: '🎬', description: '4 shots: Reveal → Detail → Orbit → Static',
+      shots: ['hero_reveal', 'detail_explorer', 'cinematic_orbit', 'static_breathe'],
+      durations: [3, 2, 3, 2],
+      music: 'upbeat_corporate'
+    },
+    { id: 'luxury_reveal', label: 'Luxury Reveal', icon: '💎', description: '4 shots: Breathe → Spotlight → Macro → Hero',
+      shots: ['static_breathe', 'hero_spotlight', 'macro_texture', 'hero_reveal'],
+      durations: [2, 3, 2, 3],
+      music: 'elegant_piano'
+    },
+    { id: 'dynamic_promo', label: 'Dynamic Promo', icon: '⚡', description: '4 shots: Crash → Whip → Detail → Crash',
+      shots: ['crash_zoom', 'whip_pan_multi', 'detail_explorer', 'crash_zoom'],
+      durations: [2, 2, 2, 2],
+      music: 'fashion_groove'  // Fixed: was tech_modern, now matches backend
+    }
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -178,6 +219,23 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     const [editPrompt, setEditPrompt] = useState('');
     const [isEditing, setIsEditing] = useState(false);
 
+    // Quality Gate state
+    const [qualityScore, setQualityScore] = useState(null);
+    const [qualityIssues, setQualityIssues] = useState([]);
+    const [isQualityChecking, setIsQualityChecking] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
+    const MAX_RETRIES = 2;
+
+    // v4.0 World-Class Features
+    const [aiRecommendation, setAiRecommendation] = useState(null);
+    const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
+    const [musicEnabled, setMusicEnabled] = useState(true);
+    const [selectedMusic, setSelectedMusic] = useState('elegant_piano');
+    const [sequenceMode, setSequenceMode] = useState('single');
+    const [sequenceProgress, setSequenceProgress] = useState({ current: 0, total: 0, videos: [] });
+    // v4.1 Custom Sequence Builder
+    const [customSequence, setCustomSequence] = useState([]);  // Array of { shotId, duration }
+
     // Library/Source selection state
     const [showSourceModal, setShowSourceModal] = useState(false);
     const [addedToLibrary, setAddedToLibrary] = useState(false);
@@ -195,6 +253,31 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         return { type: 'image', url: sourceImage };
     };
 
+    // Fetch AI recommendations for an image
+    const fetchRecommendations = async (imageData) => {
+        setIsLoadingRecommendation(true);
+        try {
+            const result = await getSmartRecommendation(imageData);
+            setAiRecommendation(result);
+
+            // Auto-select first recommended shot
+            if (result.recommended_shots?.length > 0) {
+                const firstShot = result.recommended_shots[0];
+                if (firstShot.id) {
+                    setCameraMovement(firstShot.id);
+                }
+                // Set recommended music
+                if (firstShot.music) {
+                    setSelectedMusic(firstShot.music);
+                }
+            }
+        } catch (err) {
+            console.warn('Recommendation failed:', err);
+        } finally {
+            setIsLoadingRecommendation(false);
+        }
+    };
+
     // Handle image upload
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0];
@@ -207,6 +290,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
             setGeneratedVideos([]);
             setActiveVideoIndex(-1);
             setError(null);
+            setAiRecommendation(null);
 
             // Auto-add device uploads to library
             addToLibrary({
@@ -215,6 +299,9 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 name: file.name || `Upload ${new Date().toLocaleDateString()}`,
                 source: 'upload'
             }).catch(err => console.warn('Auto-add to library failed:', err));
+
+            // Fetch AI recommendations
+            fetchRecommendations(imageData);
         };
         reader.readAsDataURL(file);
     };
@@ -264,6 +351,11 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 setGeneratedVideos(videoUrls);
                 setActiveVideoIndex(videoUrls.length - 1); // Show last video
                 console.log('🎬 Loaded', videoUrls.length, 'videos');
+            }
+
+            // Fetch recommendations for loaded image
+            if (sourceImg) {
+                fetchRecommendations(sourceImg);
             }
         }
     }, [initialProject]);
@@ -371,29 +463,147 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                     clearInterval(pollingIntervalRef.current);
                     pollingIntervalRef.current = null;
 
-                    setPollingStatus('Video ready!');
-                    setProgress(100);
-                    setIsGenerating(false);
-                    setIsEditing(false);
-                    setEditPrompt(''); // Clear edit prompt after success
-
-                    // Add video to collection (check for duplicates)
+                    // Quality Gate Check
                     if (result.video_url) {
-                        setGeneratedVideos(prev => {
-                            // Prevent duplicate videos
-                            if (prev.includes(result.video_url)) {
-                                return prev;
+                        setPollingStatus('Analyzing video quality...');
+                        setProgress(95);
+                        setIsQualityChecking(true);
+
+                        try {
+                            const qualityResult = await qualityCheckMotion(
+                                result.video_url,
+                                sourceImage,
+                                cameraMovement,
+                                retryCount
+                            );
+
+                            setQualityScore(qualityResult.score || 0);
+                            setQualityIssues(qualityResult.issues || []);
+                            setIsQualityChecking(false);
+
+                            // Check if quality is approved or we've exceeded retries
+                            if (qualityResult.approved || retryCount >= MAX_RETRIES) {
+                                // Accept the video - add music if enabled
+                                let finalVideoUrl = result.video_url;
+
+                                if (musicEnabled && selectedMusic) {
+                                    setPollingStatus('Adding background music...');
+                                    try {
+                                        const musicResult = await addMusicToVideo(result.video_url, selectedMusic, true);
+                                        if (musicResult.success && musicResult.video_url) {
+                                            finalVideoUrl = musicResult.video_url;
+                                            console.log('🎵 Music added successfully');
+                                        }
+                                    } catch (musicErr) {
+                                        console.warn('Music overlay failed, using original:', musicErr);
+                                    }
+                                }
+
+                                setPollingStatus(qualityResult.approved ? 'Video ready!' : 'Video ready (best effort)');
+                                setProgress(100);
+                                setIsGenerating(false);
+                                setIsEditing(false);
+                                setEditPrompt('');
+                                setRetryCount(0);
+
+                                setGeneratedVideos(prev => {
+                                    if (prev.includes(finalVideoUrl)) {
+                                        return prev;
+                                    }
+                                    const newVideos = [...prev, finalVideoUrl];
+                                    setActiveVideoIndex(newVideos.length - 1);
+                                    saveVideoToHistory(finalVideoUrl, newVideos);
+                                    return newVideos;
+                                });
+                            } else if (qualityResult.should_retry) {
+                                // Auto-retry with stricter prompts
+                                setRetryCount(prev => prev + 1);
+                                setPollingStatus(`Quality issue detected, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+                                setProgress(10);
+
+                                // Restart generation with retry count
+                                const retryResult = await startMotionGeneration(sourceImage, {
+                                    cameraMovement,
+                                    speed,
+                                    duration: parseInt(duration),
+                                    qualityMode,
+                                    aspectRatio,
+                                    customDirective,
+                                    retryCount: retryCount + 1
+                                });
+
+                                if (retryResult.success && retryResult.operation_name) {
+                                    setOperationName(retryResult.operation_name);
+                                    setModelId(retryResult.model_id);
+                                    startPolling(retryResult.operation_name, retryResult.model_id);
+                                } else {
+                                    throw new Error('Retry failed to start');
+                                }
+                            } else {
+                                // Quality check failed but no retry needed - still add music
+                                let finalVideoUrl = result.video_url;
+
+                                if (musicEnabled && selectedMusic) {
+                                    setPollingStatus('Adding background music...');
+                                    try {
+                                        const musicResult = await addMusicToVideo(result.video_url, selectedMusic, true);
+                                        if (musicResult.success && musicResult.video_url) {
+                                            finalVideoUrl = musicResult.video_url;
+                                        }
+                                    } catch (musicErr) {
+                                        console.warn('Music overlay failed:', musicErr);
+                                    }
+                                }
+
+                                setPollingStatus('Video ready!');
+                                setProgress(100);
+                                setIsGenerating(false);
+                                setIsEditing(false);
+                                setEditPrompt('');
+
+                                setGeneratedVideos(prev => {
+                                    if (prev.includes(finalVideoUrl)) {
+                                        return prev;
+                                    }
+                                    const newVideos = [...prev, finalVideoUrl];
+                                    setActiveVideoIndex(newVideos.length - 1);
+                                    saveVideoToHistory(finalVideoUrl, newVideos);
+                                    return newVideos;
+                                });
                             }
-                            const newVideos = [...prev, result.video_url];
-                            // Set active index to the new video
-                            setActiveVideoIndex(newVideos.length - 1);
+                        } catch (qualityError) {
+                            console.warn('Quality check failed, accepting video:', qualityError);
+                            // On quality check error, accept the video anyway - still try to add music
+                            let finalVideoUrl = result.video_url;
 
-                            // Save to history with the updated videos array
-                            // We pass newVideos to avoid stale closure issues
-                            saveVideoToHistory(result.video_url, newVideos);
+                            if (musicEnabled && selectedMusic) {
+                                try {
+                                    const musicResult = await addMusicToVideo(result.video_url, selectedMusic, true);
+                                    if (musicResult.success && musicResult.video_url) {
+                                        finalVideoUrl = musicResult.video_url;
+                                    }
+                                } catch (musicErr) {
+                                    console.warn('Music overlay failed:', musicErr);
+                                }
+                            }
 
-                            return newVideos;
-                        });
+                            setPollingStatus('Video ready!');
+                            setProgress(100);
+                            setIsGenerating(false);
+                            setIsEditing(false);
+                            setEditPrompt('');
+                            setIsQualityChecking(false);
+
+                            setGeneratedVideos(prev => {
+                                if (prev.includes(finalVideoUrl)) {
+                                    return prev;
+                                }
+                                const newVideos = [...prev, finalVideoUrl];
+                                setActiveVideoIndex(newVideos.length - 1);
+                                saveVideoToHistory(finalVideoUrl, newVideos);
+                                return newVideos;
+                            });
+                        }
                     }
 
                 } else if (result.status === 'FAILED' || result.status === 'ERROR') {
@@ -448,46 +658,225 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                 }
             }
         }, 5000); // Poll every 5 seconds
-    }, [saveVideoToHistory]);
+    }, [saveVideoToHistory, sourceImage, cameraMovement, speed, duration, qualityMode, aspectRatio, customDirective, retryCount, musicEnabled, selectedMusic]);
 
-    // Generate video
+    // Generate a single video and wait for completion (promise-based)
+    const generateSingleVideo = async (shotType, shotDuration) => {
+        const genResult = await startMotionGeneration(sourceImage, {
+            cameraMovement: shotType,
+            speed,
+            duration: shotDuration || parseInt(duration),
+            qualityMode,
+            aspectRatio,
+            customDirective,
+            retryCount: 0
+        });
+
+        if (!genResult.success || !genResult.operation_name) {
+            throw new Error(genResult.error || 'Failed to start generation');
+        }
+
+        // Poll until complete
+        let pollCount = 0;
+        const maxPollCount = 60;
+
+        while (pollCount < maxPollCount) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            pollCount++;
+
+            const result = await pollMotionGeneration(genResult.operation_name, genResult.model_id);
+
+            if (result.status === 'COMPLETE' && result.video_url) {
+                return result.video_url;
+            } else if (result.status === 'FAILED' || result.status === 'ERROR') {
+                throw new Error(result.error || 'Video generation failed');
+            }
+
+            // Update progress
+            const shotProgress = Math.min(95, Math.floor((pollCount / maxPollCount) * 100));
+            setProgress(shotProgress);
+        }
+
+        throw new Error('Video generation timed out');
+    };
+
+    // Generate video (single or sequence)
     const handleGenerateVideo = async () => {
         if (!sourceImage) return;
 
-        // Check credits
+        const sequencePreset = SEQUENCE_PRESETS.find(p => p.id === sequenceMode);
+        const isCustomSequence = sequenceMode === 'custom' && customSequence.length > 0;
+        const isPresetSequence = sequenceMode !== 'single' && sequenceMode !== 'custom' && sequencePreset?.shots?.length > 0;
+        const isSequence = isCustomSequence || isPresetSequence;
+
+        // Calculate credit multiplier based on sequence length
         const creditFeature = qualityMode === 'pro' ? 'motion_pro' : 'motion_fast';
-        const creditResult = useCreditsHook(creditFeature);
-        if (!creditResult.success) {
-            setShowCreditsModal(true);
-            return;
+        const creditMultiplier = isCustomSequence ? customSequence.length : (isPresetSequence ? sequencePreset.shots.length : 1);
+
+        for (let i = 0; i < creditMultiplier; i++) {
+            const creditResult = useCreditsHook(creditFeature);
+            if (!creditResult.success) {
+                setShowCreditsModal(true);
+                return;
+            }
         }
 
         setIsGenerating(true);
         setError(null);
-        setPollingStatus('Starting video generation...');
         setProgress(0);
 
-        try {
-            const result = await startMotionGeneration(sourceImage, {
-                cameraMovement,
-                speed,
-                duration: parseInt(duration),
-                qualityMode,
-                aspectRatio,
-                customDirective
-            });
+        // Reset state
+        setRetryCount(0);
+        setQualityScore(null);
+        setQualityIssues([]);
 
-            if (result.success && result.operation_name) {
-                setOperationName(result.operation_name);
-                setModelId(result.model_id);
-                startPolling(result.operation_name, result.model_id);
+        try {
+            if (isSequence) {
+                // ═══════════════════════════════════════════════════════════
+                // MULTI-SHOT SEQUENCE GENERATION (Custom or Preset)
+                // ═══════════════════════════════════════════════════════════
+                let shots, durations, sequenceMusic;
+
+                if (isCustomSequence) {
+                    // Custom sequence - use user-defined shots
+                    shots = customSequence.map(s => s.shotId);
+                    durations = customSequence.map(s => s.duration);
+                    sequenceMusic = selectedMusic;  // User's selected music
+                } else {
+                    // Preset sequence
+                    shots = sequencePreset.shots;
+                    durations = sequencePreset.durations || shots.map(() => 3);
+                    sequenceMusic = sequencePreset.music || selectedMusic;
+                }
+
+                setSequenceProgress({ current: 0, total: shots.length, videos: [] });
+                setPollingStatus(`Generating shot 1/${shots.length}...`);
+
+                const generatedVideoUrls = [];
+
+                for (let i = 0; i < shots.length; i++) {
+                    const shotType = shots[i];
+                    const shotDuration = durations[i];
+                    const shotLabel = SHOT_TYPES.find(s => s.id === shotType)?.label || shotType;
+
+                    setPollingStatus(`Generating shot ${i + 1}/${shots.length}: ${shotLabel}...`);
+                    setProgress(Math.floor((i / shots.length) * 70)); // 0-70% for individual shots
+
+                    try {
+                        let videoUrl = await generateSingleVideo(shotType, shotDuration);
+
+                        // Quality Gate for each shot (with 1 retry)
+                        setPollingStatus(`Checking quality: shot ${i + 1}...`);
+                        try {
+                            const qualityResult = await qualityCheckMotion(videoUrl, sourceImage, shotType, 0);
+
+                            if (!qualityResult.approved && qualityResult.should_retry) {
+                                // Retry this shot with stricter prompt
+                                console.log(`Shot ${i + 1} quality failed (score: ${qualityResult.score}), retrying...`);
+                                setPollingStatus(`Retrying shot ${i + 1}: ${shotLabel}...`);
+                                videoUrl = await generateSingleVideo(shotType, shotDuration);
+                            }
+                        } catch (qErr) {
+                            console.warn(`Quality check failed for shot ${i + 1}:`, qErr);
+                            // Continue with the video anyway
+                        }
+
+                        generatedVideoUrls.push(videoUrl);
+                        setSequenceProgress(prev => ({
+                            ...prev,
+                            current: i + 1,
+                            videos: [...prev.videos, videoUrl]
+                        }));
+                    } catch (err) {
+                        console.error(`Shot ${i + 1} failed:`, err);
+                        // Continue with remaining shots, don't fail entire sequence
+                    }
+                }
+
+                if (generatedVideoUrls.length === 0) {
+                    throw new Error('All shots failed to generate');
+                }
+
+                // Stitch videos together
+                setPollingStatus('Stitching videos together...');
+                setProgress(75);
+
+                let finalVideoUrl;
+
+                if (generatedVideoUrls.length === 1) {
+                    // Only one video succeeded, use it directly
+                    finalVideoUrl = generatedVideoUrls[0];
+                } else {
+                    // Stitch multiple videos
+                    const stitchResult = await stitchVideoSequence(
+                        generatedVideoUrls,
+                        musicEnabled ? sequenceMusic : null,
+                        musicEnabled
+                    );
+
+                    if (stitchResult.success && stitchResult.video_url) {
+                        finalVideoUrl = stitchResult.video_url;
+                    } else {
+                        // Stitching failed, use the last video
+                        console.warn('Stitching failed, using last video');
+                        finalVideoUrl = generatedVideoUrls[generatedVideoUrls.length - 1];
+
+                        // Still try to add music if stitching failed
+                        if (musicEnabled) {
+                            try {
+                                const musicResult = await addMusicToVideo(finalVideoUrl, sequenceMusic, true);
+                                if (musicResult.success && musicResult.video_url) {
+                                    finalVideoUrl = musicResult.video_url;
+                                }
+                            } catch (musicErr) {
+                                console.warn('Music overlay failed:', musicErr);
+                            }
+                        }
+                    }
+                }
+
+                // Success - add to generated videos
+                setPollingStatus('Sequence complete!');
+                setProgress(100);
+                setIsGenerating(false);
+                setSequenceProgress({ current: 0, total: 0, videos: [] });
+
+                setGeneratedVideos(prev => {
+                    const newVideos = [...prev, finalVideoUrl];
+                    setActiveVideoIndex(newVideos.length - 1);
+                    saveVideoToHistory(finalVideoUrl, newVideos);
+                    return newVideos;
+                });
+
             } else {
-                throw new Error(result.error || 'Failed to start generation');
+                // ═══════════════════════════════════════════════════════════
+                // SINGLE SHOT GENERATION (existing flow with polling)
+                // ═══════════════════════════════════════════════════════════
+                setPollingStatus('Starting video generation...');
+
+                const result = await startMotionGeneration(sourceImage, {
+                    cameraMovement,
+                    speed,
+                    duration: parseInt(duration),
+                    qualityMode,
+                    aspectRatio,
+                    customDirective,
+                    retryCount: 0
+                });
+
+                if (result.success && result.operation_name) {
+                    setOperationName(result.operation_name);
+                    setModelId(result.model_id);
+                    startPolling(result.operation_name, result.model_id);
+                } else {
+                    throw new Error(result.error || 'Failed to start generation');
+                }
             }
         } catch (err) {
             setError(err.message);
             setIsGenerating(false);
             setPollingStatus('');
+            setSequenceProgress({ current: 0, total: 0, videos: [] });
         }
     };
 
@@ -507,6 +896,17 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         setPollingStatus('');
         setProgress(0);
         setEditPrompt('');
+        // Reset quality gate state
+        setQualityScore(null);
+        setQualityIssues([]);
+        setIsQualityChecking(false);
+        setRetryCount(0);
+        // Reset v4.0 features
+        setAiRecommendation(null);
+        setSequenceMode('single');
+        setSequenceProgress({ current: 0, total: 0, videos: [] });
+        // Reset v4.1 custom sequence
+        setCustomSequence([]);
         // Reset project ID so next session creates a new project
         setCurrentProjectId(null);
     };
@@ -602,6 +1002,10 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         setGeneratedVideos([]);
         setActiveVideoIndex(-1);
         setError(null);
+        setAiRecommendation(null);
+
+        // Fetch AI recommendations
+        fetchRecommendations(asset.url);
     };
 
     const activeMedia = getActiveMedia();
@@ -660,6 +1064,234 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                 </button>
                             )}
                         </div>
+
+                        {/* AI Recommendation Banner */}
+                        {sourceImage && (isLoadingRecommendation || aiRecommendation) && (
+                            <div className="p-3 bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-xl">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Lightbulb size={14} className="text-violet-600" />
+                                    <span className="text-xs font-semibold text-violet-800">
+                                        {t('motion.aiRecommendation') || 'AI Recommendation'}
+                                    </span>
+                                    {isLoadingRecommendation && <Loader2 size={12} className="animate-spin text-violet-500" />}
+                                </div>
+                                {aiRecommendation && !isLoadingRecommendation && (
+                                    <>
+                                        <p className="text-[10px] text-violet-700 mb-2">
+                                            <span className="font-medium">{aiRecommendation.product_name || 'Product'}</span>
+                                            {aiRecommendation.category && ` • ${aiRecommendation.category}`}
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {aiRecommendation.recommended_shots?.slice(0, 3).map((shot, idx) => (
+                                                <button
+                                                    key={shot.id || idx}
+                                                    onClick={() => {
+                                                        setCameraMovement(shot.id);
+                                                        if (shot.music) setSelectedMusic(shot.music);
+                                                    }}
+                                                    className={`px-2 py-1 rounded text-[9px] font-medium transition-all ${
+                                                        cameraMovement === shot.id
+                                                            ? 'bg-violet-500 text-white'
+                                                            : 'bg-white text-violet-700 hover:bg-violet-100'
+                                                    }`}
+                                                >
+                                                    {idx === 0 && '⭐ '}{shot.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Music & Sequence Mode */}
+                        {sourceImage && (
+                            <div className="flex gap-2">
+                                {/* Music Toggle */}
+                                <div className="flex-1 p-2 bg-[#F5F4F1] rounded-lg border border-[#E8E7E4]">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                            <Music size={10} />
+                                            Music
+                                        </div>
+                                        <button
+                                            onClick={() => setMusicEnabled(!musicEnabled)}
+                                            className={`p-1 rounded transition-colors ${
+                                                musicEnabled ? 'bg-violet-500 text-white' : 'bg-[#E8E7E4] text-[#8C8C8C]'
+                                            }`}
+                                        >
+                                            {musicEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+                                        </button>
+                                    </div>
+                                    {musicEnabled && (
+                                        <select
+                                            value={selectedMusic}
+                                            onChange={(e) => setSelectedMusic(e.target.value)}
+                                            className="w-full px-2 py-1 bg-white border border-[#E8E7E4] rounded text-[10px] text-[#1A1A1A]"
+                                        >
+                                            {Object.entries(MUSIC_LIBRARY).map(([id, music]) => (
+                                                <option key={id} value={id}>
+                                                    {music.icon} {music.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                {/* Sequence Mode */}
+                                <div className="flex-1 p-2 bg-[#F5F4F1] rounded-lg border border-[#E8E7E4]">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[9px] font-semibold uppercase mb-2">
+                                        <Film size={10} />
+                                        Mode
+                                    </div>
+                                    <select
+                                        value={sequenceMode}
+                                        onChange={(e) => setSequenceMode(e.target.value)}
+                                        className="w-full px-2 py-1 bg-white border border-[#E8E7E4] rounded text-[10px] text-[#1A1A1A]"
+                                    >
+                                        {SEQUENCE_PRESETS.map((preset) => (
+                                            <option key={preset.id} value={preset.id}>
+                                                {preset.icon} {preset.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sequence Description or Custom Builder */}
+                        {sequenceMode === 'custom' ? (
+                            /* ═══════════════════════════════════════════════════════════
+                               CUSTOM SEQUENCE BUILDER
+                            ═══════════════════════════════════════════════════════════ */
+                            <div className="p-3 bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Wand2 size={14} className="text-violet-600" />
+                                        <span className="text-xs font-bold text-violet-800">Custom Sequence Builder</span>
+                                    </div>
+                                    <span className="text-[9px] text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full">
+                                        {customSequence.length}/6 shots
+                                    </span>
+                                </div>
+
+                                {/* Current Sequence */}
+                                {customSequence.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {customSequence.map((item, idx) => {
+                                            const shot = SHOT_TYPES.find(s => s.id === item.shotId);
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-white border border-violet-300 rounded-lg shadow-sm group"
+                                                >
+                                                    <span className="text-[9px] font-bold text-violet-600">{idx + 1}</span>
+                                                    <span className="text-[10px] text-[#1A1A1A]">{shot?.label || item.shotId}</span>
+                                                    {/* Duration selector */}
+                                                    <select
+                                                        value={item.duration}
+                                                        onChange={(e) => {
+                                                            const newDuration = parseInt(e.target.value);
+                                                            setCustomSequence(prev => prev.map((s, i) =>
+                                                                i === idx ? { ...s, duration: newDuration } : s
+                                                            ));
+                                                        }}
+                                                        className="w-10 px-0.5 py-0 text-[8px] text-violet-600 bg-violet-50 border border-violet-200 rounded"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <option value={2}>2s</option>
+                                                        <option value={3}>3s</option>
+                                                        <option value={4}>4s</option>
+                                                        <option value={5}>5s</option>
+                                                    </select>
+                                                    <button
+                                                        onClick={() => setCustomSequence(prev => prev.filter((_, i) => i !== idx))}
+                                                        className="ml-1 p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-[10px] text-violet-600 italic">
+                                        Click shots below to add them to your sequence
+                                    </p>
+                                )}
+
+                                {/* Shot Picker Grid */}
+                                <div className="space-y-2">
+                                    <p className="text-[9px] text-violet-700 font-medium">Add shots:</p>
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {SHOT_TYPES.map((shot) => (
+                                            <button
+                                                key={shot.id}
+                                                onClick={() => {
+                                                    if (customSequence.length < 6) {
+                                                        setCustomSequence(prev => [...prev, { shotId: shot.id, duration: 3 }]);
+                                                    }
+                                                }}
+                                                disabled={customSequence.length >= 6}
+                                                className={`px-2 py-1.5 rounded text-[9px] font-medium transition-all border text-left
+                                                    ${customSequence.some(s => s.shotId === shot.id)
+                                                        ? 'bg-violet-100 text-violet-700 border-violet-300'
+                                                        : 'bg-white text-[#5C5C5C] border-[#E8E7E4] hover:border-violet-300 hover:bg-violet-50'
+                                                    }
+                                                    ${customSequence.length >= 6 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                <Plus size={8} className="inline mr-1" />
+                                                {shot.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Quick Actions */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setCustomSequence([])}
+                                        className="flex-1 px-2 py-1 text-[9px] text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors"
+                                    >
+                                        Clear All
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            // AI suggest based on product
+                                            if (aiRecommendation?.recommended_shots?.length) {
+                                                const aiShots = aiRecommendation.recommended_shots.slice(0, 4).map(s => ({
+                                                    shotId: s.id,
+                                                    duration: 3
+                                                }));
+                                                setCustomSequence(aiShots);
+                                            }
+                                        }}
+                                        disabled={!aiRecommendation?.recommended_shots?.length}
+                                        className="flex-1 px-2 py-1 text-[9px] text-violet-600 bg-violet-100 hover:bg-violet-200 rounded border border-violet-200 transition-colors disabled:opacity-50"
+                                    >
+                                        <Sparkles size={10} className="inline mr-1" />
+                                        AI Suggest
+                                    </button>
+                                </div>
+
+                                {/* Credit Info */}
+                                {customSequence.length > 0 && (
+                                    <p className="text-[8px] text-violet-600">
+                                        {customSequence.length} videos × {getCreditCost(duration, qualityMode)} = {customSequence.length * getCreditCost(duration, qualityMode)} credits
+                                    </p>
+                                )}
+                            </div>
+                        ) : sequenceMode !== 'single' && (
+                            <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="text-[9px] text-amber-800">
+                                    <span className="font-semibold">Multi-Shot Sequence:</span>{' '}
+                                    {SEQUENCE_PRESETS.find(p => p.id === sequenceMode)?.description}
+                                </p>
+                                <p className="text-[8px] text-amber-600 mt-1">
+                                    {SEQUENCE_PRESETS.find(p => p.id === sequenceMode)?.shots?.length || 4} videos will be generated and stitched together
+                                </p>
+                            </div>
+                        )}
 
                         {/* Custom Directive */}
                         <div className="space-y-2">
@@ -804,10 +1436,15 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                 </>
                             ) : (
                                 <>
-                                    <Video size={18} />
-                                    <span>{t('motion.generateVideo') || 'Generate Video'}</span>
+                                    {sequenceMode !== 'single' ? <Film size={18} /> : <Video size={18} />}
+                                    <span>
+                                        {sequenceMode !== 'single'
+                                            ? (t('motion.generateSequence') || 'Generate Sequence')
+                                            : (t('motion.generateVideo') || 'Generate Video')
+                                        }
+                                    </span>
                                     <span className="absolute right-4 text-xs text-white/70">
-                                        {creditCost} {t('credits.creditsUnit') || 'credits'}
+                                        {sequenceMode !== 'single' ? `${creditCost * 4}` : creditCost} {t('credits.creditsUnit') || 'credits'}
                                     </span>
                                 </>
                             )}
@@ -878,12 +1515,32 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                         )}
                                     </div>
 
-                                    {/* Label */}
-                                    <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
-                                        {activeVideoIndex === -1
-                                            ? (t('motion.original') || 'Original')
-                                            : `${t('motion.video') || 'Video'} ${activeVideoIndex + 1}`
-                                        }
+                                    {/* Label with Quality Score */}
+                                    <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                                        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
+                                            {activeVideoIndex === -1
+                                                ? (t('motion.original') || 'Original')
+                                                : `${t('motion.video') || 'Video'} ${activeVideoIndex + 1}`
+                                            }
+                                        </div>
+                                        {/* Quality Score Badge */}
+                                        {activeVideoIndex >= 0 && qualityScore !== null && (
+                                            <div className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 ${
+                                                qualityScore >= 80 ? 'bg-emerald-500/80 text-white' :
+                                                qualityScore >= 60 ? 'bg-amber-500/80 text-white' :
+                                                'bg-red-500/80 text-white'
+                                            }`}>
+                                                <span>{qualityScore >= 80 ? '✓' : qualityScore >= 60 ? '!' : '✗'}</span>
+                                                <span>Q:{qualityScore}</span>
+                                            </div>
+                                        )}
+                                        {/* Music Badge */}
+                                        {activeVideoIndex >= 0 && musicEnabled && (
+                                            <div className="px-2 py-1 rounded-lg text-[10px] font-medium bg-violet-500/80 text-white flex items-center gap-1">
+                                                <Music size={10} />
+                                                {MUSIC_LIBRARY[selectedMusic]?.icon}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Video Controls (only for video) */}
@@ -915,20 +1572,50 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                     )}
 
                                     {/* Loading Overlay with Ring Progress */}
-                                    {isGenerating && (
+                                    {(isGenerating || isQualityChecking) && (
                                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
+                                            {/* Sequence Progress Indicators */}
+                                            {sequenceProgress.total > 0 && (
+                                                <div className="flex gap-2 mb-4">
+                                                    {Array.from({ length: sequenceProgress.total }).map((_, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${
+                                                                idx < sequenceProgress.current
+                                                                    ? 'bg-emerald-500 text-white'
+                                                                    : idx === sequenceProgress.current
+                                                                        ? 'bg-violet-500 text-white animate-pulse'
+                                                                        : 'bg-white/20 text-white/50'
+                                                            }`}
+                                                        >
+                                                            {idx < sequenceProgress.current ? '✓' : idx + 1}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
                                             {/* Ring Progress Indicator */}
                                             <div
                                                 className="ring-progress mb-4"
                                                 style={{ '--progress': progress || 5, '--size': '100px', '--stroke-width': '8px' }}
                                             >
                                                 <div className="ring-progress-inner text-white text-lg">
-                                                    {progress || 5}%
+                                                    {isQualityChecking ? '🔍' : `${progress || 5}%`}
                                                 </div>
                                             </div>
                                             <p className="text-white font-medium">{pollingStatus}</p>
+                                            {retryCount > 0 && (
+                                                <p className="text-amber-400 text-xs mt-1">
+                                                    Auto-retry {retryCount}/{MAX_RETRIES} - Stricter prompts applied
+                                                </p>
+                                            )}
                                             <p className="text-white/50 text-xs mt-2">
-                                                {t('motion.processingTip') || 'Video generation typically takes 1-3 minutes'}
+                                                {isQualityChecking
+                                                    ? (t('motion.qualityCheckTip') || 'AI is verifying product integrity...')
+                                                    : sequenceProgress.total > 0
+                                                        ? `Generating ${sequenceProgress.total}-shot sequence...`
+                                                        : (t('motion.processingTip') || 'Video generation typically takes 1-3 minutes')
+                                                }
                                             </p>
                                         </div>
                                     )}
@@ -985,6 +1672,30 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                                         </div>
                                     </button>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Quality Issues Alert */}
+                        {qualityIssues.length > 0 && activeVideoIndex >= 0 && qualityScore !== null && qualityScore < 80 && (
+                            <div className={`mt-4 p-3 rounded-xl border ${
+                                qualityScore >= 60
+                                    ? 'bg-amber-50 border-amber-200'
+                                    : 'bg-red-50 border-red-200'
+                            }`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <AlertCircle size={14} className={qualityScore >= 60 ? 'text-amber-600' : 'text-red-600'} />
+                                    <span className={`text-xs font-semibold ${qualityScore >= 60 ? 'text-amber-800' : 'text-red-800'}`}>
+                                        {t('motion.qualityWarning') || 'Quality Notes'}
+                                    </span>
+                                </div>
+                                <ul className={`text-[10px] space-y-1 ${qualityScore >= 60 ? 'text-amber-700' : 'text-red-700'}`}>
+                                    {qualityIssues.map((issue, idx) => (
+                                        <li key={idx}>• {issue}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-[9px] mt-2 opacity-70">
+                                    {t('motion.qualityTip') || 'Tip: Try "Static Breathe" or "Environment Motion" for guaranteed product safety.'}
+                                </p>
                             </div>
                         )}
 

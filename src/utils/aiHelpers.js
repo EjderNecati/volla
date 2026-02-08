@@ -1411,6 +1411,71 @@ export const generateHandsfreeImage = async (imageBase64, analysisContext = {}, 
 // =====================================================
 
 /**
+ * Get AI-powered shot recommendations for a product image
+ * @param {string} imageBase64 - Source image as base64
+ * @returns {Promise<{success: boolean, category: string, recommended_shots: array, reasoning: string}>}
+ */
+export const getSmartRecommendation = async (imageBase64) => {
+  log('🧠 Getting smart shot recommendations...');
+
+  try {
+    const compressedImage = await compressImage(imageBase64, 1500, 0.8);
+
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'recommend',
+        image: compressedImage
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Recommendation failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🧠 Smart recommendation result:', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Smart recommendation failed:', error);
+    return {
+      success: false,
+      category: 'default',
+      recommended_shots: [],
+      reasoning: 'Could not analyze product'
+    };
+  }
+};
+
+/**
+ * Get available shot types, sequences, and music library
+ * @returns {Promise<{shot_types: object, sequences: object, music_library: object}>}
+ */
+export const getMotionLibrary = async () => {
+  log('📚 Getting motion library...');
+
+  try {
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_shot_types' })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Library fetch failed: ${response.status}`);
+    }
+
+    return await response.json();
+
+  } catch (error) {
+    console.error('❌ Motion library fetch failed:', error);
+    return { shot_types: {}, sequences: {}, music_library: {} };
+  }
+};
+
+/**
  * Start video generation with Veo 3.1
  * Returns operation name for polling
  * @param {string} imageBase64 - Source image as base64
@@ -1437,7 +1502,8 @@ export const startMotionGeneration = async (imageBase64, motionOptions) => {
         qualityMode: motionOptions.qualityMode || 'fast',
         aspectRatio: motionOptions.aspectRatio || '16:9',
         customDirective: motionOptions.customDirective || '',
-        useDirector: true  // Enable Gemini 3 Pro Director AI
+        useDirector: true,  // Enable Gemini 3 Pro Director AI
+        retryCount: motionOptions.retryCount || 0  // Quality Gate retry count
       })
     });
 
@@ -1488,6 +1554,157 @@ export const pollMotionGeneration = async (operationName, modelId) => {
   } catch (error) {
     console.error('❌ Motion poll failed:', error);
     throw error;
+  }
+};
+
+/**
+ * Quality Gate: Analyze generated video with Gemini 3 Pro Vision
+ * Checks if product was preserved correctly (no distortion, movement, etc.)
+ * @param {string} videoUrl - The generated video URL
+ * @param {string} originalImageBase64 - Original product image for comparison
+ * @param {string} shotType - The shot type used for generation
+ * @param {number} retryCount - Current retry count for backend tracking
+ * @returns {Promise<{success: boolean, approved: boolean, score: number, issues: string[], should_retry: boolean}>}
+ */
+export const qualityCheckMotion = async (videoUrl, originalImageBase64, shotType, retryCount = 0) => {
+  log('🎬 Quality Gate: Analyzing video quality...');
+
+  try {
+    // Compress original image
+    const compressedImage = await compressImage(originalImageBase64, 1500, 0.8);
+
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'quality_check',
+        videoUrl: videoUrl,
+        originalImage: compressedImage,
+        shotType: shotType,
+        retryCount: retryCount
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Quality check failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎬 Quality Gate result:', data);
+
+    // Parse backend response structure
+    // Backend returns: { success, quality: {passed, score, issues, ...}, should_retry, retry_count, max_retries }
+    const quality = data.quality || {};
+    const score = Math.round((quality.score || 0) * 100); // Convert 0-1 to 0-100
+
+    return {
+      success: data.success,
+      approved: quality.passed ?? true,
+      score: score,
+      issues: quality.issues || [],
+      should_retry: data.should_retry || false,
+      retryCount: data.retry_count || 0,
+      maxRetries: data.max_retries || 2,
+      productStability: quality.product_stability,
+      motionQuality: quality.motion_quality,
+      productIntegrity: quality.product_integrity,
+      recommendation: quality.recommendation
+    };
+
+  } catch (error) {
+    console.error('❌ Quality Gate failed:', error);
+    // On error, assume video is acceptable (don't block user)
+    return {
+      success: false,
+      approved: true,
+      score: 50,
+      issues: ['Quality check unavailable'],
+      should_retry: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Add background music to a completed video
+ * @param {string} videoUrl - The video URL (base64 data URL or HTTP)
+ * @param {string} musicId - The music track ID
+ * @param {boolean} musicEnabled - Whether to add music
+ * @returns {Promise<{success: boolean, video_url: string, music_added: boolean}>}
+ */
+export const addMusicToVideo = async (videoUrl, musicId, musicEnabled = true) => {
+  log('🎵 Adding music to video...');
+
+  try {
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add_music',
+        videoUrl: videoUrl,
+        musicId: musicId,
+        musicEnabled: musicEnabled
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Add music failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎵 Music result:', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Add music failed:', error);
+    return {
+      success: false,
+      video_url: videoUrl,
+      music_added: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Stitch multiple videos into a sequence with optional music
+ * @param {string[]} videoUrls - Array of video URLs to stitch
+ * @param {string} musicId - The music track ID
+ * @param {boolean} musicEnabled - Whether to add music
+ * @returns {Promise<{success: boolean, video_url: string, videos_stitched: number}>}
+ */
+export const stitchVideoSequence = async (videoUrls, musicId, musicEnabled = true) => {
+  log('🎬 Stitching video sequence...');
+
+  try {
+    const response = await fetch('/api/generate-motion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'stitch_sequence',
+        videoUrls: videoUrls,
+        musicId: musicId,
+        musicEnabled: musicEnabled
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Stitch failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    log('🎬 Stitch result:', data);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Stitch failed:', error);
+    return {
+      success: false,
+      video_url: null,
+      videos_stitched: 0,
+      error: error.message
+    };
   }
 };
 
