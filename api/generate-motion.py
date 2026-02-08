@@ -1366,7 +1366,7 @@ class handler(BaseHTTPRequestHandler):
                 # Store original image for quality check later
                 result['original_image'] = image_data[:100] + '...'  # Truncate for response
                 result['shot_type'] = shot_type
-                result['retry_count'] = retry_count
+                result['retry_count'] = 0  # Quality Gate disabled, no retries
 
                 # Include music recommendation
                 shot_config = SHOT_TYPES.get(shot_type, {})
