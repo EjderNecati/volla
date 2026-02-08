@@ -685,90 +685,12 @@ Return JSON ONLY:
 
 def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_directive, retry_count=0):
     """
-    Gemini analyzes product and creates SPECIFIC Veo prompt.
-    Returns a clean, safe prompt tailored to this exact product and shot type.
+    DISABLED - Director AI was causing Veo to generate new content instead of animating the source image.
+    Now we use ultra-minimal prompts that let the image speak for itself.
     """
-    _ = (speed, retry_count, custom_directive)  # Suppress unused warnings
-    if not genai_client:
-        print("   ⚠️ Director AI not available")
-        return None
-
-    shot_config = SHOT_TYPES.get(shot_type, SHOT_TYPES['hero_reveal'])
-    safe_instruction = SAFE_CAMERA_INSTRUCTIONS.get(shot_type, SAFE_CAMERA_INSTRUCTIONS['hero_reveal'])
-
-    if 'base64,' in image_data:
-        b64 = image_data.split('base64,')[1]
-    else:
-        b64 = image_data
-
-    try:
-        image_bytes = base64.b64decode(b64)
-        product_image = Image.open(io.BytesIO(image_bytes))
-    except Exception as e:
-        print(f"   ⚠️ Image decode failed: {e}")
-        return None
-
-    # Shot-specific rules - EXPLICIT: Subject FROZEN, only camera moves
-    shot_rules = {
-        'environment_motion': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Only subtle light changes in background. The object stays exactly as shown.',
-        'static_breathe': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera has tiny 1% breathing motion only. Object is completely still.',
-        'hero_reveal': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera slowly pushes forward toward the frozen object. Object stays exactly as shown.',
-        'hero_spotlight': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Soft light moves across the frozen object surface.',
-        'cinematic_orbit': 'THE OBJECT IS FROZEN AND DOES NOT MOVE OR ROTATE. Camera physically travels in a 180-degree arc around the frozen object. The object stays perfectly still in the center.',
-        'dolly_showcase': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera glides forward toward the frozen object. Object stays exactly as shown.',
-        'macro_texture': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera pulls back from close-up of frozen object to wide shot. Object stays still.',
-        'detail_explorer': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera zooms in on frozen object details then zooms out. Object stays still.',
-        'rack_focus': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Focus shifts to make frozen object sharp.',
-        'vertigo_zoom': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera moves backward while zooming in. Frozen object stays same size.',
-        'whip_pan_multi': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera whips between angles of frozen object. Object stays still.',
-        'crash_zoom': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera zooms rapidly toward frozen object detail. Object stays still.',
-    }
-
-    specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
-
-    # DO NOT describe the product - let the image speak for itself
-    # Only describe camera movement, Veo will use the image as reference
-    analysis_prompt = f"""Write a {duration}-second video prompt for this image.
-
-CRITICAL: DO NOT describe what the object is. DO NOT name it. Just call it "the scene" or "the subject".
-
-CAMERA INSTRUCTION:
-{specific_rule}
-
-Write ONLY this format (do not describe the object):
-
-"The scene is completely still and frozen. {specific_rule} Soft natural lighting. {duration} seconds."
-
-RULES:
-- DO NOT name or describe the object (no "baby gate", "door", "bottle", etc.)
-- Only use words: "the scene", "the subject", "the frame"
-- Focus 100% on camera movement
-- Keep it SHORT - under 30 words
-
-Write the prompt now:"""
-
-    print(f"   📍 Director AI analyzing product...")
-
-    try:
-        response = genai_client.models.generate_content(
-            model="gemini-2.0-flash",  # Use flash for speed
-            contents=[analysis_prompt, product_image]
-        )
-        director_output = response.text.strip()
-
-        # Clean up the output - remove quotes if present
-        if director_output.startswith('"') and director_output.endswith('"'):
-            director_output = director_output[1:-1]
-
-        # Sanitize to remove any trigger words
-        director_output = sanitize_prompt(director_output)
-
-        print(f"   ✅ Director AI: {director_output[:100]}...")
-        return director_output
-
-    except Exception as e:
-        print(f"   ⚠️ Director failed: {e}")
-        return None
+    _ = (image_data, shot_type, speed, duration, custom_directive, retry_count)
+    print("   ⚠️ Director AI: DISABLED (using minimal prompts to preserve source image)")
+    return None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -861,28 +783,29 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
         print(f"   📝 Director AI prompt: {prompt[:100]}...")
         return prompt
 
-    # Fallback: Ultra-simple prompts (only if Director AI failed)
-    print("   ⚠️ Director AI unavailable, using fallback prompt")
-    FALLBACK_PROMPTS = {
-        'environment_motion': f'Product sits still on table. Background has gentle light movement. Camera does not move. {duration} seconds.',
-        'static_breathe': f'Product on clean surface. Very subtle camera breathing. Product stays still. {duration} seconds.',
-        'hero_reveal': f'Camera slowly moves toward product. Product stays still. Soft lighting. {duration} seconds.',
-        'hero_spotlight': f'Product on surface. Soft light moves across it. Camera is still. {duration} seconds.',
-        'cinematic_orbit': f'Camera moves in circle around product. Product stays in center. {duration} seconds.',
-        'dolly_showcase': f'Camera glides forward toward product. Product is still. {duration} seconds.',
-        'macro_texture': f'Close view of product slowly pulling back. {duration} seconds.',
-        'detail_explorer': f'Camera moves to show product details. Product stays still. {duration} seconds.',
-        'rack_focus': f'Focus shifts to sharp product. Camera does not move. {duration} seconds.',
-        'vertigo_zoom': f'Camera dolly with zoom. Product stays same size. {duration} seconds.',
-        'whip_pan_multi': f'Fast camera pans between product angles. {duration} seconds.',
-        'crash_zoom': f'Fast zoom toward product detail. {duration} seconds.',
+    # ULTRA MINIMAL prompts - ONLY camera movement, NO scene description
+    # This lets Veo use the source image as-is without generating new content
+    print("   📝 Using ULTRA MINIMAL prompt (image-only reference)")
+    MINIMAL_PROMPTS = {
+        'environment_motion': 'Subtle light movement. Static camera.',
+        'static_breathe': 'Subtle camera breathing.',
+        'hero_reveal': 'Slow camera push forward.',
+        'hero_spotlight': 'Soft light sweep.',
+        'cinematic_orbit': 'Camera orbits around center.',
+        'dolly_showcase': 'Camera dolly forward.',
+        'macro_texture': 'Camera pulls back slowly.',
+        'detail_explorer': 'Camera zooms to details.',
+        'rack_focus': 'Focus shift.',
+        'vertigo_zoom': 'Dolly zoom effect.',
+        'whip_pan_multi': 'Quick camera pan.',
+        'crash_zoom': 'Fast zoom in.',
     }
 
-    prompt = FALLBACK_PROMPTS.get(shot_type, f'Product video. Camera moves smoothly. {duration} seconds.')
+    prompt = MINIMAL_PROMPTS.get(shot_type, 'Smooth camera movement.')
     if custom_directive:
         prompt = f"{prompt} {custom_directive}"
 
-    print(f"   📝 Fallback prompt: {prompt}")
+    print(f"   📝 Minimal prompt: {prompt}")
     return prompt
 
 
