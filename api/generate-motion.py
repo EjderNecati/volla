@@ -1027,13 +1027,31 @@ def poll_operation(operation_name, model_id, token, proj_id):
 
         if response.status_code == 200:
             result = response.json()
+            print(f"   📊 Poll result keys: {list(result.keys())}")
 
             if result.get('done'):
+                # Check for error first
+                if result.get('error'):
+                    error_info = result.get('error', {})
+                    error_msg = error_info.get('message', str(error_info))
+                    print(f"   ❌ Generation error: {error_msg}")
+                    return {'success': False, 'status': 'FAILED', 'error': f"Generation failed: {error_msg}"}
+
                 resp = result.get('response', {})
-                videos = resp.get('videos', []) or resp.get('predictions', [])
+                print(f"   📊 Response keys: {list(resp.keys())}")
+
+                # Try multiple possible locations for video data
+                videos = (
+                    resp.get('videos', []) or
+                    resp.get('predictions', []) or
+                    resp.get('generatedVideos', []) or
+                    result.get('videos', []) or
+                    result.get('predictions', [])
+                )
 
                 if videos:
                     video = videos[0]
+                    print(f"   📊 Video keys: {list(video.keys())}")
                     if video.get('gcsUri'):
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video['gcsUri']}
                     elif video.get('bytesBase64Encoded'):
@@ -1041,12 +1059,17 @@ def poll_operation(operation_name, model_id, token, proj_id):
                         return {'success': True, 'status': 'COMPLETE', 'video_url': f"data:{mime};base64,{video['bytesBase64Encoded']}"}
                     elif video.get('videoUri'):
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video['videoUri']}
+                    elif video.get('uri'):
+                        return {'success': True, 'status': 'COMPLETE', 'video_url': video['uri']}
 
+                # Log the full response for debugging
+                print(f"   ⚠️ No video found. Full response: {str(resp)[:500]}")
                 return {'success': False, 'status': 'FAILED', 'error': 'No video in response'}
             else:
                 progress = result.get('metadata', {}).get('progressPercent', 0)
                 return {'success': True, 'status': 'PROCESSING', 'progress': progress}
 
+        print(f"   ❌ Poll HTTP error: {response.status_code} - {response.text[:200]}")
         return {'success': False, 'status': 'ERROR', 'error': f"Poll Error: {response.status_code}"}
 
     except Exception as e:
