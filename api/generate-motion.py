@@ -850,41 +850,29 @@ SAFE_CAMERA_INSTRUCTIONS = {
 
 
 def build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan=None, retry_count=0):
-    """Build Veo prompt - uses Director AI output when available."""
+    """Build Veo prompt - ultra-simple static prompts only."""
     # Suppress unused parameter warnings
-    _ = retry_count
+    _ = (director_plan, retry_count, custom_directive)
 
-    speed_map = {
-        'slow': 'slow motion',
-        'normal': 'normal speed',
-        'fast': 'fast motion'
+    # Ultra-simple prompts that definitely won't trigger content filter
+    ULTRA_SAFE_PROMPTS = {
+        'environment_motion': f'Product sits still on table. Background has gentle light movement. Camera does not move. {duration} seconds.',
+        'static_breathe': f'Product on clean surface. Very subtle camera breathing. Product stays still. {duration} seconds.',
+        'hero_reveal': f'Camera slowly moves toward product. Product stays still. Soft lighting. {duration} seconds.',
+        'hero_spotlight': f'Product on surface. Soft light moves across it. Camera is still. {duration} seconds.',
+        'cinematic_orbit': f'Camera moves in circle around product. Product stays in center. {duration} seconds.',
+        'dolly_showcase': f'Camera glides forward toward product. Product is still. {duration} seconds.',
+        'macro_texture': f'Close view of product slowly pulling back. {duration} seconds.',
+        'detail_explorer': f'Camera moves to show product details. Product stays still. {duration} seconds.',
+        'rack_focus': f'Focus shifts to sharp product. Camera does not move. {duration} seconds.',
+        'vertigo_zoom': f'Camera dolly with zoom. Product stays same size. {duration} seconds.',
+        'whip_pan_multi': f'Fast camera pans between product angles. {duration} seconds.',
+        'crash_zoom': f'Fast zoom toward product detail. {duration} seconds.',
     }
-    speed_text = speed_map.get(speed, 'normal speed')
 
-    # If Director AI provided a custom prompt, use it (already sanitized)
-    if director_plan:
-        prompt = f"""{director_plan}
+    prompt = ULTRA_SAFE_PROMPTS.get(shot_type, f'Product video. Camera moves smoothly. {duration} seconds.')
 
-Duration: {duration} seconds, {speed_text}.
-Product must look exactly like source image throughout."""
-
-        print(f"   📝 Using Director AI prompt ({len(prompt)} chars)")
-        return prompt
-
-    # Fallback: use generic safe prompt
-    safe_instruction = SAFE_CAMERA_INSTRUCTIONS.get(shot_type, SAFE_CAMERA_INSTRUCTIONS['hero_reveal'])
-    safe_custom = sanitize_prompt(custom_directive) if custom_directive else ''
-
-    prompt = f"""Product video, {speed_text}, {duration} seconds.
-
-Camera: {safe_instruction}
-
-Style: Natural lighting, clean background, professional look.
-Product looks exactly like source image.
-
-{f'{safe_custom}' if safe_custom else ''}"""
-
-    print(f"   📝 Using fallback prompt ({len(prompt)} chars)")
+    print(f"   📝 Ultra-safe prompt: {prompt}")
     return prompt
 
 
