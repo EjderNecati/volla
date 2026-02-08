@@ -688,6 +688,7 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
     Gemini analyzes product and creates SPECIFIC Veo prompt.
     Returns a clean, safe prompt tailored to this exact product and shot type.
     """
+    _ = (speed, retry_count, custom_directive)  # Suppress unused warnings
     if not genai_client:
         print("   ⚠️ Director AI not available")
         return None
@@ -707,46 +708,41 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
         print(f"   ⚠️ Image decode failed: {e}")
         return None
 
-    # Shot-specific rules
+    # Shot-specific rules - VERY EXPLICIT camera movement descriptions
     shot_rules = {
-        'environment_motion': 'CAMERA MUST NOT MOVE AT ALL. Only background elements like light, shadows, or air can have subtle movement. Product is completely static.',
-        'static_breathe': 'Camera has only tiny 1-2% breathing motion. Product does not move at all.',
-        'hero_reveal': 'Camera slowly pushes in toward product. Product stays perfectly still.',
-        'hero_spotlight': 'Camera is static. Only light moves across the product surface.',
-        'cinematic_orbit': 'Camera orbits around the product. Product stays in center, does not rotate.',
-        'dolly_showcase': 'Camera moves forward toward product. Product is stationary.',
-        'macro_texture': 'Camera pulls back from close-up. Product does not move.',
-        'detail_explorer': 'Camera zooms to details. Product stays in place.',
-        'rack_focus': 'Camera is static. Only focus changes.',
-        'vertigo_zoom': 'Dolly zoom effect. Product stays same size in frame.',
-        'whip_pan_multi': 'Fast camera pans between angles.',
-        'crash_zoom': 'Fast zoom to product detail.',
+        'environment_motion': 'CAMERA IS COMPLETELY STATIC AND DOES NOT MOVE. The product does not move. Only subtle light changes or gentle air movement in the background. Everything else is still.',
+        'static_breathe': 'Camera is nearly still with only tiny 1% breathing motion. Product is completely frozen and does not move at all.',
+        'hero_reveal': 'Camera starts far and slowly PUSHES FORWARD toward the product over the full duration. Smooth dolly-in movement. Product stays frozen.',
+        'hero_spotlight': 'Camera is completely static. A soft light beam slowly moves across the product surface from left to right.',
+        'cinematic_orbit': 'Camera PHYSICALLY MOVES IN A 180-DEGREE ARC around the product. Starting from the left side, the camera travels in a smooth curve to the right side while keeping the product centered. The product does NOT rotate - only the camera moves around it to reveal different angles.',
+        'dolly_showcase': 'Camera starts far away and GLIDES FORWARD in a straight line toward the product. Smooth forward dolly movement. Product stays still.',
+        'macro_texture': 'Camera starts in EXTREME CLOSE-UP on product details, then slowly PULLS BACK to reveal the full product.',
+        'detail_explorer': 'Camera ZOOMS IN quickly to show small details on the product surface, then ZOOMS OUT. Product stays still.',
+        'rack_focus': 'Camera is completely static. Focus starts blurry and slowly shifts to make the product sharp and clear.',
+        'vertigo_zoom': 'Camera MOVES BACKWARD while simultaneously ZOOMING IN, creating a vertigo/dolly zoom effect. Product stays same size.',
+        'whip_pan_multi': 'Camera WHIPS quickly from one angle to another. Fast panning motion between different viewpoints.',
+        'crash_zoom': 'Camera ZOOMS IN RAPIDLY toward a detail on the product, then holds.',
     }
 
     specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
 
-    analysis_prompt = f"""Look at this product image. Write a simple video description.
+    analysis_prompt = f"""Look at this product image. Write a video prompt for a {duration}-second video.
 
-SHOT TYPE: {shot_type}
-CAMERA RULE: {specific_rule}
-DURATION: {duration} seconds
-SPEED: {speed}
+REQUIRED CAMERA MOVEMENT (THIS MUST HAPPEN):
+{specific_rule}
 
-Write a SHORT video prompt (max 100 words) that describes:
-1. What the product looks like (color, material, shape)
-2. The camera movement (following the CAMERA RULE exactly)
-3. The lighting (natural, soft)
+Write a prompt that includes:
+1. Brief product description (what it looks like)
+2. THE EXACT CAMERA MOVEMENT DESCRIBED ABOVE - this is the most important part!
+3. Soft natural lighting
 
-RULES:
-- Use only simple, safe words
-- No words like: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking
-- Keep it factual and technical
-- Product must look exactly like the source image
+CRITICAL: The camera movement MUST be the main action in the video. Describe the camera physically moving.
 
-Example format:
-"A [product description] sits on a clean surface. [Camera movement description]. Natural soft lighting. Product remains unchanged throughout."
+FORBIDDEN WORDS: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking, beautiful, amazing
 
-Write the prompt:"""
+Format: "[Product description]. [CAMERA MOVEMENT - be very specific about how camera moves]. Soft lighting. {duration} seconds."
+
+Write the prompt now:"""
 
     print(f"   📍 Director AI analyzing product...")
 
