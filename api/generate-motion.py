@@ -812,20 +812,20 @@ def sanitize_prompt(text):
     return result
 
 
-# Safe camera instructions (Google-friendly versions)
+# Safe camera instructions (Google-friendly, REALISTIC versions - no sparkles/effects)
 SAFE_CAMERA_INSTRUCTIONS = {
-    'hero_reveal': 'Smooth camera push-in with soft lighting transition. Product stays perfectly still.',
-    'hero_spotlight': 'Static camera with gentle moving light across product surface. Product does not move.',
-    'detail_explorer': 'Camera smoothly zooms to product details then back. Product remains stationary.',
-    'macro_texture': 'Very close view slowly pulling back to show full product. Shallow depth of field.',
-    'cinematic_orbit': 'Camera moves in smooth arc around stationary product. Professional turntable style.',
-    'dolly_showcase': 'Camera glides forward toward product. Product stays completely still.',
-    'rack_focus': 'Focus shifts from background to sharp product. Camera position fixed.',
-    'vertigo_zoom': 'Simultaneous dolly and zoom creating perspective shift. Product stays same size.',
-    'static_breathe': 'Nearly static shot with very subtle camera breathing motion. Product frozen.',
-    'environment_motion': 'Product completely still while background has gentle motion like particles or light.',
-    'whip_pan_multi': 'Quick camera pans between different angles of product with motion blur transitions.',
-    'crash_zoom': 'Quick zoom toward product detail then hold. High energy but product stays stable.',
+    'hero_reveal': 'Smooth camera push-in with natural daylight. Product stays perfectly still. Realistic shadows.',
+    'hero_spotlight': 'Static camera with soft natural window light. Product does not move. No artificial glow.',
+    'detail_explorer': 'Camera smoothly zooms to product details. Natural lighting. No effects or sparkles.',
+    'macro_texture': 'Very close view slowly pulling back. Natural shallow depth of field. Real materials.',
+    'cinematic_orbit': 'Camera moves in smooth arc around product. Natural studio lighting. Clean background.',
+    'dolly_showcase': 'Camera glides forward toward product. Soft natural shadows. Product stays still.',
+    'rack_focus': 'Focus shifts from background to product. Natural bokeh. No artificial effects.',
+    'vertigo_zoom': 'Dolly and zoom creating perspective shift. Natural lighting throughout.',
+    'static_breathe': 'Nearly static shot with subtle camera motion. Natural ambient light. Product frozen.',
+    'environment_motion': 'Product still while background has subtle natural motion like curtains or plants.',
+    'whip_pan_multi': 'Quick camera pans between angles. Natural motion blur. No added effects.',
+    'crash_zoom': 'Quick zoom toward product detail. Natural lighting. Clean professional look.',
 }
 
 
@@ -850,15 +850,23 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
     # DON'T use director_plan - it often contains trigger words
     # Keep prompt simple and safe
 
-    prompt = f"""Professional product commercial video, {speed_text}, {duration} seconds.
+    prompt = f"""Realistic product video, {speed_text}, {duration} seconds.
 
 Camera: {safe_instruction}
 
-Requirements:
-- Product must look identical to source image
-- No changes to product shape, color, or texture
-- Camera moves smoothly, product stays still
-- High quality commercial style
+CRITICAL REQUIREMENTS:
+- Product must look EXACTLY like source image - no changes
+- REALISTIC natural lighting only - NO sparkles, NO glitter, NO magical effects
+- NO lens flares, NO particle effects, NO glow effects
+- Real-world environment with natural shadows
+- Clean, professional commercial style like Apple or IKEA ads
+- Photorealistic quality - looks like real camera footage
+
+FORBIDDEN:
+- Any sparkle or glitter effects
+- Magical/fantasy lighting
+- Artificial glow around product
+- Dramatic unrealistic lighting
 
 {f'Additional: {safe_custom}' if safe_custom else ''}"""
 
@@ -903,7 +911,15 @@ def quality_gate_analyze(video_data, original_image, shot_type):
     """
     Gemini 3 Pro Vision analyzes the generated video for quality.
     Returns quality score and issues found.
+
+    NOTE: Quality Gate is DISABLED to prevent unnecessary retries and API costs.
+    Videos are accepted as-is. User can regenerate manually if needed.
     """
+    # DISABLED - Always pass to avoid retry loops and extra API costs
+    print("   ⚠️ Quality Gate: DISABLED (accepting video as-is)")
+    return {'passed': True, 'score': 1.0, 'issues': [], 'skipped': True, 'disabled': True}
+
+    # Original code below (kept for reference)
     if not genai_client:
         print("   ⚠️ Quality Gate: Gemini not available, skipping")
         return {'passed': True, 'score': 0.7, 'issues': [], 'skipped': True}
