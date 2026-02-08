@@ -708,39 +708,45 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
         print(f"   ⚠️ Image decode failed: {e}")
         return None
 
-    # Shot-specific rules - VERY EXPLICIT camera movement descriptions
+    # Shot-specific rules - EXPLICIT: Subject FROZEN, only camera moves
     shot_rules = {
-        'environment_motion': 'CAMERA IS COMPLETELY STATIC AND DOES NOT MOVE. The product does not move. Only subtle light changes or gentle air movement in the background. Everything else is still.',
-        'static_breathe': 'Camera is nearly still with only tiny 1% breathing motion. Product is completely frozen and does not move at all.',
-        'hero_reveal': 'Camera starts far and slowly PUSHES FORWARD toward the product over the full duration. Smooth dolly-in movement. Product stays frozen.',
-        'hero_spotlight': 'Camera is completely static. A soft light beam slowly moves across the product surface from left to right.',
-        'cinematic_orbit': 'Camera PHYSICALLY MOVES IN A 180-DEGREE ARC around the product. Starting from the left side, the camera travels in a smooth curve to the right side while keeping the product centered. The product does NOT rotate - only the camera moves around it to reveal different angles.',
-        'dolly_showcase': 'Camera starts far away and GLIDES FORWARD in a straight line toward the product. Smooth forward dolly movement. Product stays still.',
-        'macro_texture': 'Camera starts in EXTREME CLOSE-UP on product details, then slowly PULLS BACK to reveal the full product.',
-        'detail_explorer': 'Camera ZOOMS IN quickly to show small details on the product surface, then ZOOMS OUT. Product stays still.',
-        'rack_focus': 'Camera is completely static. Focus starts blurry and slowly shifts to make the product sharp and clear.',
-        'vertigo_zoom': 'Camera MOVES BACKWARD while simultaneously ZOOMING IN, creating a vertigo/dolly zoom effect. Product stays same size.',
-        'whip_pan_multi': 'Camera WHIPS quickly from one angle to another. Fast panning motion between different viewpoints.',
-        'crash_zoom': 'Camera ZOOMS IN RAPIDLY toward a detail on the product, then holds.',
+        'environment_motion': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Only subtle light changes in background. The object stays exactly as shown.',
+        'static_breathe': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera has tiny 1% breathing motion only. Object is completely still.',
+        'hero_reveal': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera slowly pushes forward toward the frozen object. Object stays exactly as shown.',
+        'hero_spotlight': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Soft light moves across the frozen object surface.',
+        'cinematic_orbit': 'THE OBJECT IS FROZEN AND DOES NOT MOVE OR ROTATE. Camera physically travels in a 180-degree arc around the frozen object. The object stays perfectly still in the center.',
+        'dolly_showcase': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera glides forward toward the frozen object. Object stays exactly as shown.',
+        'macro_texture': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera pulls back from close-up of frozen object to wide shot. Object stays still.',
+        'detail_explorer': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera zooms in on frozen object details then zooms out. Object stays still.',
+        'rack_focus': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera is static. Focus shifts to make frozen object sharp.',
+        'vertigo_zoom': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera moves backward while zooming in. Frozen object stays same size.',
+        'whip_pan_multi': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera whips between angles of frozen object. Object stays still.',
+        'crash_zoom': 'THE OBJECT IS FROZEN AND DOES NOT MOVE. Camera zooms rapidly toward frozen object detail. Object stays still.',
     }
 
     specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
 
-    analysis_prompt = f"""Write a {duration}-second video prompt. The CAMERA MOVEMENT is the most important part.
+    analysis_prompt = f"""Write a {duration}-second video prompt.
 
-MANDATORY CAMERA ACTION (this MUST be the main focus of the video):
+CRITICAL RULE #1 - SUBJECT MUST BE FROZEN:
+The object/product in this image MUST NOT MOVE, CHANGE, OPEN, CLOSE, ROTATE, or ANIMATE in ANY way.
+It must stay EXACTLY as it appears in the image - completely frozen and static.
+If there is a door, it stays closed. If there is a lid, it stays shut. NOTHING moves except the camera.
+
+CRITICAL RULE #2 - CAMERA MOVEMENT:
 {specific_rule}
 
 Look at the product image and write a prompt in this EXACT format:
 
-"CAMERA: [Describe the camera movement in detail - this is priority #1].
-SUBJECT: [Brief description of the product - what it looks like].
-The camera [repeat the movement again]. Soft natural lighting. {duration} seconds."
+"The [object] is COMPLETELY FROZEN and does not move at all throughout the video.
+CAMERA: [Describe the camera movement in detail].
+The [object] remains perfectly still while the camera [repeat movement]. Soft natural lighting. {duration} seconds."
 
 RULES:
-- Start with CAMERA movement description
-- Camera movement must be described at least TWICE
-- Product description is secondary
+- MUST state that subject is FROZEN/STILL at the start
+- MUST repeat that subject does not move
+- Camera movement described clearly
+- FORBIDDEN: Any words implying subject movement (opens, rotates, spins, moves, transforms, changes)
 - FORBIDDEN WORDS: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking
 
 Write the prompt now:"""
