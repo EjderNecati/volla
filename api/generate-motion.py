@@ -1086,9 +1086,13 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
                 print(f"   ✅ Operation started")
                 return {'success': True, 'operation_name': operation_name, 'model_id': model_id, 'status': 'PENDING'}
 
-        return {'success': False, 'error': f"API Error: {response.status_code}"}
+        # Log the actual error response
+        error_body = response.text[:500] if response.text else 'No response body'
+        print(f"   ❌ Veo API Error {response.status_code}: {error_body}")
+        return {'success': False, 'error': f"API Error: {response.status_code}", 'details': error_body}
 
     except Exception as e:
+        print(f"   ❌ Request exception: {e}")
         return {'success': False, 'error': str(e)}
 
 
