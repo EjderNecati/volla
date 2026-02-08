@@ -24,22 +24,48 @@ import InsufficientCreditsModal from './InsufficientCreditsModal';
 import SourceSelectionModal from './SourceSelectionModal';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MOTION CONFIGURATION
+// MOTION STUDIO v2.0 - PROFESSIONAL CINEMATOGRAPHY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const CAMERA_MOVEMENTS = [
-    { id: 'static', label: 'Static', en: 'No movement' },
-    { id: 'pan_left', label: 'Pan Left', en: 'Pan Left' },
-    { id: 'pan_right', label: 'Pan Right', en: 'Pan Right' },
-    { id: 'tilt_up', label: 'Tilt Up', en: 'Tilt Up' },
-    { id: 'tilt_down', label: 'Tilt Down', en: 'Tilt Down' },
-    { id: 'zoom_in', label: 'Zoom In', en: 'Zoom In' },
-    { id: 'zoom_out', label: 'Zoom Out', en: 'Zoom Out' },
-    { id: 'dolly_in', label: 'Dolly In', en: 'Dolly In' },
-    { id: 'dolly_out', label: 'Dolly Out', en: 'Dolly Out' },
-    { id: 'orbit_cw', label: 'Orbit CW', en: 'Clockwise Orbit' },
-    { id: 'orbit_ccw', label: 'Orbit CCW', en: 'Counter-Clockwise' }
+// Shot type categories for organized display
+const SHOT_CATEGORIES = [
+    { id: 'hero', name: 'Hero Shots', icon: '🎬', description: 'Dramatic reveals' },
+    { id: 'detail', name: 'Detail', icon: '🔍', description: 'Close-ups & texture' },
+    { id: 'movement', name: 'Movement', icon: '🎥', description: 'Orbit & dolly' },
+    { id: 'cinematic', name: 'Cinematic', icon: '🎞️', description: 'Film techniques' },
+    { id: 'safe', name: 'Product Safe', icon: '🔒', description: 'Zero distortion' },
+    { id: 'dynamic', name: 'Dynamic', icon: '⚡', description: 'High energy' }
 ];
+
+// Professional shot types - real cinematography techniques
+const SHOT_TYPES = [
+    // Hero Shots
+    { id: 'hero_reveal', label: 'Hero Reveal', category: 'hero', description: 'Shadow to light reveal' },
+    { id: 'hero_spotlight', label: 'Spotlight', category: 'hero', description: 'Moving spotlight effect' },
+
+    // Detail Shots
+    { id: 'detail_explorer', label: 'Detail Explorer', category: 'detail', description: 'Quick zooms to details' },
+    { id: 'macro_texture', label: 'Macro Texture', category: 'detail', description: 'Extreme close-up pull' },
+
+    // Movement
+    { id: 'cinematic_orbit', label: 'Cinematic Orbit', category: 'movement', description: '180° smooth orbit' },
+    { id: 'dolly_showcase', label: 'Dolly Showcase', category: 'movement', description: 'Forward dolly reveal' },
+
+    // Cinematic Techniques
+    { id: 'rack_focus', label: 'Rack Focus', category: 'cinematic', description: 'Focus shift effect' },
+    { id: 'vertigo_zoom', label: 'Vertigo Effect', category: 'cinematic', description: 'Dolly zoom drama' },
+
+    // Product Safe (guaranteed no distortion)
+    { id: 'static_breathe', label: 'Static Breathe', category: 'safe', description: 'Subtle motion, 100% safe' },
+    { id: 'environment_motion', label: 'Environment Motion', category: 'safe', description: 'Background moves only' },
+
+    // Dynamic
+    { id: 'whip_pan_multi', label: 'Whip Pan', category: 'dynamic', description: 'Fast angle transitions' },
+    { id: 'crash_zoom', label: 'Crash Zoom', category: 'dynamic', description: 'Dramatic fast zoom' }
+];
+
+// Legacy mapping for backwards compatibility
+const CAMERA_MOVEMENTS = SHOT_TYPES;
 
 const SPEED_OPTIONS = [
     { id: 'slow', label: 'Slow', en: 'Slow motion' },
@@ -122,7 +148,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
     const [customDirective, setCustomDirective] = useState('');
 
     // Motion settings
-    const [cameraMovement, setCameraMovement] = useState('zoom_in');
+    const [cameraMovement, setCameraMovement] = useState('hero_reveal');
     const [speed, setSpeed] = useState('normal');
     const [duration, setDuration] = useState('6');
     const [qualityMode, setQualityMode] = useState('fast');
@@ -649,16 +675,61 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                             />
                         </div>
 
-                        {/* Camera Movement */}
-                        <OptionGroup
-                            title={t('motion.cameraMovement') || 'Camera Movement'}
-                            options={CAMERA_MOVEMENTS}
-                            selected={cameraMovement}
-                            onSelect={setCameraMovement}
-                            columns={4}
-                            translationKeyPrefix="motion.cameraMovements"
-                            t={t}
-                        />
+                        {/* Shot Type - Professional Cinematography */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                <Video size={12} />
+                                {t('motion.shotType') || 'Shot Type'}
+                                <span className="ml-auto px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded text-[8px] font-bold">
+                                    PRO
+                                </span>
+                            </div>
+
+                            {/* Category Tabs */}
+                            <div className="flex flex-wrap gap-1">
+                                {SHOT_CATEGORIES.map((cat) => {
+                                    const isActive = SHOT_TYPES.find(s => s.id === cameraMovement)?.category === cat.id;
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                const firstInCategory = SHOT_TYPES.find(s => s.category === cat.id);
+                                                if (firstInCategory) setCameraMovement(firstInCategory.id);
+                                            }}
+                                            className={`px-2 py-1 rounded text-[9px] font-medium transition-all ${
+                                                isActive
+                                                    ? 'bg-violet-500 text-white'
+                                                    : 'bg-[#F5F4F1] text-[#5C5C5C] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            {cat.icon} {cat.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Shot Options in Selected Category */}
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {SHOT_TYPES
+                                    .filter(shot => shot.category === (SHOT_TYPES.find(s => s.id === cameraMovement)?.category || 'hero'))
+                                    .map((shot) => (
+                                        <button
+                                            key={shot.id}
+                                            onClick={() => setCameraMovement(shot.id)}
+                                            className={`px-2 py-2 rounded-lg text-left transition-all border ${
+                                                cameraMovement === shot.id
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-md'
+                                                    : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            <div className="text-[10px] font-semibold">{shot.label}</div>
+                                            <div className={`text-[8px] ${cameraMovement === shot.id ? 'text-white/70' : 'text-[#8C8C8C]'}`}>
+                                                {shot.description}
+                                            </div>
+                                        </button>
+                                    ))}
+                            </div>
+                        </div>
 
                         {/* Speed */}
                         <OptionGroup

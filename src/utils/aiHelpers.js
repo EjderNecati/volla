@@ -1430,12 +1430,14 @@ export const startMotionGeneration = async (imageBase64, motionOptions) => {
       body: JSON.stringify({
         action: 'start',
         image: compressedImage,
-        cameraMovement: motionOptions.cameraMovement || 'static',
+        shotType: motionOptions.cameraMovement || 'hero_reveal',  // v2.0 shot type
+        cameraMovement: motionOptions.cameraMovement || 'hero_reveal',  // Legacy support
         speed: motionOptions.speed || 'normal',
         duration: motionOptions.duration || 6,
         qualityMode: motionOptions.qualityMode || 'fast',
         aspectRatio: motionOptions.aspectRatio || '16:9',
-        customDirective: motionOptions.customDirective || ''
+        customDirective: motionOptions.customDirective || '',
+        useDirector: true  // Enable Gemini 3 Pro Director AI
       })
     });
 
