@@ -850,25 +850,18 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
     # DON'T use director_plan - it often contains trigger words
     # Keep prompt simple and safe
 
-    prompt = f"""Realistic product video, {speed_text}, {duration} seconds.
+    prompt = f"""Clean product video, {speed_text}, {duration} seconds.
 
 Camera: {safe_instruction}
 
-CRITICAL REQUIREMENTS:
-- Product must look EXACTLY like source image - no changes
-- REALISTIC natural lighting only - NO sparkles, NO glitter, NO magical effects
-- NO lens flares, NO particle effects, NO glow effects
-- Real-world environment with natural shadows
-- Clean, professional commercial style like Apple or IKEA ads
-- Photorealistic quality - looks like real camera footage
+Style:
+- Product looks exactly like source image
+- Natural daylight, soft shadows
+- Simple clean background
+- Professional commercial look
+- Real photography style
 
-FORBIDDEN:
-- Any sparkle or glitter effects
-- Magical/fantasy lighting
-- Artificial glow around product
-- Dramatic unrealistic lighting
-
-{f'Additional: {safe_custom}' if safe_custom else ''}"""
+{f'Note: {safe_custom}' if safe_custom else ''}"""
 
     print(f"   📝 Safe prompt built ({len(prompt)} chars)")
     return prompt
