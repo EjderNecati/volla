@@ -726,21 +726,22 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
 
     specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
 
-    analysis_prompt = f"""Look at this product image. Write a video prompt for a {duration}-second video.
+    analysis_prompt = f"""Write a {duration}-second video prompt. The CAMERA MOVEMENT is the most important part.
 
-REQUIRED CAMERA MOVEMENT (THIS MUST HAPPEN):
+MANDATORY CAMERA ACTION (this MUST be the main focus of the video):
 {specific_rule}
 
-Write a prompt that includes:
-1. Brief product description (what it looks like)
-2. THE EXACT CAMERA MOVEMENT DESCRIBED ABOVE - this is the most important part!
-3. Soft natural lighting
+Look at the product image and write a prompt in this EXACT format:
 
-CRITICAL: The camera movement MUST be the main action in the video. Describe the camera physically moving.
+"CAMERA: [Describe the camera movement in detail - this is priority #1].
+SUBJECT: [Brief description of the product - what it looks like].
+The camera [repeat the movement again]. Soft natural lighting. {duration} seconds."
 
-FORBIDDEN WORDS: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking, beautiful, amazing
-
-Format: "[Product description]. [CAMERA MOVEMENT - be very specific about how camera moves]. Soft lighting. {duration} seconds."
+RULES:
+- Start with CAMERA movement description
+- Camera movement must be described at least TWICE
+- Product description is secondary
+- FORBIDDEN WORDS: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking
 
 Write the prompt now:"""
 
