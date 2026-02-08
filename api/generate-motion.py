@@ -850,12 +850,21 @@ SAFE_CAMERA_INSTRUCTIONS = {
 
 
 def build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan=None, retry_count=0):
-    """Build Veo prompt - ultra-simple static prompts only."""
-    # Suppress unused parameter warnings
-    _ = (director_plan, retry_count, custom_directive)
+    """Build Veo prompt - uses Director AI plan if available, otherwise falls back to safe prompts."""
+    _ = retry_count  # Suppress unused warning
 
-    # Ultra-simple prompts that definitely won't trigger content filter
-    ULTRA_SAFE_PROMPTS = {
+    # If Director AI provided a specific prompt, USE IT (this describes the actual product!)
+    if director_plan:
+        prompt = director_plan
+        # Add custom directive if provided
+        if custom_directive:
+            prompt = f"{prompt} {custom_directive}"
+        print(f"   📝 Director AI prompt: {prompt[:100]}...")
+        return prompt
+
+    # Fallback: Ultra-simple prompts (only if Director AI failed)
+    print("   ⚠️ Director AI unavailable, using fallback prompt")
+    FALLBACK_PROMPTS = {
         'environment_motion': f'Product sits still on table. Background has gentle light movement. Camera does not move. {duration} seconds.',
         'static_breathe': f'Product on clean surface. Very subtle camera breathing. Product stays still. {duration} seconds.',
         'hero_reveal': f'Camera slowly moves toward product. Product stays still. Soft lighting. {duration} seconds.',
@@ -870,9 +879,11 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
         'crash_zoom': f'Fast zoom toward product detail. {duration} seconds.',
     }
 
-    prompt = ULTRA_SAFE_PROMPTS.get(shot_type, f'Product video. Camera moves smoothly. {duration} seconds.')
+    prompt = FALLBACK_PROMPTS.get(shot_type, f'Product video. Camera moves smoothly. {duration} seconds.')
+    if custom_directive:
+        prompt = f"{prompt} {custom_directive}"
 
-    print(f"   📝 Ultra-safe prompt: {prompt}")
+    print(f"   📝 Fallback prompt: {prompt}")
     return prompt
 
 
@@ -1441,8 +1452,12 @@ class handler(BaseHTTPRequestHandler):
                 if not token or not project_id:
                     raise ValueError("OAuth2 not available")
 
-                # Build prompt directly - no Director AI (causes issues)
-                prompt = build_motion_prompt(shot_type, speed, duration, None, None, 0)
+                # Stage 1: Director AI analyzes the product and creates specific prompt
+                custom_directive = data.get('customDirective', '')
+                director_plan = director_analyze_and_plan(image_data, shot_type, speed, duration, custom_directive, 0)
+
+                # Stage 2: Build final prompt (uses Director plan if available)
+                prompt = build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan, 0)
 
                 # Stage 3: Start generation
                 model_id = 'veo-3.1-generate-001' if quality_mode == 'pro' else 'veo-3.1-fast-generate-001'
