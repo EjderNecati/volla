@@ -726,28 +726,24 @@ def director_analyze_and_plan(image_data, shot_type, speed, duration, custom_dir
 
     specific_rule = shot_rules.get(shot_type, 'Camera moves smoothly. Product stays still.')
 
-    analysis_prompt = f"""Write a {duration}-second video prompt.
+    # DO NOT describe the product - let the image speak for itself
+    # Only describe camera movement, Veo will use the image as reference
+    analysis_prompt = f"""Write a {duration}-second video prompt for this image.
 
-CRITICAL RULE #1 - SUBJECT MUST BE FROZEN:
-The object/product in this image MUST NOT MOVE, CHANGE, OPEN, CLOSE, ROTATE, or ANIMATE in ANY way.
-It must stay EXACTLY as it appears in the image - completely frozen and static.
-If there is a door, it stays closed. If there is a lid, it stays shut. NOTHING moves except the camera.
+CRITICAL: DO NOT describe what the object is. DO NOT name it. Just call it "the scene" or "the subject".
 
-CRITICAL RULE #2 - CAMERA MOVEMENT:
+CAMERA INSTRUCTION:
 {specific_rule}
 
-Look at the product image and write a prompt in this EXACT format:
+Write ONLY this format (do not describe the object):
 
-"The [object] is COMPLETELY FROZEN and does not move at all throughout the video.
-CAMERA: [Describe the camera movement in detail].
-The [object] remains perfectly still while the camera [repeat movement]. Soft natural lighting. {duration} seconds."
+"The scene is completely still and frozen. {specific_rule} Soft natural lighting. {duration} seconds."
 
 RULES:
-- MUST state that subject is FROZEN/STILL at the start
-- MUST repeat that subject does not move
-- Camera movement described clearly
-- FORBIDDEN: Any words implying subject movement (opens, rotates, spins, moves, transforms, changes)
-- FORBIDDEN WORDS: dramatic, reveal, spotlight, crash, impact, stunning, breathtaking
+- DO NOT name or describe the object (no "baby gate", "door", "bottle", etc.)
+- Only use words: "the scene", "the subject", "the frame"
+- Focus 100% on camera movement
+- Keep it SHORT - under 30 words
 
 Write the prompt now:"""
 
