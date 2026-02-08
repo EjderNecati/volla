@@ -812,20 +812,20 @@ def sanitize_prompt(text):
     return result
 
 
-# Safe camera instructions (Google-friendly, REALISTIC versions - no sparkles/effects)
+# Safe camera instructions (ultra-simple, Google-friendly)
 SAFE_CAMERA_INSTRUCTIONS = {
-    'hero_reveal': 'Smooth camera push-in with natural daylight. Product stays perfectly still. Realistic shadows.',
-    'hero_spotlight': 'Static camera with soft natural window light. Product does not move. No artificial glow.',
-    'detail_explorer': 'Camera smoothly zooms to product details. Natural lighting. No effects or sparkles.',
-    'macro_texture': 'Very close view slowly pulling back. Natural shallow depth of field. Real materials.',
-    'cinematic_orbit': 'Camera moves in smooth arc around product. Natural studio lighting. Clean background.',
-    'dolly_showcase': 'Camera glides forward toward product. Soft natural shadows. Product stays still.',
-    'rack_focus': 'Focus shifts from background to product. Natural bokeh. No artificial effects.',
-    'vertigo_zoom': 'Dolly and zoom creating perspective shift. Natural lighting throughout.',
-    'static_breathe': 'Nearly static shot with subtle camera motion. Natural ambient light. Product frozen.',
-    'environment_motion': 'Product still while background has subtle natural motion like curtains or plants.',
-    'whip_pan_multi': 'Quick camera pans between angles. Natural motion blur. No added effects.',
-    'crash_zoom': 'Quick zoom toward product detail. Natural lighting. Clean professional look.',
+    'hero_reveal': 'Smooth camera push-in. Product stays still. Soft lighting.',
+    'hero_spotlight': 'Static camera. Soft window light moves across product.',
+    'detail_explorer': 'Camera zooms to product details then back out.',
+    'macro_texture': 'Close view slowly pulling back to show full product.',
+    'cinematic_orbit': 'Camera moves in arc around stationary product.',
+    'dolly_showcase': 'Camera glides forward toward product.',
+    'rack_focus': 'Focus shifts from background to sharp product.',
+    'vertigo_zoom': 'Dolly and zoom creating perspective shift.',
+    'static_breathe': 'Nearly static shot with subtle camera breathing.',
+    'environment_motion': 'Product still while background has gentle movement.',
+    'whip_pan_multi': 'Quick camera pans between different angles.',
+    'crash_zoom': 'Quick zoom toward product detail then hold.',
 }
 
 
