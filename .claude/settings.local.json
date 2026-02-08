@@ -24,7 +24,12 @@
       "Bash(powershell -Command:*)",
       "Bash(xcopy \"c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\" \"c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup_%date:~-4%%date:~3,2%%date:~0,2%\"\" /E /I /EXCLUDE:c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\\\\node_modules\\\\ 2>nul || powershell -c \"Copy-Item 'c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\\\\*' -Destination 'c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup' -Recurse -Exclude 'node_modules','.git' -Force)",
       "Bash(New-Item -ItemType Directory -Path 'c:\\\\Users\\\\tesko\\\\Desktop\\\\volla_backup' -Force)",
-      "Bash(Out-Null \")"
+      "Bash(Out-Null \")",
+      "Bash(npm run deploy:*)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:blog.tubikstudio.com)",
+      "WebFetch(domain:www.adcreative.ai)",
+      "WebFetch(domain:ai.google.dev)"
     ]
   }
 }

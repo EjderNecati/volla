@@ -52,7 +52,7 @@ export default function FeatureCard({ icon: Icon, mode, onClick }) {
             <div className={`absolute inset-0 bg-gradient-to-br ${config.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
 
             {/* Content */}
-            <div className="relative p-6 flex-1">
+            <div className="relative p-6 flex-1 flex flex-col">
                 {/* Icon + Title */}
                 <div className="flex items-center gap-4 mb-4">
                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
@@ -68,13 +68,13 @@ export default function FeatureCard({ icon: Icon, mode, onClick }) {
                     </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-[#5C5C5C] text-sm mb-6 leading-relaxed">
+                {/* Description - flex-1 to take available space */}
+                <p className="text-[#5C5C5C] text-sm leading-relaxed flex-1">
                     {description}
                 </p>
 
-                {/* CTA */}
-                <div className="flex items-center justify-between">
+                {/* CTA - mt-auto pushes to bottom always */}
+                <div className="flex items-center justify-between mt-4">
                     <span className={`text-sm font-semibold bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}>
                         {t('home.tryNow') || 'Try Now'}
                     </span>
