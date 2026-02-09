@@ -291,28 +291,28 @@ SEQUENCE_PRESETS = {
         'name': 'Product Showcase',
         'description': 'Complete product introduction video',
         'shots': ['hero_reveal', 'detail_explorer', 'cinematic_orbit', 'static_breathe'],
-        'durations': [3, 2, 3, 2],  # seconds per shot
+        'durations': [4, 4, 4, 4],  # Veo 3.1 only supports 4, 6, 8 seconds
         'music': 'upbeat_corporate'
     },
     'luxury_reveal': {
         'name': 'Luxury Reveal',
         'description': 'Premium brand style video',
         'shots': ['static_breathe', 'hero_spotlight', 'macro_texture', 'hero_reveal'],
-        'durations': [2, 3, 2, 3],
+        'durations': [4, 4, 4, 4],
         'music': 'elegant_piano'
     },
     'dynamic_promo': {
         'name': 'Dynamic Promo',
         'description': 'High-energy promotional video',
         'shots': ['crash_zoom', 'whip_pan_multi', 'detail_explorer', 'crash_zoom'],
-        'durations': [2, 3, 2, 2],
+        'durations': [4, 4, 4, 4],
         'music': 'fashion_groove'
     },
     'cinematic_story': {
         'name': 'Cinematic Story',
         'description': 'Film-quality product story',
         'shots': ['environment_motion', 'rack_focus', 'dolly_showcase', 'hero_reveal'],
-        'durations': [2, 3, 3, 2],
+        'durations': [4, 4, 4, 4],
         'music': 'cinematic_epic'
     }
 }
@@ -1056,7 +1056,7 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
         }],
         "parameters": {
             "aspectRatio": aspect_ratio,
-            "durationSeconds": int(duration),
+            "durationSeconds": int(duration) if int(duration) in [4, 6, 8] else 6,  # Veo 3.1 only supports 4, 6, 8
             "sampleCount": 1
         }
     }
