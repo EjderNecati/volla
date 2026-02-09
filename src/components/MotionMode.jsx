@@ -710,7 +710,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         const isSequence = isCustomSequence || isPresetSequence;
 
         // Calculate credit multiplier based on sequence length
-        const creditFeature = qualityMode === 'pro' ? 'motion_pro' : 'motion_fast';
+        const creditFeature = `motion_${qualityMode}_${duration}s`;
         const creditMultiplier = isCustomSequence ? customSequence.length : (isPresetSequence ? sequencePreset.shots.length : 1);
 
         for (let i = 0; i < creditMultiplier; i++) {
@@ -916,7 +916,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
         if (!sourceImage || !editPrompt.trim() || activeVideoIndex < 0) return;
 
         // Check credits (same as generation)
-        const creditFeature = qualityMode === 'pro' ? 'motion_pro' : 'motion_fast';
+        const creditFeature = `motion_${qualityMode}_${duration}s`;
         const creditResult = useCreditsHook(creditFeature);
         if (!creditResult.success) {
             setShowCreditsModal(true);
@@ -1769,7 +1769,7 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
             <InsufficientCreditsModal
                 isOpen={showCreditsModal}
                 onClose={() => setShowCreditsModal(false)}
-                feature={qualityMode === 'pro' ? 'motion_pro' : 'motion_fast'}
+                feature={`motion_${qualityMode}_${duration}s`}
                 onNavigate={onNavigate}
             />
 

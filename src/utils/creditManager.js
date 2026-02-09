@@ -70,12 +70,22 @@ export const CREDIT_COSTS = {
     real_life: 5,             // Deprecated - use photo_generation * count
     handsfree: 8,             // Keep existing handsfree cost
 
-    // Motion (Video Generation) costs
-    motion_fast: 8,           // 8 credits for Fast mode (veo-3.1-fast-generate-001)
-    motion_pro: 16,           // 16 credits for Pro mode (veo-3.1-generate-001)
+    // Motion (Video Generation) costs - by duration
+    motion_fast_4s: 6,        // 4 seconds Fast
+    motion_fast_6s: 8,        // 6 seconds Fast
+    motion_fast_8s: 10,       // 8 seconds Fast
+    motion_pro_4s: 12,        // 4 seconds Pro (2x Fast)
+    motion_pro_6s: 16,        // 6 seconds Pro (2x Fast)
+    motion_pro_8s: 20,        // 8 seconds Pro (2x Fast)
 
     // Creative Studio costs
     creative_studio: 2        // 2 credits per promotional image (same as photo_generation)
+};
+
+// Calculate Motion video cost based on duration and quality mode
+export const calculateMotionCost = (duration, qualityMode = 'fast') => {
+    const durationKey = `motion_${qualityMode}_${duration}s`;
+    return CREDIT_COSTS[durationKey] || (qualityMode === 'pro' ? 16 : 8); // Default to 6s pricing
 };
 
 // NEW: Calculate generation cost dynamically
