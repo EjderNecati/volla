@@ -1018,6 +1018,55 @@ def crop_video_to_square(video_path, output_path):
         return video_path
 
 
+def compress_image_for_veo(image_data, max_size_mb=3, max_dimension=1920):
+    """Compress image to fit within Vercel payload limits while maintaining quality."""
+    try:
+        if 'base64,' in image_data:
+            b64 = image_data.split('base64,')[1]
+        else:
+            b64 = image_data
+
+        image_bytes = base64.b64decode(b64)
+        img = Image.open(io.BytesIO(image_bytes))
+
+        # Convert to RGB if necessary (removes alpha channel)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+
+        # Resize if too large
+        width, height = img.size
+        if max(width, height) > max_dimension:
+            ratio = max_dimension / max(width, height)
+            new_size = (int(width * ratio), int(height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+            print(f"   📐 Resized image: {width}x{height} → {new_size[0]}x{new_size[1]}")
+
+        # Compress with decreasing quality until under size limit
+        quality = 90
+        while quality >= 50:
+            buffer = io.BytesIO()
+            img.save(buffer, format='JPEG', quality=quality, optimize=True)
+            size_mb = len(buffer.getvalue()) / (1024 * 1024)
+
+            if size_mb <= max_size_mb:
+                print(f"   📦 Compressed image: {size_mb:.2f}MB (quality={quality})")
+                return base64.b64encode(buffer.getvalue()).decode('utf-8'), 'image/jpeg'
+
+            quality -= 10
+
+        # Final attempt with lowest quality
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=50, optimize=True)
+        print(f"   ⚠️ Image compressed to minimum quality")
+        return base64.b64encode(buffer.getvalue()).decode('utf-8'), 'image/jpeg'
+
+    except Exception as e:
+        print(f"   ⚠️ Compression failed: {e}, using original")
+        if 'base64,' in image_data:
+            return image_data.split('base64,')[1], 'image/jpeg'
+        return image_data, 'image/jpeg'
+
+
 def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration, token, proj_id):
     """Start Veo 3.1 video generation."""
     # Veo only supports 16:9 and 9:16 - store original for post-processing
@@ -1027,12 +1076,8 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
         print(f"   ⚠️ Aspect ratio {aspect_ratio} not native, will crop after generation")
         aspect_ratio = '16:9'  # Generate in 16:9, crop later
 
-    if 'base64,' in image_data:
-        base64_clean = image_data.split('base64,')[1]
-        mime_type = 'image/png' if 'png' in image_data.lower() else 'image/jpeg'
-    else:
-        base64_clean = image_data
-        mime_type = 'image/jpeg'
+    # Compress image to avoid FUNCTION_PAYLOAD_TOO_LARGE error
+    base64_clean, mime_type = compress_image_for_veo(image_data)
 
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
