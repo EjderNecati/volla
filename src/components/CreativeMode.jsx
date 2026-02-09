@@ -206,6 +206,43 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// IMAGE COMPRESSION FOR REELS (Vercel Payload Limit Fix)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const compressImageForReels = (base64Image, maxDimension = 1280, quality = 0.7) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            // Calculate new dimensions
+            let { width, height } = img;
+            if (Math.max(width, height) > maxDimension) {
+                const ratio = maxDimension / Math.max(width, height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+            }
+
+            // Create canvas and compress
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Export as compressed JPEG
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            console.log(`📦 Image compressed: ${Math.round(base64Image.length / 1024)}KB → ${Math.round(compressed.length / 1024)}KB`);
+            resolve(compressed);
+        };
+        img.onerror = () => {
+            console.warn('⚠️ Image compression failed, using original');
+            resolve(base64Image);
+        };
+        img.src = base64Image;
+    });
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COLLAPSIBLE SECTION COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -505,13 +542,17 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
+            // Compress image to avoid Vercel 413 payload limit
+            console.log('📦 Compressing image for Reels API...');
+            const compressedImage = await compressImageForReels(sourceImage, 1280, 0.7);
+
             // Start video generation via NEW Reels API
             const response = await fetch('/api/generate-reels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'start',
-                    image: sourceImage,
+                    image: compressedImage,
                     contentType: reelsContentType,
                     script: script,
                     duration: reelsDuration,
