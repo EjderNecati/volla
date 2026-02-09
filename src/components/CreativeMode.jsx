@@ -116,6 +116,71 @@ const REELS_QUALITY_MODES = [
     { id: 'pro', label: 'Pro', description: 'Higher quality' }
 ];
 
+// Music Library for Reels (same as Motion)
+const REELS_MUSIC = [
+    { id: 'none', label: 'No Music', icon: '🔇' },
+    { id: 'trending_beat', label: 'Trending Beat', icon: '🔥', url: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b0939c8.mp3' },
+    { id: 'chill_lofi', label: 'Chill Lo-Fi', icon: '🎧', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3' },
+    { id: 'upbeat_pop', label: 'Upbeat Pop', icon: '🎵', url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_8cb749d484.mp3' },
+    { id: 'cinematic', label: 'Cinematic', icon: '🎬', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3' },
+    { id: 'energetic', label: 'Energetic', icon: '⚡', url: 'https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3' }
+];
+
+// Caption/Subtitle Styles
+const REELS_CAPTION_STYLES = [
+    { id: 'none', label: 'No Captions', icon: '🚫' },
+    { id: 'minimal', label: 'Minimal', icon: '✨', style: 'white text, clean, bottom center' },
+    { id: 'bold', label: 'Bold', icon: '💪', style: 'large bold text, high contrast, animated' },
+    { id: 'karaoke', label: 'Karaoke', icon: '🎤', style: 'word-by-word highlight, TikTok style' },
+    { id: 'subtitle', label: 'Subtitle', icon: '📝', style: 'classic subtitle bar, readable' },
+    { id: 'aesthetic', label: 'Aesthetic', icon: '🌸', style: 'stylized font, soft colors, trendy' }
+];
+
+// Voice Options for Avatar
+const REELS_VOICES = [
+    { id: 'auto', label: 'Auto (Match Avatar)', icon: '🤖' },
+    { id: 'female_young', label: 'Young Female', icon: '👩' },
+    { id: 'female_mature', label: 'Mature Female', icon: '👩‍💼' },
+    { id: 'male_young', label: 'Young Male', icon: '👨' },
+    { id: 'male_mature', label: 'Mature Male', icon: '👨‍💼' },
+    { id: 'energetic', label: 'Energetic', icon: '⚡' },
+    { id: 'calm', label: 'Calm & Soothing', icon: '😌' }
+];
+
+// Language Options
+const REELS_LANGUAGES = [
+    { id: 'en', label: 'English', flag: '🇺🇸' },
+    { id: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+    { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { id: 'fr', label: 'Français', flag: '🇫🇷' },
+    { id: 'es', label: 'Español', flag: '🇪🇸' },
+    { id: 'it', label: 'Italiano', flag: '🇮🇹' },
+    { id: 'pt', label: 'Português', flag: '🇧🇷' },
+    { id: 'nl', label: 'Nederlands', flag: '🇳🇱' }
+];
+
+// Trending Templates (viral formats)
+const REELS_TEMPLATES = [
+    { id: 'custom', label: 'Custom', icon: '✏️', description: 'Create your own style' },
+    { id: 'product_reveal', label: 'Product Reveal', icon: '🎁', description: '"Wait for it..." style reveal', script: 'Wait for it... This [product] is about to change everything.' },
+    { id: 'pov_customer', label: 'POV: Customer', icon: '👀', description: 'POV style relatable content', script: 'POV: You finally found the perfect [product].' },
+    { id: 'before_after', label: 'Before/After', icon: '🔄', description: 'Transformation content', script: 'Before vs After using this [product]. The difference is insane.' },
+    { id: 'honest_review', label: 'Honest Review', icon: '💯', description: 'Authentic review style', script: 'Okay, let me be real with you about this [product]...' },
+    { id: 'asmr_unbox', label: 'ASMR Unboxing', icon: '📦', description: 'Satisfying unbox content', script: 'The most satisfying unboxing you will see today.' },
+    { id: 'day_in_life', label: 'Day in My Life', icon: '☀️', description: 'Lifestyle integration', script: 'A day in my life featuring this amazing [product].' },
+    { id: 'get_ready', label: 'Get Ready With Me', icon: '💄', description: 'GRWM format', script: 'Get ready with me while I show you my new [product].' }
+];
+
+// Extended durations with multi-clip
+const REELS_DURATIONS_EXTENDED = [
+    { id: 4, label: '4s', description: 'Quick hook', clips: 1 },
+    { id: 6, label: '6s', description: 'Short content', clips: 1 },
+    { id: 8, label: '8s', description: 'Standard', clips: 1 },
+    { id: 15, label: '15s', description: 'TikTok sweet spot', clips: 2 },
+    { id: 30, label: '30s', description: 'Full story', clips: 4 },
+    { id: 60, label: '60s', description: 'Complete video', clips: 8 }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TOGGLE SWITCH COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -243,6 +308,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     const [reelsIsGenerating, setReelsIsGenerating] = useState(false);
     const [reelsProgress, setReelsProgress] = useState(0);
     const [reelsPollingStatus, setReelsPollingStatus] = useState('');
+
+    // Reels v2.0 - Enhanced features
+    const [reelsMusic, setReelsMusic] = useState('none');
+    const [reelsCaptionStyle, setReelsCaptionStyle] = useState('none');
+    const [reelsVoice, setReelsVoice] = useState('auto');
+    const [reelsLanguage, setReelsLanguage] = useState('en');
+    const [reelsTemplate, setReelsTemplate] = useState('custom');
+    const [reelsScript, setReelsScript] = useState('');
+    const [reelsScriptEdited, setReelsScriptEdited] = useState(false);
+    const [showScriptPreview, setShowScriptPreview] = useState(false);
 
     // Generation state
     const [isGenerating, setIsGenerating] = useState(false);
@@ -469,19 +544,44 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             avatarDesc = `${age?.value || 'young person'} ${gender?.id === 'female' ? 'woman' : 'man'} wearing ${style?.value || 'casual clothes'}, ${mood?.value || 'enthusiastic expression'}`;
         }
 
+        // Get language instruction
+        const langInfo = REELS_LANGUAGES.find(l => l.id === reelsLanguage);
+        const langInstruction = reelsLanguage !== 'en' ? ` Speaking in ${langInfo?.label || 'English'}.` : '';
+
+        // Get voice instruction
+        const voiceInfo = REELS_VOICES.find(v => v.id === reelsVoice);
+        const voiceInstruction = reelsVoice !== 'auto' ? ` Voice style: ${voiceInfo?.label || 'natural'}.` : '';
+
+        // Get platform-specific style
+        const platformStyles = {
+            tiktok: 'TikTok viral style, fast-paced, engaging hooks',
+            instagram: 'Instagram Reels aesthetic, polished, branded feel',
+            youtube: 'YouTube Shorts style, informative, clear presentation'
+        };
+        const platformStyle = platformStyles[reelsPlatform] || platformStyles.tiktok;
+
+        // If user has custom script, use it
+        if (reelsScriptEdited && reelsScript) {
+            return `Vertical 9:16 video. ${platformStyle}. ${hasAvatar ? `A ${avatarDesc} presents the product.${langInstruction}${voiceInstruction}` : 'Product showcase.'} The narrative: "${reelsScript}" Professional lighting. ${reelsDuration} seconds.`;
+        }
+
+        // If template has a script, incorporate it
+        const template = REELS_TEMPLATES.find(t => t.id === reelsTemplate);
+        const templateScript = template?.script ? ` The hook: "${template.script}"` : '';
+
         // Build prompt based on content type
         const prompts = {
-            product_showcase: `Vertical 9:16 cinematic product video. Product displayed elegantly with dynamic camera movement: slow push in, then gentle orbit. Professional product photography lighting, soft shadows. Instagram Reels advertisement style. Product sharp and centered. ${reelsDuration} seconds.`,
+            product_showcase: `Vertical 9:16 cinematic product video. ${platformStyle}. Product displayed elegantly with dynamic camera movement: slow push in, then gentle orbit.${templateScript} Professional product photography lighting, soft shadows. Product sharp and centered. ${reelsDuration} seconds.`,
 
-            hands_demo: `Vertical 9:16 video. Elegant hands pick up and examine the product. Hands slowly rotate product, touch the material, show details. ASMR style, deliberate slow movements. Soft natural window lighting. Close-up focus. Satisfying product demonstration. ${reelsDuration} seconds.`,
+            hands_demo: `Vertical 9:16 video. ${platformStyle}. Elegant hands pick up and examine the product. Hands slowly rotate product, touch the material, show details.${templateScript} ASMR style, deliberate slow movements. Soft natural window lighting. Close-up focus. Satisfying product demonstration. ${reelsDuration} seconds.`,
 
-            avatar_review: `Vertical 9:16 video. A ${avatarDesc} holds the product, looking directly at camera, speaking with enthusiasm. Shows product features, turns it around to display details. Natural daylight, modern room background. TikTok product review style, authentic feel. ${reelsDuration} seconds.`,
+            avatar_review: `Vertical 9:16 video. ${platformStyle}. A ${avatarDesc} holds the product, looking directly at camera, speaking with genuine enthusiasm.${langInstruction}${voiceInstruction}${templateScript} Shows product features, turns it around to display details. Natural daylight, modern room background. Authentic feel, relatable content. ${reelsDuration} seconds.`,
 
-            lifestyle: `Vertical 9:16 lifestyle video. A ${avatarDesc} naturally using the product. Candid moment, not looking at camera. Aesthetic influencer content style. Soft natural lighting, cinematic color grade. ${reelsDuration} seconds.`,
+            lifestyle: `Vertical 9:16 lifestyle video. ${platformStyle}. A ${avatarDesc} naturally using the product in everyday setting.${langInstruction}${templateScript} Candid moment, aesthetic influencer content style. Soft natural lighting, cinematic color grade, warm tones. ${reelsDuration} seconds.`,
 
-            unboxing: `Vertical 9:16 unboxing video. Hands carefully open a package to reveal the product inside. Slow reveal, satisfying movements. ASMR unboxing style. Clean minimal background, soft lighting. Focus on anticipation and reveal moment. ${reelsDuration} seconds.`,
+            unboxing: `Vertical 9:16 unboxing video. ${platformStyle}. Hands carefully open a package to reveal the product inside.${templateScript} Slow reveal, satisfying movements. ASMR unboxing style. Clean minimal background, soft lighting. Focus on anticipation and reveal moment. ${reelsDuration} seconds.`,
 
-            hook_teaser: `Vertical 9:16 attention-grabbing hook video. Product in dramatic presentation with fast dynamic movement, eye-catching angles. Bold, scroll-stopping content style. Maximum impact. ${reelsDuration} seconds.`
+            hook_teaser: `Vertical 9:16 attention-grabbing hook video. ${platformStyle}.${templateScript} Product in dramatic presentation with fast dynamic movement, eye-catching angles, scroll-stopping energy. Bold lighting, maximum visual impact. ${reelsDuration} seconds.`
         };
 
         return prompts[reelsContentType] || prompts.product_showcase;
@@ -1149,9 +1249,39 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             </div>
                         </div>
 
-                        {/* REELS MODE OPTIONS */}
+                        {/* REELS MODE OPTIONS - TOP TIER v2.0 */}
                         {mode === 'reels' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
+                                {/* Trending Templates */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                        🔥 {t('creative.reels.template') || 'Viral Template'}
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                        {REELS_TEMPLATES.map((tmpl) => (
+                                            <button
+                                                key={tmpl.id}
+                                                onClick={() => {
+                                                    setReelsTemplate(tmpl.id);
+                                                    if (tmpl.script) {
+                                                        setReelsScript(tmpl.script);
+                                                        setReelsScriptEdited(false);
+                                                    }
+                                                }}
+                                                className={`px-2 py-2 rounded-lg text-[9px] font-medium transition-all border text-center ${
+                                                    reelsTemplate === tmpl.id
+                                                        ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-500'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                                title={tmpl.description}
+                                            >
+                                                <div className="text-sm mb-0.5">{tmpl.icon}</div>
+                                                <div className="truncate">{tmpl.label}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Content Type Selection */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
@@ -1179,187 +1309,262 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     </div>
                                 </div>
 
-                                {/* Avatar Options - Only show if content type requires avatar or user enables it */}
+                                {/* Script Preview & Edit */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                            📝 {t('creative.reels.script') || 'Script / Narrative'}
+                                        </div>
+                                        <button
+                                            onClick={() => setShowScriptPreview(!showScriptPreview)}
+                                            className="text-[9px] text-purple-500 hover:text-purple-700"
+                                        >
+                                            {showScriptPreview ? 'Hide' : 'Edit'}
+                                        </button>
+                                    </div>
+                                    {showScriptPreview && (
+                                        <textarea
+                                            value={reelsScript}
+                                            onChange={(e) => {
+                                                setReelsScript(e.target.value);
+                                                setReelsScriptEdited(true);
+                                            }}
+                                            placeholder="AI will generate a script based on your product, or write your own..."
+                                            className="w-full h-20 p-2 text-[11px] bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    )}
+                                    {!showScriptPreview && reelsScript && (
+                                        <div className="text-[10px] text-[#8C8C8C] bg-[#F5F4F1] p-2 rounded-lg truncate">
+                                            {reelsScript.substring(0, 50)}...
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Avatar Options - Only show if content type requires avatar */}
                                 {REELS_CONTENT_TYPES.find(t => t.id === reelsContentType)?.hasAvatar && (
-                                    <div className="space-y-3 p-3 bg-[#F5F4F1] rounded-lg border border-[#E8E7E4]">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C8C8C]">
-                                                👤 {t('creative.reels.avatarSettings') || 'Avatar Settings'}
-                                            </span>
+                                    <div className="space-y-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-purple-600">
+                                            👤 Avatar & Voice
                                         </div>
-
-                                        {/* Avatar Gender */}
-                                        <div className="space-y-1.5">
-                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.gender') || 'Gender'}</span>
-                                            <div className="flex gap-1.5">
-                                                {REELS_AVATAR_GENDERS.map((g) => (
-                                                    <button
-                                                        key={g.id}
-                                                        onClick={() => setReelsAvatarGender(g.id)}
-                                                        className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
-                                                            reelsAvatarGender === g.id
-                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                        }`}
-                                                    >
-                                                        {g.icon} {t(`creative.reels.genders.${g.id}`) || g.label}
-                                                    </button>
-                                                ))}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">Gender</span>
+                                                <div className="flex gap-1">
+                                                    {REELS_AVATAR_GENDERS.map((g) => (
+                                                        <button
+                                                            key={g.id}
+                                                            onClick={() => setReelsAvatarGender(g.id)}
+                                                            className={`flex-1 px-2 py-1 rounded text-[9px] ${
+                                                                reelsAvatarGender === g.id
+                                                                    ? 'bg-purple-500 text-white'
+                                                                    : 'bg-white border border-[#E8E7E4]'
+                                                            }`}
+                                                        >
+                                                            {g.icon}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">Age</span>
+                                                <select
+                                                    value={reelsAvatarAge}
+                                                    onChange={(e) => setReelsAvatarAge(e.target.value)}
+                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
+                                                >
+                                                    {REELS_AVATAR_AGES.map((a) => (
+                                                        <option key={a.id} value={a.id}>{a.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">Style</span>
+                                                <select
+                                                    value={reelsAvatarStyle}
+                                                    onChange={(e) => setReelsAvatarStyle(e.target.value)}
+                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
+                                                >
+                                                    {REELS_AVATAR_STYLES.map((s) => (
+                                                        <option key={s.id} value={s.id}>{s.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">Mood</span>
+                                                <select
+                                                    value={reelsAvatarMood}
+                                                    onChange={(e) => setReelsAvatarMood(e.target.value)}
+                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
+                                                >
+                                                    {REELS_AVATAR_MOODS.map((m) => (
+                                                        <option key={m.id} value={m.id}>{m.label}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
-
-                                        {/* Avatar Age */}
-                                        <div className="space-y-1.5">
-                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.age') || 'Age'}</span>
-                                            <div className="flex gap-1.5">
-                                                {REELS_AVATAR_AGES.map((a) => (
-                                                    <button
-                                                        key={a.id}
-                                                        onClick={() => setReelsAvatarAge(a.id)}
-                                                        className={`flex-1 px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
-                                                            reelsAvatarAge === a.id
-                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                        }`}
-                                                    >
-                                                        {t(`creative.reels.ages.${a.id}`) || a.label}
-                                                    </button>
-                                                ))}
+                                        {/* Voice & Language */}
+                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-purple-200">
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">🎤 Voice</span>
+                                                <select
+                                                    value={reelsVoice}
+                                                    onChange={(e) => setReelsVoice(e.target.value)}
+                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
+                                                >
+                                                    {REELS_VOICES.map((v) => (
+                                                        <option key={v.id} value={v.id}>{v.icon} {v.label}</option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                        </div>
-
-                                        {/* Avatar Style */}
-                                        <div className="space-y-1.5">
-                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.style') || 'Style'}</span>
-                                            <div className="grid grid-cols-4 gap-1.5">
-                                                {REELS_AVATAR_STYLES.map((s) => (
-                                                    <button
-                                                        key={s.id}
-                                                        onClick={() => setReelsAvatarStyle(s.id)}
-                                                        className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
-                                                            reelsAvatarStyle === s.id
-                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                        }`}
-                                                    >
-                                                        {t(`creative.reels.styles.${s.id}`) || s.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Avatar Mood */}
-                                        <div className="space-y-1.5">
-                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.mood') || 'Mood'}</span>
-                                            <div className="grid grid-cols-4 gap-1.5">
-                                                {REELS_AVATAR_MOODS.map((m) => (
-                                                    <button
-                                                        key={m.id}
-                                                        onClick={() => setReelsAvatarMood(m.id)}
-                                                        className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
-                                                            reelsAvatarMood === m.id
-                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                        }`}
-                                                    >
-                                                        {t(`creative.reels.moods.${m.id}`) || m.label}
-                                                    </button>
-                                                ))}
+                                            <div className="space-y-1">
+                                                <span className="text-[9px] text-[#8C8C8C]">🌍 Language</span>
+                                                <select
+                                                    value={reelsLanguage}
+                                                    onChange={(e) => setReelsLanguage(e.target.value)}
+                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
+                                                >
+                                                    {REELS_LANGUAGES.map((l) => (
+                                                        <option key={l.id} value={l.id}>{l.flag} {l.label}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Platform Selection */}
+                                {/* Music Selection */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                        📱 {t('creative.reels.platform') || 'Platform'}
+                                        🎵 {t('creative.reels.music') || 'Background Music'}
                                     </div>
-                                    <div className="flex gap-1.5">
-                                        {REELS_PLATFORMS.map((p) => (
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {REELS_MUSIC.map((m) => (
                                             <button
-                                                key={p.id}
-                                                onClick={() => setReelsPlatform(p.id)}
-                                                className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
-                                                    reelsPlatform === p.id
+                                                key={m.id}
+                                                onClick={() => setReelsMusic(m.id)}
+                                                className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
+                                                    reelsMusic === m.id
                                                         ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                                         : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                                 }`}
                                             >
-                                                {p.icon} {t(`creative.reels.platforms.${p.id}`) || p.label}
+                                                {m.icon} {m.label}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Duration Selection */}
+                                {/* Caption Style */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                        ⏱️ {t('creative.reels.duration') || 'Duration'}
+                                        💬 {t('creative.reels.captions') || 'Caption Style'}
                                     </div>
-                                    <div className="flex gap-1.5">
-                                        {REELS_DURATIONS.map((d) => (
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {REELS_CAPTION_STYLES.map((c) => (
                                             <button
-                                                key={d.id}
-                                                onClick={() => setReelsDuration(d.id)}
-                                                className={`flex-1 px-2 py-2 rounded-lg text-[10px] font-medium transition-all border text-center ${
-                                                    reelsDuration === d.id
+                                                key={c.id}
+                                                onClick={() => setReelsCaptionStyle(c.id)}
+                                                className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
+                                                    reelsCaptionStyle === c.id
                                                         ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
                                                         : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                                 }`}
+                                                title={c.style}
                                             >
-                                                <div className="font-bold">{d.label}</div>
-                                                <div className="text-[8px] opacity-70">{d.description}</div>
+                                                {c.icon} {c.label}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Platform & Duration Row */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Platform */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                            📱 Platform
+                                        </div>
+                                        <div className="flex gap-1">
+                                            {REELS_PLATFORMS.map((p) => (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => setReelsPlatform(p.id)}
+                                                    className={`flex-1 px-1 py-1.5 rounded text-[8px] font-medium border ${
+                                                        reelsPlatform === p.id
+                                                            ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                            : 'bg-[#F5F4F1] border-[#E8E7E4]'
+                                                    }`}
+                                                >
+                                                    {p.icon}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                            ⏱️ Duration
+                                        </div>
+                                        <div className="flex gap-1">
+                                            {REELS_DURATIONS_EXTENDED.slice(0, 4).map((d) => (
+                                                <button
+                                                    key={d.id}
+                                                    onClick={() => setReelsDuration(d.id)}
+                                                    className={`flex-1 px-1 py-1.5 rounded text-[8px] font-medium border ${
+                                                        reelsDuration === d.id
+                                                            ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                            : 'bg-[#F5F4F1] border-[#E8E7E4]'
+                                                    }`}
+                                                >
+                                                    {d.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Quality Mode */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                        ⚡ {t('creative.reels.quality') || 'Quality'}
-                                    </div>
-                                    <div className="flex gap-1.5">
-                                        {REELS_QUALITY_MODES.map((q) => (
-                                            <button
-                                                key={q.id}
-                                                onClick={() => setReelsQuality(q.id)}
-                                                className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-medium transition-all border ${
-                                                    reelsQuality === q.id
-                                                        ? q.id === 'pro'
-                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500'
-                                                            : 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                }`}
-                                            >
-                                                {q.id === 'pro' ? '💎' : '⚡'} {t(`creative.reels.qualities.${q.id}`) || q.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                                <div className="flex gap-1.5">
+                                    {REELS_QUALITY_MODES.map((q) => (
+                                        <button
+                                            key={q.id}
+                                            onClick={() => setReelsQuality(q.id)}
+                                            className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-medium transition-all border ${
+                                                reelsQuality === q.id
+                                                    ? q.id === 'pro'
+                                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500'
+                                                        : 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                    : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            {q.id === 'pro' ? '💎 Pro' : '⚡ Fast'}
+                                        </button>
+                                    ))}
                                 </div>
 
                                 {/* Reels Generate Button */}
                                 <button
                                     onClick={handleGenerateReels}
                                     disabled={!sourceImage || reelsIsGenerating}
-                                    className={`w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative
-                                        ${sourceImage && !reelsIsGenerating ? 'animate-pulse-glow-pink hover:scale-[1.02]' : ''}`}
+                                    className={`w-full py-4 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative shadow-lg
+                                        ${sourceImage && !reelsIsGenerating ? 'animate-pulse hover:scale-[1.02]' : ''}`}
                                 >
                                     {reelsIsGenerating ? (
                                         <>
                                             <Loader2 size={18} className="animate-spin" />
-                                            <span>{reelsPollingStatus || `${t('creative.reels.generating') || 'Generating Reels'}... ${reelsProgress}%`}</span>
+                                            <span>{reelsPollingStatus || `Generating Reels... ${reelsProgress}%`}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Sparkles size={18} />
-                                            <span>🎬 {t('creative.reels.generate') || 'Generate Reels'}</span>
+                                            <span>🎬 Generate Viral Reels</span>
                                             <span className="absolute right-4 text-xs text-white/70">
-                                                {reelsQuality === 'pro'
-                                                    ? (reelsDuration === 4 ? '16' : reelsDuration === 6 ? '20' : '24')
-                                                    : (reelsDuration === 4 ? '8' : reelsDuration === 6 ? '10' : '12')
-                                                } {t('common.credits') || 'credits'}
+                                                {(() => {
+                                                    const clips = REELS_DURATIONS_EXTENDED.find(d => d.id === reelsDuration)?.clips || 1;
+                                                    const baseCost = reelsQuality === 'pro' ? 16 : 8;
+                                                    return baseCost * clips;
+                                                })()} credits
                                             </span>
                                         </>
                                     )}
@@ -1369,9 +1574,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 {reelsVideo && (
                                     <div className="space-y-2">
                                         <div className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider">
-                                            🎬 {t('creative.reels.result') || 'Generated Reels'}
+                                            🎬 Your Viral Reels
                                         </div>
-                                        <div className="aspect-[9/16] max-h-[400px] bg-black rounded-lg overflow-hidden">
+                                        <div className="aspect-[9/16] max-h-[400px] bg-black rounded-lg overflow-hidden shadow-xl">
                                             <video
                                                 src={reelsVideo}
                                                 controls
@@ -1380,18 +1585,26 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                                 loop
                                             />
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                const a = document.createElement('a');
-                                                a.href = reelsVideo;
-                                                a.download = `reels-${Date.now()}.mp4`;
-                                                a.click();
-                                            }}
-                                            className="w-full py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-[#2A2A2A] transition-colors"
-                                        >
-                                            <Download size={16} />
-                                            {t('creative.reels.download') || 'Download Reels'}
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    const a = document.createElement('a');
+                                                    a.href = reelsVideo;
+                                                    a.download = `reels-${reelsPlatform}-${Date.now()}.mp4`;
+                                                    a.click();
+                                                }}
+                                                className="flex-1 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-[#2A2A2A] transition-colors"
+                                            >
+                                                <Download size={16} />
+                                                Download
+                                            </button>
+                                            <button
+                                                onClick={() => setReelsVideo(null)}
+                                                className="px-4 py-2 bg-[#F5F4F1] text-[#1A1A1A] rounded-lg text-sm font-medium hover:bg-[#E8E7E4] transition-colors"
+                                            >
+                                                🔄 New
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
