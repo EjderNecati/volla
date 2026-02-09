@@ -78,6 +78,14 @@ export const CREDIT_COSTS = {
     motion_pro_6s: 16,        // 6 seconds Pro (2x Fast)
     motion_pro_8s: 20,        // 8 seconds Pro (2x Fast)
 
+    // Reels (Creative Video) costs - by duration (slightly higher than Motion)
+    reels_fast_4s: 8,         // 4 seconds Fast
+    reels_fast_6s: 10,        // 6 seconds Fast
+    reels_fast_8s: 12,        // 8 seconds Fast
+    reels_pro_4s: 16,         // 4 seconds Pro (2x Fast)
+    reels_pro_6s: 20,         // 6 seconds Pro (2x Fast)
+    reels_pro_8s: 24,         // 8 seconds Pro (2x Fast)
+
     // Creative Studio costs
     creative_studio: 2        // 2 credits per promotional image (same as photo_generation)
 };
@@ -86,6 +94,12 @@ export const CREDIT_COSTS = {
 export const calculateMotionCost = (duration, qualityMode = 'fast') => {
     const durationKey = `motion_${qualityMode}_${duration}s`;
     return CREDIT_COSTS[durationKey] || (qualityMode === 'pro' ? 16 : 8); // Default to 6s pricing
+};
+
+// Calculate Reels video cost based on duration and quality mode
+export const calculateReelsCost = (duration, qualityMode = 'fast') => {
+    const durationKey = `reels_${qualityMode}_${duration}s`;
+    return CREDIT_COSTS[durationKey] || (qualityMode === 'pro' ? 20 : 10); // Default to 6s pricing
 };
 
 // NEW: Calculate generation cost dynamically

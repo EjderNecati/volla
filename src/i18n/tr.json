@@ -273,7 +273,61 @@
         "modeToggle": {
             "title": "Mod",
             "auto": "Otomatik",
-            "manual": "Manuel"
+            "manual": "Manuel",
+            "reels": "Reels"
+        },
+        "reels": {
+            "contentType": "İçerik Tipi",
+            "contentTypes": {
+                "product_showcase": "Ürün Tanıtımı",
+                "hands_demo": "Eller Demo",
+                "avatar_review": "Avatar İnceleme",
+                "lifestyle": "Yaşam Tarzı",
+                "unboxing": "Kutu Açılışı",
+                "hook_teaser": "Hook/Teaser"
+            },
+            "avatarSettings": "Avatar Ayarları",
+            "gender": "Cinsiyet",
+            "genders": {
+                "female": "Kadın",
+                "male": "Erkek"
+            },
+            "age": "Yaş",
+            "ages": {
+                "young": "Genç (20'li)",
+                "adult": "Yetişkin (30-40)",
+                "mature": "Olgun (50+)"
+            },
+            "style": "Stil",
+            "styles": {
+                "casual": "Günlük",
+                "professional": "Profesyonel",
+                "trendy": "Trend",
+                "minimal": "Minimal"
+            },
+            "mood": "Ruh Hali",
+            "moods": {
+                "enthusiastic": "Enerjik",
+                "calm": "Sakin",
+                "friendly": "Samimi",
+                "professional": "Profesyonel"
+            },
+            "platform": "Platform",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram Reels",
+                "youtube": "YouTube Shorts"
+            },
+            "duration": "Süre",
+            "quality": "Kalite",
+            "qualities": {
+                "fast": "Hızlı",
+                "pro": "Pro"
+            },
+            "generate": "Reels Oluştur",
+            "generating": "Reels Oluşturuluyor",
+            "result": "Oluşturulan Reels",
+            "download": "Reels İndir"
         },
         "autoMode": {
             "theme": "Tema",

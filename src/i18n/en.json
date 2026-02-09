@@ -130,7 +130,61 @@
         "modeToggle": {
             "title": "Mode",
             "auto": "Auto",
-            "manual": "Manual"
+            "manual": "Manual",
+            "reels": "Reels"
+        },
+        "reels": {
+            "contentType": "Content Type",
+            "contentTypes": {
+                "product_showcase": "Product Showcase",
+                "hands_demo": "Hands Demo",
+                "avatar_review": "Avatar Review",
+                "lifestyle": "Lifestyle",
+                "unboxing": "Unboxing",
+                "hook_teaser": "Hook/Teaser"
+            },
+            "avatarSettings": "Avatar Settings",
+            "gender": "Gender",
+            "genders": {
+                "female": "Female",
+                "male": "Male"
+            },
+            "age": "Age",
+            "ages": {
+                "young": "Young (20s)",
+                "adult": "Adult (30-40s)",
+                "mature": "Mature (50+)"
+            },
+            "style": "Style",
+            "styles": {
+                "casual": "Casual",
+                "professional": "Professional",
+                "trendy": "Trendy",
+                "minimal": "Minimal"
+            },
+            "mood": "Mood",
+            "moods": {
+                "enthusiastic": "Enthusiastic",
+                "calm": "Calm",
+                "friendly": "Friendly",
+                "professional": "Professional"
+            },
+            "platform": "Platform",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram Reels",
+                "youtube": "YouTube Shorts"
+            },
+            "duration": "Duration",
+            "quality": "Quality",
+            "qualities": {
+                "fast": "Fast",
+                "pro": "Pro"
+            },
+            "generate": "Generate Reels",
+            "generating": "Generating Reels",
+            "result": "Generated Reels",
+            "download": "Download Reels"
         },
         "autoMode": {
             "theme": "Theme",

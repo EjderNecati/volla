@@ -62,6 +62,61 @@ const ASPECT_RATIOS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// REELS MODE CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const REELS_CONTENT_TYPES = [
+    { id: 'product_showcase', label: 'Product Showcase', icon: '📦', hasAvatar: false, description: 'Dynamic product presentation with camera movements' },
+    { id: 'hands_demo', label: 'Hands Demo', icon: '👋', hasAvatar: false, description: 'Hands interacting with product, ASMR style' },
+    { id: 'avatar_review', label: 'Avatar Review', icon: '👤', hasAvatar: true, description: 'Person presenting and reviewing the product' },
+    { id: 'lifestyle', label: 'Lifestyle', icon: '🌅', hasAvatar: true, description: 'Product in natural use context' },
+    { id: 'unboxing', label: 'Unboxing', icon: '📦', hasAvatar: false, description: 'Satisfying package opening reveal' },
+    { id: 'hook_teaser', label: 'Hook/Teaser', icon: '⚡', hasAvatar: false, description: 'Attention-grabbing scroll stopper' }
+];
+
+const REELS_AVATAR_GENDERS = [
+    { id: 'female', label: 'Female', icon: '👩' },
+    { id: 'male', label: 'Male', icon: '👨' }
+];
+
+const REELS_AVATAR_AGES = [
+    { id: 'young', label: 'Young (20s)', value: 'young person in their 20s' },
+    { id: 'adult', label: 'Adult (30-40s)', value: 'adult person in their 30s' },
+    { id: 'mature', label: 'Mature (50+)', value: 'mature person in their 50s' }
+];
+
+const REELS_AVATAR_STYLES = [
+    { id: 'casual', label: 'Casual', value: 'casual everyday clothes' },
+    { id: 'professional', label: 'Professional', value: 'professional business attire' },
+    { id: 'trendy', label: 'Trendy', value: 'trendy fashionable outfit' },
+    { id: 'minimal', label: 'Minimal', value: 'minimal clean style clothing' }
+];
+
+const REELS_AVATAR_MOODS = [
+    { id: 'enthusiastic', label: 'Enthusiastic', value: 'enthusiastic excited expression' },
+    { id: 'calm', label: 'Calm', value: 'calm relaxed demeanor' },
+    { id: 'friendly', label: 'Friendly', value: 'warm friendly smile' },
+    { id: 'professional', label: 'Professional', value: 'professional confident manner' }
+];
+
+const REELS_PLATFORMS = [
+    { id: 'tiktok', label: 'TikTok', icon: '📱' },
+    { id: 'instagram', label: 'Instagram Reels', icon: '📸' },
+    { id: 'youtube', label: 'YouTube Shorts', icon: '▶️' }
+];
+
+const REELS_DURATIONS = [
+    { id: 4, label: '4s', description: 'Quick hook' },
+    { id: 6, label: '6s', description: 'Short content' },
+    { id: 8, label: '8s', description: 'Full content' }
+];
+
+const REELS_QUALITY_MODES = [
+    { id: 'fast', label: 'Fast', description: 'Quick generation' },
+    { id: 'pro', label: 'Pro', description: 'Higher quality' }
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TOGGLE SWITCH COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -126,7 +181,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     // Source image state
     const [sourceImage, setSourceImage] = useState(null);
 
-    // Mode state: 'auto' or 'manual'
+    // Mode state: 'auto', 'manual', or 'reels'
     const [mode, setMode] = useState('auto');
 
     // Auto mode settings
@@ -173,6 +228,21 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
     // Manual mode settings
     const [manualPrompt, setManualPrompt] = useState('');
+
+    // Reels mode settings
+    const [reelsContentType, setReelsContentType] = useState('product_showcase');
+    const [reelsAvatarEnabled, setReelsAvatarEnabled] = useState(false);
+    const [reelsAvatarGender, setReelsAvatarGender] = useState('female');
+    const [reelsAvatarAge, setReelsAvatarAge] = useState('young');
+    const [reelsAvatarStyle, setReelsAvatarStyle] = useState('casual');
+    const [reelsAvatarMood, setReelsAvatarMood] = useState('enthusiastic');
+    const [reelsPlatform, setReelsPlatform] = useState('tiktok');
+    const [reelsDuration, setReelsDuration] = useState(6);
+    const [reelsQuality, setReelsQuality] = useState('fast');
+    const [reelsVideo, setReelsVideo] = useState(null);
+    const [reelsIsGenerating, setReelsIsGenerating] = useState(false);
+    const [reelsProgress, setReelsProgress] = useState(0);
+    const [reelsPollingStatus, setReelsPollingStatus] = useState('');
 
     // Generation state
     const [isGenerating, setIsGenerating] = useState(false);
@@ -326,6 +396,155 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         } catch (err) {
             console.warn('Failed to save creative to history:', err);
         }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // REELS VIDEO GENERATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    const handleGenerateReels = async () => {
+        if (!sourceImage) return;
+
+        // Calculate credits
+        const creditKey = `reels_${reelsQuality}_${reelsDuration}s`;
+        const creditResult = useCreditsHook(creditKey);
+        if (!creditResult.success) {
+            setShowCreditsModal(true);
+            return;
+        }
+
+        setReelsIsGenerating(true);
+        setReelsVideo(null);
+        setReelsProgress(0);
+        setError(null);
+
+        try {
+            // Build prompt based on content type and avatar settings
+            const contentType = REELS_CONTENT_TYPES.find(t => t.id === reelsContentType);
+            let prompt = buildReelsPrompt();
+
+            console.log('🎬 Generating Reels:', { contentType: reelsContentType, prompt });
+
+            // Start video generation via Motion API
+            const response = await fetch('/api/generate-motion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'start',
+                    image: sourceImage,
+                    shotType: 'reels_custom',
+                    duration: reelsDuration,
+                    qualityMode: reelsQuality,
+                    aspectRatio: '9:16',
+                    customDirective: prompt
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.operation_name) {
+                // Start polling for completion
+                pollReelsGeneration(result.operation_name, result.model_id, result.crop_to_square);
+            } else {
+                throw new Error(result.error || 'Failed to start video generation');
+            }
+        } catch (err) {
+            console.error('Reels generation error:', err);
+            setError(err.message || 'Failed to generate Reels');
+            setReelsIsGenerating(false);
+        }
+    };
+
+    const buildReelsPrompt = () => {
+        const contentType = REELS_CONTENT_TYPES.find(t => t.id === reelsContentType);
+        const hasAvatar = contentType?.hasAvatar && reelsAvatarEnabled !== false;
+
+        // Get avatar description if needed
+        let avatarDesc = '';
+        if (hasAvatar) {
+            const gender = REELS_AVATAR_GENDERS.find(g => g.id === reelsAvatarGender);
+            const age = REELS_AVATAR_AGES.find(a => a.id === reelsAvatarAge);
+            const style = REELS_AVATAR_STYLES.find(s => s.id === reelsAvatarStyle);
+            const mood = REELS_AVATAR_MOODS.find(m => m.id === reelsAvatarMood);
+            avatarDesc = `${age?.value || 'young person'} ${gender?.id === 'female' ? 'woman' : 'man'} wearing ${style?.value || 'casual clothes'}, ${mood?.value || 'enthusiastic expression'}`;
+        }
+
+        // Build prompt based on content type
+        const prompts = {
+            product_showcase: `Vertical 9:16 cinematic product video. Product displayed elegantly with dynamic camera movement: slow push in, then gentle orbit. Professional product photography lighting, soft shadows. Instagram Reels advertisement style. Product sharp and centered. ${reelsDuration} seconds.`,
+
+            hands_demo: `Vertical 9:16 video. Elegant hands pick up and examine the product. Hands slowly rotate product, touch the material, show details. ASMR style, deliberate slow movements. Soft natural window lighting. Close-up focus. Satisfying product demonstration. ${reelsDuration} seconds.`,
+
+            avatar_review: `Vertical 9:16 video. A ${avatarDesc} holds the product, looking directly at camera, speaking with enthusiasm. Shows product features, turns it around to display details. Natural daylight, modern room background. TikTok product review style, authentic feel. ${reelsDuration} seconds.`,
+
+            lifestyle: `Vertical 9:16 lifestyle video. A ${avatarDesc} naturally using the product. Candid moment, not looking at camera. Aesthetic influencer content style. Soft natural lighting, cinematic color grade. ${reelsDuration} seconds.`,
+
+            unboxing: `Vertical 9:16 unboxing video. Hands carefully open a package to reveal the product inside. Slow reveal, satisfying movements. ASMR unboxing style. Clean minimal background, soft lighting. Focus on anticipation and reveal moment. ${reelsDuration} seconds.`,
+
+            hook_teaser: `Vertical 9:16 attention-grabbing hook video. Product in dramatic presentation with fast dynamic movement, eye-catching angles. Bold, scroll-stopping content style. Maximum impact. ${reelsDuration} seconds.`
+        };
+
+        return prompts[reelsContentType] || prompts.product_showcase;
+    };
+
+    const pollReelsGeneration = async (operationName, modelId, cropToSquare) => {
+        setReelsPollingStatus('Processing video...');
+
+        let simulatedProgress = 5;
+        const progressInterval = setInterval(() => {
+            simulatedProgress = Math.min(90, simulatedProgress + Math.random() * 5);
+            setReelsProgress(Math.round(simulatedProgress));
+        }, 2000);
+
+        const maxAttempts = 60;
+        let attempts = 0;
+
+        const poll = async () => {
+            try {
+                const response = await fetch('/api/generate-motion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'poll',
+                        operationName,
+                        modelId,
+                        cropToSquare
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.done) {
+                    clearInterval(progressInterval);
+                    setReelsProgress(100);
+
+                    if (result.video_url) {
+                        setReelsVideo(result.video_url);
+                        setReelsPollingStatus('');
+                    } else if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    setReelsIsGenerating(false);
+                } else if (result.error) {
+                    clearInterval(progressInterval);
+                    throw new Error(result.error);
+                } else {
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        setTimeout(poll, 3000);
+                    } else {
+                        clearInterval(progressInterval);
+                        throw new Error('Video generation timed out');
+                    }
+                }
+            } catch (err) {
+                clearInterval(progressInterval);
+                setError(err.message || 'Failed to generate video');
+                setReelsIsGenerating(false);
+            }
+        };
+
+        poll();
     };
 
     const handleGenerate = async () => {
@@ -524,7 +743,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
                                 {t('creative.modeToggle.title') || 'Mode'}
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5">
+                            <div className="grid grid-cols-3 gap-1.5">
                                 <button
                                     onClick={() => setMode('auto')}
                                     className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
@@ -544,6 +763,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     }`}
                                 >
                                     {t('creative.modeToggle.manual') || 'Manual'}
+                                </button>
+                                <button
+                                    onClick={() => setMode('reels')}
+                                    className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
+                                        mode === 'reels'
+                                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-purple-500'
+                                            : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                    }`}
+                                >
+                                    🎬 {t('creative.modeToggle.reels') || 'Reels'}
                                 </button>
                             </div>
                         </div>
@@ -920,7 +1149,256 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             </div>
                         </div>
 
-                        {/* Generate Button */}
+                        {/* REELS MODE OPTIONS */}
+                        {mode === 'reels' && (
+                            <div className="space-y-4">
+                                {/* Content Type Selection */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                        🎬 {t('creative.reels.contentType') || 'Content Type'}
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {REELS_CONTENT_TYPES.map((type) => (
+                                            <button
+                                                key={type.id}
+                                                onClick={() => {
+                                                    setReelsContentType(type.id);
+                                                    setReelsAvatarEnabled(type.hasAvatar);
+                                                }}
+                                                className={`px-2 py-2 rounded-lg text-[10px] font-medium transition-all border text-center ${
+                                                    reelsContentType === type.id
+                                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-purple-500'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                                title={type.description}
+                                            >
+                                                <div className="text-base mb-0.5">{type.icon}</div>
+                                                <div>{t(`creative.reels.contentTypes.${type.id}`) || type.label}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Avatar Options - Only show if content type requires avatar or user enables it */}
+                                {REELS_CONTENT_TYPES.find(t => t.id === reelsContentType)?.hasAvatar && (
+                                    <div className="space-y-3 p-3 bg-[#F5F4F1] rounded-lg border border-[#E8E7E4]">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C8C8C]">
+                                                👤 {t('creative.reels.avatarSettings') || 'Avatar Settings'}
+                                            </span>
+                                        </div>
+
+                                        {/* Avatar Gender */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.gender') || 'Gender'}</span>
+                                            <div className="flex gap-1.5">
+                                                {REELS_AVATAR_GENDERS.map((g) => (
+                                                    <button
+                                                        key={g.id}
+                                                        onClick={() => setReelsAvatarGender(g.id)}
+                                                        className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
+                                                            reelsAvatarGender === g.id
+                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        }`}
+                                                    >
+                                                        {g.icon} {t(`creative.reels.genders.${g.id}`) || g.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Avatar Age */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.age') || 'Age'}</span>
+                                            <div className="flex gap-1.5">
+                                                {REELS_AVATAR_AGES.map((a) => (
+                                                    <button
+                                                        key={a.id}
+                                                        onClick={() => setReelsAvatarAge(a.id)}
+                                                        className={`flex-1 px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
+                                                            reelsAvatarAge === a.id
+                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        }`}
+                                                    >
+                                                        {t(`creative.reels.ages.${a.id}`) || a.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Avatar Style */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.style') || 'Style'}</span>
+                                            <div className="grid grid-cols-4 gap-1.5">
+                                                {REELS_AVATAR_STYLES.map((s) => (
+                                                    <button
+                                                        key={s.id}
+                                                        onClick={() => setReelsAvatarStyle(s.id)}
+                                                        className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
+                                                            reelsAvatarStyle === s.id
+                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        }`}
+                                                    >
+                                                        {t(`creative.reels.styles.${s.id}`) || s.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Avatar Mood */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C]">{t('creative.reels.mood') || 'Mood'}</span>
+                                            <div className="grid grid-cols-4 gap-1.5">
+                                                {REELS_AVATAR_MOODS.map((m) => (
+                                                    <button
+                                                        key={m.id}
+                                                        onClick={() => setReelsAvatarMood(m.id)}
+                                                        className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
+                                                            reelsAvatarMood === m.id
+                                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                                : 'bg-white text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        }`}
+                                                    >
+                                                        {t(`creative.reels.moods.${m.id}`) || m.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Platform Selection */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                        📱 {t('creative.reels.platform') || 'Platform'}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        {REELS_PLATFORMS.map((p) => (
+                                            <button
+                                                key={p.id}
+                                                onClick={() => setReelsPlatform(p.id)}
+                                                className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
+                                                    reelsPlatform === p.id
+                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                            >
+                                                {p.icon} {t(`creative.reels.platforms.${p.id}`) || p.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Duration Selection */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                        ⏱️ {t('creative.reels.duration') || 'Duration'}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        {REELS_DURATIONS.map((d) => (
+                                            <button
+                                                key={d.id}
+                                                onClick={() => setReelsDuration(d.id)}
+                                                className={`flex-1 px-2 py-2 rounded-lg text-[10px] font-medium transition-all border text-center ${
+                                                    reelsDuration === d.id
+                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                            >
+                                                <div className="font-bold">{d.label}</div>
+                                                <div className="text-[8px] opacity-70">{d.description}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Quality Mode */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                        ⚡ {t('creative.reels.quality') || 'Quality'}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        {REELS_QUALITY_MODES.map((q) => (
+                                            <button
+                                                key={q.id}
+                                                onClick={() => setReelsQuality(q.id)}
+                                                className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-medium transition-all border ${
+                                                    reelsQuality === q.id
+                                                        ? q.id === 'pro'
+                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500'
+                                                            : 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                            >
+                                                {q.id === 'pro' ? '💎' : '⚡'} {t(`creative.reels.qualities.${q.id}`) || q.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Reels Generate Button */}
+                                <button
+                                    onClick={handleGenerateReels}
+                                    disabled={!sourceImage || reelsIsGenerating}
+                                    className={`w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative
+                                        ${sourceImage && !reelsIsGenerating ? 'animate-pulse-glow-pink hover:scale-[1.02]' : ''}`}
+                                >
+                                    {reelsIsGenerating ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>{reelsPollingStatus || `${t('creative.reels.generating') || 'Generating Reels'}... ${reelsProgress}%`}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles size={18} />
+                                            <span>🎬 {t('creative.reels.generate') || 'Generate Reels'}</span>
+                                            <span className="absolute right-4 text-xs text-white/70">
+                                                {reelsQuality === 'pro'
+                                                    ? (reelsDuration === 4 ? '16' : reelsDuration === 6 ? '20' : '24')
+                                                    : (reelsDuration === 4 ? '8' : reelsDuration === 6 ? '10' : '12')
+                                                } {t('common.credits') || 'credits'}
+                                            </span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Generated Reels Video */}
+                                {reelsVideo && (
+                                    <div className="space-y-2">
+                                        <div className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider">
+                                            🎬 {t('creative.reels.result') || 'Generated Reels'}
+                                        </div>
+                                        <div className="aspect-[9/16] max-h-[400px] bg-black rounded-lg overflow-hidden">
+                                            <video
+                                                src={reelsVideo}
+                                                controls
+                                                className="w-full h-full object-contain"
+                                                autoPlay
+                                                loop
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const a = document.createElement('a');
+                                                a.href = reelsVideo;
+                                                a.download = `reels-${Date.now()}.mp4`;
+                                                a.click();
+                                            }}
+                                            className="w-full py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-[#2A2A2A] transition-colors"
+                                        >
+                                            <Download size={16} />
+                                            {t('creative.reels.download') || 'Download Reels'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Generate Button - Only for Auto and Manual modes */}
+                        {mode !== 'reels' && (
                         <button
                             onClick={handleGenerate}
                             disabled={!sourceImage || isGenerating || (mode === 'manual' && !manualPrompt.trim())}
@@ -942,6 +1420,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 </>
                             )}
                         </button>
+                        )}
 
                         {/* Error Display */}
                         {error && (
