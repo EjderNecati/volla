@@ -260,7 +260,8 @@
         "step1": "Kamera hareketini seçin (kaydırma, yakınlaştırma, yörünge vb.)",
         "step2": "Hız ve süreyi belirleyin",
         "step3": "Kalite modunu seçin (Hızlı veya Pro)",
-        "step4": "Video Oluştur'a tıklayın ve sihrin gerçekleşmesini bekleyin!"
+        "step4": "Video Oluştur'a tıklayın ve sihrin gerçekleşmesini bekleyin!",
+        "processingTip": "Video üretimi genellikle 1-3 dakika sürer"
     },
     "creative": {
         "title": "Kreatif Stüdyo",
