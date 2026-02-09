@@ -176,15 +176,88 @@
                 "youtube": "YouTube Shorts"
             },
             "duration": "Duration",
+            "durations": {
+                "4s": "4s - Quick hook",
+                "6s": "6s - Short content",
+                "8s": "8s - Standard",
+                "15s": "15s - TikTok sweet spot",
+                "30s": "30s - Full story",
+                "60s": "60s - Complete video"
+            },
             "quality": "Quality",
             "qualities": {
                 "fast": "Fast",
                 "pro": "Pro"
             },
-            "generate": "Generate Reels",
+            "music": "Background Music",
+            "musicOptions": {
+                "none": "No Music",
+                "trending_beat": "Trending Beat",
+                "chill_lofi": "Chill Lo-Fi",
+                "upbeat_pop": "Upbeat Pop",
+                "cinematic": "Cinematic",
+                "energetic": "Energetic",
+                "elegant_piano": "Elegant Piano",
+                "tech_modern": "Tech Modern",
+                "fashion_groove": "Fashion Groove"
+            },
+            "captions": "Caption Style",
+            "captionStyles": {
+                "none": "No Captions",
+                "minimal": "Minimal",
+                "bold": "Bold",
+                "karaoke": "Karaoke",
+                "subtitle": "Subtitle",
+                "aesthetic": "Aesthetic",
+                "neon": "Neon",
+                "gradient": "Gradient"
+            },
+            "voice": "Voice",
+            "voices": {
+                "auto": "Auto (Match Avatar)",
+                "female_young": "Young Female",
+                "female_mature": "Mature Female",
+                "male_young": "Young Male",
+                "male_mature": "Mature Male",
+                "energetic": "Energetic",
+                "calm": "Calm & Soothing"
+            },
+            "language": "Language",
+            "languages": {
+                "en": "English",
+                "tr": "Turkce",
+                "de": "Deutsch",
+                "fr": "Francais",
+                "es": "Espanol",
+                "it": "Italiano",
+                "pt": "Portugues",
+                "nl": "Nederlands"
+            },
+            "template": "Viral Template",
+            "templates": {
+                "custom": "Custom",
+                "product_reveal": "Product Reveal",
+                "pov_customer": "POV: Customer",
+                "before_after": "Before/After",
+                "honest_review": "Honest Review",
+                "asmr_unbox": "ASMR Unboxing",
+                "day_in_life": "Day in My Life",
+                "get_ready": "Get Ready With Me"
+            },
+            "script": "Script / Narrative",
+            "scriptPlaceholder": "AI will generate a script based on your product, or write your own...",
+            "generate": "Generate Viral Reels",
             "generating": "Generating Reels",
-            "result": "Generated Reels",
-            "download": "Download Reels"
+            "generatingClips": "Generating clips...",
+            "finalizing": "Finalizing video...",
+            "addingMusic": "Adding music...",
+            "addingCaptions": "Adding captions...",
+            "stitching": "Stitching clips...",
+            "result": "Your Viral Reels",
+            "download": "Download Reels",
+            "newReels": "New Reels",
+            "credits": "credits",
+            "multiClipNote": "Extended durations use multiple clips for better quality"
         },
         "autoMode": {
             "theme": "Theme",

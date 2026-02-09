@@ -480,7 +480,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     const handleGenerateReels = async () => {
         if (!sourceImage) return;
 
-        // Calculate credits
+        // Calculate credits using extended calculator
         const creditKey = `reels_${reelsQuality}_${reelsDuration}s`;
         const creditResult = useCreditsHook(creditKey);
         if (!creditResult.success) {
@@ -494,32 +494,54 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         setError(null);
 
         try {
-            // Build prompt based on content type and avatar settings
-            const contentType = REELS_CONTENT_TYPES.find(t => t.id === reelsContentType);
-            let prompt = buildReelsPrompt();
+            const script = reelsScriptEdited && reelsScript ? reelsScript : '';
 
-            console.log('🎬 Generating Reels:', { contentType: reelsContentType, prompt });
+            console.log('🎬 Generating Reels:', {
+                contentType: reelsContentType,
+                duration: reelsDuration,
+                music: reelsMusic,
+                captions: reelsCaptionStyle,
+                template: reelsTemplate
+            });
 
-            // Start video generation via Motion API
-            const response = await fetch('/api/generate-motion', {
+            // Start video generation via NEW Reels API
+            const response = await fetch('/api/generate-reels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'start',
                     image: sourceImage,
-                    shotType: 'reels_custom',
+                    contentType: reelsContentType,
+                    script: script,
                     duration: reelsDuration,
                     qualityMode: reelsQuality,
-                    aspectRatio: '9:16',
-                    customDirective: prompt
+                    musicId: reelsMusic,
+                    captionStyle: reelsCaptionStyle,
+                    platform: reelsPlatform,
+                    template: reelsTemplate,
+                    avatarConfig: reelsAvatarEnabled ? {
+                        gender: reelsAvatarGender,
+                        age: reelsAvatarAge,
+                        style: reelsAvatarStyle,
+                        mood: reelsAvatarMood
+                    } : null,
+                    voice: reelsVoice,
+                    language: reelsLanguage
                 })
             });
 
             const result = await response.json();
 
-            if (result.success && result.operation_name) {
-                // Start polling for completion
-                pollReelsGeneration(result.operation_name, result.model_id, result.crop_to_square);
+            if (result.success) {
+                if (result.operations && result.operations.length > 1) {
+                    // Multi-clip generation: poll all operations then finalize
+                    pollMultiClipGeneration(result.operations, result);
+                } else if (result.operation_name) {
+                    // Single clip generation
+                    pollReelsGeneration(result.operation_name, result.model_id, result);
+                } else {
+                    throw new Error('No operation started');
+                }
             } else {
                 throw new Error(result.error || 'Failed to start video generation');
             }
@@ -587,12 +609,12 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         return prompts[reelsContentType] || prompts.product_showcase;
     };
 
-    const pollReelsGeneration = async (operationName, modelId, cropToSquare) => {
+    const pollReelsGeneration = async (operationName, modelId, initialResult) => {
         setReelsPollingStatus('Processing video...');
 
         let simulatedProgress = 5;
         const progressInterval = setInterval(() => {
-            simulatedProgress = Math.min(90, simulatedProgress + Math.random() * 5);
+            simulatedProgress = Math.min(85, simulatedProgress + Math.random() * 5);
             setReelsProgress(Math.round(simulatedProgress));
         }, 2000);
 
@@ -601,33 +623,30 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
         const poll = async () => {
             try {
-                const response = await fetch('/api/generate-motion', {
+                const response = await fetch('/api/generate-reels', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'poll',
                         operationName,
-                        modelId,
-                        cropToSquare
+                        modelId
                     })
                 });
 
                 const result = await response.json();
 
-                if (result.done) {
+                if (result.done || result.status === 'COMPLETE') {
                     clearInterval(progressInterval);
-                    setReelsProgress(100);
 
                     if (result.video_url) {
-                        setReelsVideo(result.video_url);
-                        setReelsPollingStatus('');
+                        // Finalize: add music and captions
+                        await finalizeReels([result.video_url], initialResult);
                     } else if (result.error) {
                         throw new Error(result.error);
                     }
-                    setReelsIsGenerating(false);
-                } else if (result.error) {
+                } else if (result.error || result.status === 'FAILED') {
                     clearInterval(progressInterval);
-                    throw new Error(result.error);
+                    throw new Error(result.error || 'Generation failed');
                 } else {
                     attempts++;
                     if (attempts < maxAttempts) {
@@ -645,6 +664,130 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         };
 
         poll();
+    };
+
+    // Multi-clip polling for extended durations (15s, 30s, 60s)
+    const pollMultiClipGeneration = async (operations, initialResult) => {
+        setReelsPollingStatus(`Generating ${operations.length} clips...`);
+        setReelsProgress(5);
+
+        const totalClips = operations.length;
+        const completedVideos = [];
+
+        // Poll all operations in parallel
+        const pollAllOperations = async () => {
+            let allComplete = false;
+            let attempts = 0;
+            const maxAttempts = 120; // Longer timeout for multi-clip
+
+            while (!allComplete && attempts < maxAttempts) {
+                await new Promise(r => setTimeout(r, 3000));
+                attempts++;
+
+                let completedCount = 0;
+
+                for (const op of operations) {
+                    if (op.completed) {
+                        completedCount++;
+                        continue;
+                    }
+
+                    try {
+                        const response = await fetch('/api/generate-reels', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'poll',
+                                operationName: op.operation_name,
+                                modelId: op.model_id
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.done || result.status === 'COMPLETE') {
+                            if (result.video_url) {
+                                op.completed = true;
+                                op.video_url = result.video_url;
+                                completedCount++;
+                            }
+                        } else if (result.error || result.status === 'FAILED') {
+                            console.error(`Clip ${op.clip_index + 1} failed:`, result.error);
+                            op.completed = true;
+                            op.failed = true;
+                            completedCount++;
+                        }
+                    } catch (err) {
+                        console.error(`Error polling clip ${op.clip_index + 1}:`, err);
+                    }
+                }
+
+                const progress = Math.round((completedCount / totalClips) * 75);
+                setReelsProgress(progress);
+                setReelsPollingStatus(`Generated ${completedCount}/${totalClips} clips...`);
+
+                allComplete = operations.every(op => op.completed);
+            }
+
+            if (!allComplete) {
+                throw new Error('Multi-clip generation timed out');
+            }
+
+            // Collect successful video URLs
+            const videoUrls = operations
+                .filter(op => op.video_url && !op.failed)
+                .sort((a, b) => a.clip_index - b.clip_index)
+                .map(op => op.video_url);
+
+            if (videoUrls.length === 0) {
+                throw new Error('All clips failed to generate');
+            }
+
+            // Finalize: stitch + music + captions
+            await finalizeReels(videoUrls, initialResult);
+        };
+
+        try {
+            await pollAllOperations();
+        } catch (err) {
+            setError(err.message || 'Failed to generate multi-clip video');
+            setReelsIsGenerating(false);
+        }
+    };
+
+    // Finalize reels: stitch clips, add music, burn captions
+    const finalizeReels = async (videoUrls, initialResult) => {
+        setReelsPollingStatus('Finalizing video...');
+        setReelsProgress(85);
+
+        try {
+            const response = await fetch('/api/generate-reels', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'finalize',
+                    videoUrls,
+                    musicId: initialResult.music_id || reelsMusic,
+                    captionStyle: initialResult.caption_style || reelsCaptionStyle,
+                    script: initialResult.script || reelsScript,
+                    targetDuration: initialResult.target_duration || reelsDuration
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.video_url) {
+                setReelsProgress(100);
+                setReelsVideo(result.video_url);
+                setReelsPollingStatus('');
+            } else {
+                throw new Error(result.error || 'Finalization failed');
+            }
+        } catch (err) {
+            setError(err.message || 'Failed to finalize video');
+        }
+
+        setReelsIsGenerating(false);
     };
 
     const handleGenerate = async () => {

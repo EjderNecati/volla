@@ -319,15 +319,88 @@
                 "youtube": "YouTube Shorts"
             },
             "duration": "Süre",
+            "durations": {
+                "4s": "4sn - Hızlı hook",
+                "6s": "6sn - Kısa içerik",
+                "8s": "8sn - Standart",
+                "15s": "15sn - TikTok ideali",
+                "30s": "30sn - Tam hikaye",
+                "60s": "60sn - Komple video"
+            },
             "quality": "Kalite",
             "qualities": {
                 "fast": "Hızlı",
                 "pro": "Pro"
             },
-            "generate": "Reels Oluştur",
+            "music": "Arka Plan Müziği",
+            "musicOptions": {
+                "none": "Müzik Yok",
+                "trending_beat": "Trend Beat",
+                "chill_lofi": "Chill Lo-Fi",
+                "upbeat_pop": "Neşeli Pop",
+                "cinematic": "Sinematik",
+                "energetic": "Enerjik",
+                "elegant_piano": "Zarif Piyano",
+                "tech_modern": "Modern Teknoloji",
+                "fashion_groove": "Moda Ritmi"
+            },
+            "captions": "Altyazı Stili",
+            "captionStyles": {
+                "none": "Altyazı Yok",
+                "minimal": "Minimal",
+                "bold": "Kalın",
+                "karaoke": "Karaoke",
+                "subtitle": "Altyazı",
+                "aesthetic": "Estetik",
+                "neon": "Neon",
+                "gradient": "Gradyan"
+            },
+            "voice": "Ses",
+            "voices": {
+                "auto": "Otomatik (Avatar ile Eşleş)",
+                "female_young": "Genç Kadın",
+                "female_mature": "Olgun Kadın",
+                "male_young": "Genç Erkek",
+                "male_mature": "Olgun Erkek",
+                "energetic": "Enerjik",
+                "calm": "Sakin ve Rahatlatıcı"
+            },
+            "language": "Dil",
+            "languages": {
+                "en": "İngilizce",
+                "tr": "Türkçe",
+                "de": "Almanca",
+                "fr": "Fransızca",
+                "es": "İspanyolca",
+                "it": "İtalyanca",
+                "pt": "Portekizce",
+                "nl": "Hollandaca"
+            },
+            "template": "Viral Şablon",
+            "templates": {
+                "custom": "Özel",
+                "product_reveal": "Ürün Açılışı",
+                "pov_customer": "POV: Müşteri",
+                "before_after": "Önce/Sonra",
+                "honest_review": "Dürüst İnceleme",
+                "asmr_unbox": "ASMR Kutu Açma",
+                "day_in_life": "Hayatımdan Bir Gün",
+                "get_ready": "Benimle Hazırlan"
+            },
+            "script": "Senaryo / Anlatı",
+            "scriptPlaceholder": "AI ürününüze göre senaryo oluşturacak veya kendiniz yazın...",
+            "generate": "Viral Reels Oluştur",
             "generating": "Reels Oluşturuluyor",
-            "result": "Oluşturulan Reels",
-            "download": "Reels İndir"
+            "generatingClips": "Klipler oluşturuluyor...",
+            "finalizing": "Video sonlandırılıyor...",
+            "addingMusic": "Müzik ekleniyor...",
+            "addingCaptions": "Altyazılar ekleniyor...",
+            "stitching": "Klipler birleştiriliyor...",
+            "result": "Viral Reels'iniz",
+            "download": "Reels İndir",
+            "newReels": "Yeni Reels",
+            "credits": "kredi",
+            "multiClipNote": "Uzun süreler daha iyi kalite için birden fazla klip kullanır"
         },
         "autoMode": {
             "theme": "Tema",
