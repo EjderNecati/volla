@@ -783,29 +783,29 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
         print(f"   📝 Director AI prompt: {prompt[:100]}...")
         return prompt
 
-    # ULTRA MINIMAL prompts - ONLY camera movement, NO scene description
-    # This lets Veo use the source image as-is without generating new content
-    print("   📝 Using ULTRA MINIMAL prompt (image-only reference)")
-    MINIMAL_PROMPTS = {
-        'environment_motion': 'Subtle light movement. Static camera.',
-        'static_breathe': 'Subtle camera breathing.',
-        'hero_reveal': 'Slow camera push forward.',
-        'hero_spotlight': 'Soft light sweep.',
-        'cinematic_orbit': 'Camera orbits around center.',
-        'dolly_showcase': 'Camera dolly forward.',
-        'macro_texture': 'Camera pulls back slowly.',
-        'detail_explorer': 'Camera zooms to details.',
-        'rack_focus': 'Focus shift.',
-        'vertigo_zoom': 'Dolly zoom effect.',
-        'whip_pan_multi': 'Quick camera pan.',
-        'crash_zoom': 'Fast zoom in.',
+    # Veo 3.1 CORRECT FORMAT: [Camera move]: [Subject state], [lighting]
+    # Key: "subject remains stationary" + specific camera verb
+    print("   📝 Using Veo 3.1 format prompts")
+    VEO31_PROMPTS = {
+        'environment_motion': 'Tripod lock-off: subject remains stationary, ambient light shifts subtly, soft natural lighting.',
+        'static_breathe': 'Subtle handheld breathing: subject remains stationary, gentle micro-movements, soft diffused lighting.',
+        'hero_reveal': 'Slow dolly push in: subject remains stationary in center, camera glides forward smoothly, cinematic lighting.',
+        'hero_spotlight': 'Tripod lock-off: subject remains stationary, soft light beam sweeps across surface, dramatic lighting.',
+        'cinematic_orbit': 'Slow 180-degree orbit: subject remains stationary in center, camera arcs smoothly around, cinematic lighting.',
+        'dolly_showcase': 'Smooth dolly in: subject remains stationary, camera glides forward, soft product lighting.',
+        'macro_texture': 'Slow dolly out from macro: subject remains stationary, camera pulls back to reveal full frame, soft lighting.',
+        'detail_explorer': 'Slow push in to detail: subject remains stationary, camera moves closer, shallow depth of field.',
+        'rack_focus': 'Tripod lock-off with rack focus: subject remains stationary, focus shifts from blur to sharp, soft lighting.',
+        'vertigo_zoom': 'Dolly zoom vertigo effect: subject remains stationary at same size, camera pulls back while lens zooms in.',
+        'whip_pan_multi': 'Fast whip pan: subject remains stationary, camera whips quickly to new angle, motion blur transition.',
+        'crash_zoom': 'Fast crash zoom in: subject remains stationary, camera rapidly zooms to detail, punchy lighting.',
     }
 
-    prompt = MINIMAL_PROMPTS.get(shot_type, 'Smooth camera movement.')
+    prompt = VEO31_PROMPTS.get(shot_type, 'Smooth camera movement: subject remains stationary, soft lighting.')
     if custom_directive:
         prompt = f"{prompt} {custom_directive}"
 
-    print(f"   📝 Minimal prompt: {prompt}")
+    print(f"   📝 Veo 3.1 prompt: {prompt}")
     return prompt
 
 
