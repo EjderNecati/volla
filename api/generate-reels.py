@@ -324,8 +324,98 @@ def get_video_duration(video_path):
         return 3.0
 
 
-def stitch_videos(video_paths, output_path, transition='fade', transition_duration=0.5):
-    """Stitch multiple videos together with fade transitions using FFmpeg."""
+def trim_video_to_duration(video_path, target_duration, output_path):
+    """Trim video to exact target duration using FFmpeg."""
+    try:
+        current_duration = get_video_duration(video_path)
+
+        if current_duration <= target_duration + 0.5:
+            # Already close enough, no trim needed
+            return video_path
+
+        print(f"   ✂️ Trimming video from {current_duration:.1f}s to {target_duration}s...")
+
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', video_path,
+            '-t', str(target_duration),
+            '-c:v', 'libx264',
+            '-preset', 'fast',
+            '-c:a', 'copy',
+            output_path
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, timeout=60)
+
+        if result.returncode == 0:
+            print(f"   ✅ Video trimmed to {target_duration}s")
+            return output_path
+        else:
+            print(f"   ⚠️ Trim failed: {result.stderr.decode()[:100]}")
+            return video_path
+
+    except Exception as e:
+        print(f"   ⚠️ Trim error: {e}")
+        return video_path
+
+
+# Available transitions for xfade filter
+AVAILABLE_TRANSITIONS = [
+    'fade',           # Classic fade
+    'wipeleft',       # Wipe from right to left
+    'wiperight',      # Wipe from left to right
+    'wipeup',         # Wipe from bottom to top
+    'wipedown',       # Wipe from top to bottom
+    'slideleft',      # Slide from right
+    'slideright',     # Slide from left
+    'slideup',        # Slide from bottom
+    'slidedown',      # Slide from top
+    'smoothleft',     # Smooth slide left
+    'smoothright',    # Smooth slide right
+    'circlecrop',     # Circle crop transition
+    'rectcrop',       # Rectangle crop transition
+    'distance',       # Distance-based fade
+    'fadeblack',      # Fade through black
+    'fadewhite',      # Fade through white
+    'radial',         # Radial wipe
+    'smoothup',       # Smooth slide up
+    'smoothdown',     # Smooth slide down
+    'dissolve',       # Dissolve transition
+    'pixelize',       # Pixelize transition
+    'diagtl',         # Diagonal top-left
+    'diagtr',         # Diagonal top-right
+    'diagbl',         # Diagonal bottom-left
+    'diagbr',         # Diagonal bottom-right
+    'hlslice',        # Horizontal slice
+    'vrslice',        # Vertical slice
+    'hblur',          # Horizontal blur
+    'fadegrays',      # Fade through grays
+    'squeezev',       # Vertical squeeze
+    'squeezeh',       # Horizontal squeeze
+    'zoomin',         # Zoom in transition
+]
+
+
+def get_transition_for_clip(clip_index, total_clips, content_type):
+    """Get appropriate transition based on content type and clip position."""
+    # Different content types prefer different transition styles
+    content_transitions = {
+        'product_showcase': ['fade', 'smoothleft', 'dissolve', 'zoomin'],
+        'hands_demo': ['fade', 'dissolve', 'fadeblack'],
+        'avatar_review': ['fade', 'wipeleft', 'slideright'],
+        'lifestyle': ['fade', 'smoothleft', 'dissolve', 'circlecrop'],
+        'unboxing': ['fade', 'wipeup', 'slideup', 'zoomin'],
+        'hook_teaser': ['wipeleft', 'zoomin', 'radial', 'diagtr']
+    }
+
+    transitions = content_transitions.get(content_type, ['fade', 'dissolve', 'smoothleft'])
+
+    # Cycle through transitions for variety
+    return transitions[clip_index % len(transitions)]
+
+
+def stitch_videos(video_paths, output_path, transition='fade', transition_duration=0.5, content_type=None):
+    """Stitch multiple videos together with varied transitions using FFmpeg."""
     if not video_paths or len(video_paths) == 0:
         return None
 
@@ -333,7 +423,8 @@ def stitch_videos(video_paths, output_path, transition='fade', transition_durati
         return video_paths[0]
 
     try:
-        print(f"   🎬 Stitching {len(video_paths)} videos with {transition} transitions...")
+        total_clips = len(video_paths)
+        print(f"   🎬 Stitching {total_clips} videos with dynamic transitions...")
 
         durations = [get_video_duration(p) for p in video_paths]
         print(f"   📊 Video durations: {durations}")
@@ -341,30 +432,39 @@ def stitch_videos(video_paths, output_path, transition='fade', transition_durati
         inputs = ' '.join([f'-i "{p}"' for p in video_paths])
 
         if len(video_paths) == 2:
+            # Use content-aware transition for 2 clips
+            trans = get_transition_for_clip(0, total_clips, content_type) if content_type else transition
             offset = max(0, durations[0] - transition_duration)
-            filter_complex = f"[0:v][1:v]xfade=transition={transition}:duration={transition_duration}:offset={offset}[v]"
+            filter_complex = f"[0:v][1:v]xfade=transition={trans}:duration={transition_duration}:offset={offset}[v]"
             cmd = f'ffmpeg -y {inputs} -filter_complex "{filter_complex}" -map "[v]" -c:v libx264 -preset fast {output_path}'
+            print(f"   🎨 Using transition: {trans}")
         else:
             filter_parts = []
             current_offset = 0
+            used_transitions = []
 
             for i in range(len(video_paths) - 1):
                 input_a = f"[{i}:v]" if i == 0 else f"[v{i}]"
                 input_b = f"[{i+1}:v]"
                 output_label = f"[v{i+1}]" if i < len(video_paths) - 2 else "[v]"
 
+                # Use varied transitions for each cut
+                trans = get_transition_for_clip(i, total_clips, content_type) if content_type else transition
+                used_transitions.append(trans)
+
                 offset = max(0, current_offset + durations[i] - transition_duration)
-                filter_parts.append(f"{input_a}{input_b}xfade=transition={transition}:duration={transition_duration}:offset={offset}{output_label}")
+                filter_parts.append(f"{input_a}{input_b}xfade=transition={trans}:duration={transition_duration}:offset={offset}{output_label}")
                 current_offset = offset
 
             filter_complex = ';'.join(filter_parts)
             cmd = f'ffmpeg -y {inputs} -filter_complex "{filter_complex}" -map "[v]" -c:v libx264 -preset fast {output_path}'
+            print(f"   🎨 Using transitions: {used_transitions}")
 
         print(f"   🔧 Running FFmpeg with xfade...")
         result = subprocess.run(cmd, shell=True, capture_output=True, timeout=180)
 
         if result.returncode == 0:
-            print(f"   ✅ Videos stitched with {transition} transitions")
+            print(f"   ✅ Videos stitched with dynamic transitions")
             return output_path
         else:
             print(f"   ⚠️ xfade failed, falling back to simple concat...")
@@ -559,7 +659,7 @@ def generate_caption_segments(script, duration):
 
 
 def add_captions_to_video(video_path, script, duration, style_id, output_path):
-    """Burn captions into video using FFmpeg drawtext."""
+    """Burn captions into video using FFmpeg drawtext with fade in/out effects."""
     if not script or style_id == 'none' or style_id not in CAPTION_STYLES:
         print("   ⚠️ No captions to add")
         return video_path
@@ -572,7 +672,10 @@ def add_captions_to_video(video_path, script, duration, style_id, output_path):
     if not segments:
         return video_path
 
-    print(f"   📝 Adding {len(segments)} caption segments ({style_id} style)...")
+    print(f"   📝 Adding {len(segments)} caption segments ({style_id} style) with fade effects...")
+
+    # Fade duration (in seconds)
+    fade_duration = 0.2
 
     try:
         # Build filter chain
@@ -583,11 +686,34 @@ def add_captions_to_video(video_path, script, duration, style_id, output_path):
             start = seg['start']
             end = seg['end']
 
-            # Build drawtext filter
+            # Calculate alpha for fade in/out effect
+            # Alpha goes: 0 -> 1 (fade in) -> 1 (hold) -> 0 (fade out)
+            fade_in_end = start + fade_duration
+            fade_out_start = end - fade_duration
+
+            # Create alpha expression for smooth fade in/out
+            # if t < start: 0
+            # if start <= t < fade_in_end: (t-start)/fade_duration
+            # if fade_in_end <= t < fade_out_start: 1
+            # if fade_out_start <= t < end: (end-t)/fade_duration
+            # if t >= end: 0
+            alpha_expr = (
+                f"if(lt(t,{start}),0,"
+                f"if(lt(t,{fade_in_end}),(t-{start})/{fade_duration},"
+                f"if(lt(t,{fade_out_start}),1,"
+                f"if(lt(t,{end}),({end}-t)/{fade_duration},0))))"
+            )
+
+            # Get font color with alpha support
+            font_color = style.get('fontcolor', 'white')
+            # For fade effect, we use fontcolor_expr with alpha
+            font_color_expr = f"{font_color}@%{{eif\\:{alpha_expr}\\:d\\:2}}"
+
+            # Build drawtext filter with fade
             filter_parts = [
                 f"drawtext=text='{text}'",
                 f"fontsize={style.get('fontsize', 48)}",
-                f"fontcolor={style.get('fontcolor', 'white')}",
+                f"fontcolor_expr='{font_color_expr}'",
                 "x=(w-tw)/2",
                 f"y=h-th-{100 if style.get('position') != 'bottom' else 60}",
                 f"enable='between(t,{start},{end})'"
@@ -980,17 +1106,18 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(result).encode())
 
             elif action == 'finalize':
-                # Finalize: stitch clips + add music + burn captions
+                # Finalize: stitch clips + trim + add music + burn captions
                 video_urls = data.get('videoUrls', [])
                 music_id = data.get('musicId', 'none')
                 caption_style = data.get('captionStyle', 'none')
                 script = data.get('script', '')
                 target_duration = int(data.get('targetDuration', 8))
+                content_type = data.get('contentType', 'product_showcase')
 
                 if not video_urls:
                     raise ValueError("No videos to finalize")
 
-                print(f"   🎬 Finalizing {len(video_urls)} clips...")
+                print(f"   🎬 Finalizing {len(video_urls)} clips for {target_duration}s video...")
 
                 # Download all videos
                 video_paths = []
@@ -1002,28 +1129,40 @@ class handler(BaseHTTPRequestHandler):
                 if not video_paths:
                     raise ValueError("Could not download any videos")
 
-                # Step 1: Stitch if multiple clips
+                # Step 1: Stitch if multiple clips (with dynamic transitions)
                 if len(video_paths) > 1:
                     stitch_output = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
-                    stitched_path = stitch_videos(video_paths, stitch_output)
+                    stitched_path = stitch_videos(
+                        video_paths, stitch_output,
+                        transition='fade',
+                        transition_duration=0.5,
+                        content_type=content_type  # Pass content type for varied transitions
+                    )
                     if not stitched_path:
                         stitched_path = video_paths[0]
                 else:
                     stitched_path = video_paths[0]
 
-                # Get actual duration for caption timing
-                actual_duration = get_video_duration(stitched_path) if stitched_path else target_duration
+                # Step 2: Trim to exact target duration
+                if target_duration in [15, 30, 60]:
+                    trim_output = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
+                    trimmed_path = trim_video_to_duration(stitched_path, target_duration, trim_output)
+                else:
+                    trimmed_path = stitched_path
 
-                # Step 2: Add captions if enabled
+                # Get actual duration for caption timing
+                actual_duration = get_video_duration(trimmed_path) if trimmed_path else target_duration
+
+                # Step 3: Add captions if enabled (with fade in/out)
                 if caption_style != 'none' and script and caption_style in CAPTION_STYLES:
                     caption_output = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
                     captioned_path = add_captions_to_video(
-                        stitched_path, script, actual_duration, caption_style, caption_output
+                        trimmed_path, script, actual_duration, caption_style, caption_output
                     )
                 else:
-                    captioned_path = stitched_path
+                    captioned_path = trimmed_path
 
-                # Step 3: Add music if enabled
+                # Step 4: Add music if enabled
                 if music_id != 'none' and music_id in REELS_MUSIC_LIBRARY:
                     music_config = REELS_MUSIC_LIBRARY[music_id]
                     if music_config and music_config.get('url'):
@@ -1047,7 +1186,7 @@ class handler(BaseHTTPRequestHandler):
                         except:
                             pass
 
-                for p in [stitched_path, captioned_path, final_path]:
+                for p in [stitched_path, trimmed_path, captioned_path, final_path]:
                     if p and os.path.exists(p) and p not in video_paths:
                         try:
                             os.unlink(p)

@@ -770,7 +770,8 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     musicId: initialResult.music_id || reelsMusic,
                     captionStyle: initialResult.caption_style || reelsCaptionStyle,
                     script: initialResult.script || reelsScript,
-                    targetDuration: initialResult.target_duration || reelsDuration
+                    targetDuration: initialResult.target_duration || reelsDuration,
+                    contentType: reelsContentType  // For dynamic transitions
                 })
             });
 
