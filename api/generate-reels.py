@@ -227,28 +227,28 @@ CAPTION_STYLES = {
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
-        'base': 'Vertical 9:16 cinematic product video. Ultra high-definition 8K quality. Product displayed elegantly with smooth camera movement. Shot on RED camera with anamorphic lens. Professional product photography lighting. Photorealistic render quality.',
-        'camera': 'Slow dolly in: subject remains stationary, camera glides forward, professional softbox lighting with subtle rim light.'
+        'base': 'Vertical 9:16 cinematic product video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product shape, color, or details. Product must remain IDENTICAL to source image. Ultra high-definition 8K quality. Product displayed elegantly with smooth camera movement. Shot on RED camera with anamorphic lens. Professional product photography lighting. Photorealistic render quality.',
+        'camera': 'Slow dolly in: subject remains stationary, camera glides forward, professional softbox lighting with subtle rim light. PRODUCT STAYS PERFECT AND UNALTERED.'
     },
     'hands_demo': {
-        'base': 'Vertical 9:16 hands demonstration video. ULTRA-REALISTIC human hands with visible skin texture, natural pores, subtle veins, authentic nail details. Real human hands - NOT CGI, NOT AI-generated. Shot like iPhone 15 Pro Max video. Natural skin tones, authentic micro-movements. ASMR style with real tactile interaction.',
-        'camera': 'Static close-up: real human hands interact with product smoothly, natural window lighting like real TikTok creator content. No artificial look.'
+        'base': 'Vertical 9:16 hands demonstration video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product. Product shape and details MUST remain IDENTICAL to source image. ULTRA-REALISTIC human hands with visible skin texture, natural pores, subtle veins, authentic nail details. Real human hands - NOT CGI, NOT AI-generated. Shot like iPhone 15 Pro Max video. Natural skin tones, authentic micro-movements. ASMR style with real tactile interaction.',
+        'camera': 'Static close-up: real human hands interact with product smoothly, natural window lighting like real TikTok creator content. No artificial look. PRODUCT STAYS PERFECT.'
     },
     'avatar_review': {
-        'base': 'Vertical 9:16 product review by REAL HUMAN. PHOTOREALISTIC person with authentic skin texture - visible pores, natural skin imperfections, realistic hair strands. Person looks like real TikTok influencer - NOT CGI, NOT AI-generated, NOT 3D render. Natural facial expressions, authentic eye contact. Shot on iPhone like real user-generated content. Real human presenter with genuine enthusiasm.',
-        'camera': 'Medium shot: real human presenter holds product naturally, speaks to camera with authentic expressions, natural daylight from window like real bedroom/home content. Genuine human warmth and presence.'
+        'base': 'Vertical 9:16 product review by REAL HUMAN. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product appearance. Product MUST look IDENTICAL to source image. PHOTOREALISTIC person with authentic skin texture - visible pores, natural skin imperfections, realistic hair strands. Person looks like real TikTok influencer - NOT CGI, NOT AI-generated, NOT 3D render. Natural facial expressions, authentic eye contact. Shot on iPhone like real user-generated content. Real human presenter with genuine enthusiasm.',
+        'camera': 'Medium shot: real human presenter holds product naturally, speaks to camera with authentic expressions, natural daylight from window like real bedroom/home content. Genuine human warmth and presence. PRODUCT REMAINS UNCHANGED.'
     },
     'lifestyle': {
-        'base': 'Vertical 9:16 lifestyle video. ULTRA-REALISTIC scene with authentic human presence. Real person using product naturally - photorealistic skin, genuine expressions, natural body language. Shot like premium influencer content on iPhone Pro. Authentic lifestyle moment - NOT staged CGI, NOT artificial. Natural environment with real textures and lighting.',
-        'camera': 'Smooth tracking shot: product in authentic lifestyle context, warm golden hour natural lighting, real environmental reflections.'
+        'base': 'Vertical 9:16 lifestyle video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product shape, color, proportions MUST remain IDENTICAL to source image. Do NOT distort or alter the product. ULTRA-REALISTIC scene with authentic human presence. Real person using product naturally - photorealistic skin, genuine expressions, natural body language. Shot like premium influencer content on iPhone Pro. Authentic lifestyle moment - NOT staged CGI, NOT artificial. Natural environment with real textures and lighting.',
+        'camera': 'Smooth tracking shot: product in authentic lifestyle context, warm golden hour natural lighting, real environmental reflections. PRODUCT STAYS PERFECT.'
     },
     'unboxing': {
-        'base': 'Vertical 9:16 unboxing video. ULTRA-REALISTIC human hands with authentic skin texture - visible pores, natural color variation, real fingernails. Genuine anticipation and careful movements. Shot like real TikTok unboxing - NOT CGI hands. Real tactile interaction with packaging, authentic ASMR satisfaction.',
-        'camera': 'Top-down static: real human hands unbox product with genuine anticipation, soft natural window lighting, authentic shadows.'
+        'base': 'Vertical 9:16 unboxing video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - the revealed product MUST look IDENTICAL to source image. Do NOT alter or distort the product. ULTRA-REALISTIC human hands with authentic skin texture - visible pores, natural color variation, real fingernails. Genuine anticipation and careful movements. Shot like real TikTok unboxing - NOT CGI hands. Real tactile interaction with packaging, authentic ASMR satisfaction.',
+        'camera': 'Top-down static: real human hands unbox product with genuine anticipation, soft natural window lighting, authentic shadows. PRODUCT REMAINS UNCHANGED.'
     },
     'hook_teaser': {
-        'base': 'Vertical 9:16 attention-grabbing hook video. PHOTOREALISTIC with authentic human elements if shown. Cinematic quality but feels real and genuine like viral TikTok content. Dramatic but not artificial. Real textures, authentic lighting.',
-        'camera': 'Quick zoom in: dramatic reveal, high contrast but natural lighting like professional iPhone videography.'
+        'base': 'Vertical 9:16 attention-grabbing hook video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. Do NOT distort or alter the product appearance. PHOTOREALISTIC with authentic human elements if shown. Cinematic quality but feels real and genuine like viral TikTok content. Dramatic but not artificial. Real textures, authentic lighting.',
+        'camera': 'Quick zoom in: dramatic reveal, high contrast but natural lighting like professional iPhone videography. PRODUCT STAYS PERFECT.'
     }
 }
 
@@ -616,14 +616,35 @@ def compress_image_for_veo(image_data, max_size_mb=3, max_dimension=1920):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def escape_text_for_ffmpeg(text):
-    """Escape special characters for FFmpeg drawtext."""
+    """Escape special characters for FFmpeg drawtext filter."""
     if not text:
         return ''
-    # Escape special characters
-    text = text.replace("\\", "\\\\")
-    text = text.replace("'", "'\\''")
+
+    # First, ensure text is ASCII-safe (remove/replace problematic characters)
+    try:
+        # Normalize unicode characters
+        import unicodedata
+        text = unicodedata.normalize('NFKD', text)
+        # Keep only ASCII characters
+        text = text.encode('ascii', 'ignore').decode('ascii')
+    except Exception:
+        pass
+
+    # FFmpeg drawtext escape sequence (order matters!)
+    # 1. Backslash must be first
+    text = text.replace("\\", "\\\\\\\\")
+    # 2. Single quotes
+    text = text.replace("'", "\\'")
+    # 3. Colons (FFmpeg uses : as separator)
     text = text.replace(":", "\\:")
+    # 4. Percent signs
     text = text.replace("%", "\\%")
+    # 5. Brackets and special chars
+    text = text.replace("[", "\\[")
+    text = text.replace("]", "\\]")
+    text = text.replace(";", "\\;")
+    text = text.replace(",", "\\,")
+
     return text
 
 
@@ -659,7 +680,7 @@ def generate_caption_segments(script, duration):
 
 
 def add_captions_to_video(video_path, script, duration, style_id, output_path):
-    """Burn captions into video using FFmpeg drawtext with fade in/out effects."""
+    """Burn captions into video using FFmpeg drawtext - simplified and robust."""
     if not script or style_id == 'none' or style_id not in CAPTION_STYLES:
         print("   ⚠️ No captions to add")
         return video_path
@@ -672,74 +693,70 @@ def add_captions_to_video(video_path, script, duration, style_id, output_path):
     if not segments:
         return video_path
 
-    print(f"   📝 Adding {len(segments)} caption segments ({style_id} style) with fade effects...")
-
-    # Fade duration (in seconds)
-    fade_duration = 0.2
+    print(f"   📝 Adding {len(segments)} caption segments ({style_id} style)...")
 
     try:
-        # Build filter chain
+        # Build filter chain - simplified approach without complex alpha expressions
         filters = []
 
         for seg in segments:
-            text = escape_text_for_ffmpeg(seg['text'])
+            # Clean text - keep it simple ASCII
+            text = seg['text']
+            # Remove problematic characters, keep only safe chars
+            safe_text = ''.join(c for c in text if c.isalnum() or c in ' .,!?-')
+            safe_text = safe_text.strip()
+
+            if not safe_text:
+                continue
+
             start = seg['start']
             end = seg['end']
 
-            # Calculate alpha for fade in/out effect
-            # Alpha goes: 0 -> 1 (fade in) -> 1 (hold) -> 0 (fade out)
-            fade_in_end = start + fade_duration
-            fade_out_start = end - fade_duration
+            # Get style settings
+            fontsize = style.get('fontsize', 48)
+            fontcolor = style.get('fontcolor', 'white')
+            borderw = style.get('borderw', 2)
+            bordercolor = style.get('bordercolor', 'black')
+            y_pos = 100 if style.get('position') != 'bottom' else 60
 
-            # Create alpha expression for smooth fade in/out
-            # if t < start: 0
-            # if start <= t < fade_in_end: (t-start)/fade_duration
-            # if fade_in_end <= t < fade_out_start: 1
-            # if fade_out_start <= t < end: (end-t)/fade_duration
-            # if t >= end: 0
-            alpha_expr = (
-                f"if(lt(t,{start}),0,"
-                f"if(lt(t,{fade_in_end}),(t-{start})/{fade_duration},"
-                f"if(lt(t,{fade_out_start}),1,"
-                f"if(lt(t,{end}),({end}-t)/{fade_duration},0))))"
+            # Simple drawtext filter - using textfile approach for reliability
+            text_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8')
+            text_file.write(safe_text)
+            text_file.close()
+
+            # Build filter with textfile (more reliable than inline text)
+            filter_str = (
+                f"drawtext=textfile='{text_file.name}'"
+                f":fontsize={fontsize}"
+                f":fontcolor={fontcolor}"
+                f":borderw={borderw}"
+                f":bordercolor={bordercolor}"
+                f":x=(w-tw)/2"
+                f":y=h-th-{y_pos}"
+                f":enable='between(t\\,{start:.2f}\\,{end:.2f})'"
             )
 
-            # Get font color with alpha support
-            font_color = style.get('fontcolor', 'white')
-            # For fade effect, we use fontcolor_expr with alpha
-            font_color_expr = f"{font_color}@%{{eif\\:{alpha_expr}\\:d\\:2}}"
-
-            # Build drawtext filter with fade
-            filter_parts = [
-                f"drawtext=text='{text}'",
-                f"fontsize={style.get('fontsize', 48)}",
-                f"fontcolor_expr='{font_color_expr}'",
-                "x=(w-tw)/2",
-                f"y=h-th-{100 if style.get('position') != 'bottom' else 60}",
-                f"enable='between(t,{start},{end})'"
-            ]
-
-            # Add border/stroke
-            if style.get('borderw'):
-                filter_parts.append(f"borderw={style['borderw']}")
-                filter_parts.append(f"bordercolor={style.get('bordercolor', 'black')}")
-
-            # Add shadow
+            # Add shadow if specified
             if style.get('shadowx'):
-                filter_parts.append(f"shadowx={style['shadowx']}")
-                filter_parts.append(f"shadowy={style['shadowy']}")
-                filter_parts.append(f"shadowcolor={style.get('shadowcolor', 'black@0.5')}")
+                filter_str += f":shadowx={style['shadowx']}:shadowy={style['shadowy']}"
+                if style.get('shadowcolor'):
+                    # Simplify shadow color
+                    shadow_col = style['shadowcolor'].split('@')[0]
+                    filter_str += f":shadowcolor={shadow_col}"
 
-            # Add box background
+            # Add box if specified
             if style.get('box'):
-                filter_parts.append("box=1")
-                filter_parts.append(f"boxcolor={style.get('boxcolor', 'black@0.5')}")
-                filter_parts.append(f"boxborderw={style.get('boxborderw', 10)}")
+                box_col = style.get('boxcolor', 'black@0.5').split('@')[0]
+                filter_str += f":box=1:boxcolor={box_col}@0.7:boxborderw={style.get('boxborderw', 10)}"
 
-            filters.append(':'.join(filter_parts))
+            filters.append((filter_str, text_file.name))
 
-        # Join all drawtext filters
-        filter_chain = ','.join(filters)
+        if not filters:
+            print("   ⚠️ No valid caption segments")
+            return video_path
+
+        # Build complete filter chain
+        filter_chain = ','.join([f[0] for f in filters])
 
         cmd = [
             'ffmpeg', '-y',
@@ -749,13 +766,22 @@ def add_captions_to_video(video_path, script, duration, style_id, output_path):
             output_path
         ]
 
+        print(f"   🔧 Running FFmpeg caption render...")
         result = subprocess.run(cmd, capture_output=True, timeout=120)
+
+        # Cleanup temp files
+        for _, temp_file in filters:
+            try:
+                os.unlink(temp_file)
+            except:
+                pass
 
         if result.returncode == 0:
             print(f"   ✅ Captions burned in ({style_id})")
             return output_path
         else:
-            print(f"   ⚠️ Caption render failed: {result.stderr.decode()[:200]}")
+            error_msg = result.stderr.decode()[:300] if result.stderr else 'Unknown error'
+            print(f"   ⚠️ Caption render failed: {error_msg}")
             return video_path
 
     except subprocess.TimeoutExpired:
@@ -763,6 +789,7 @@ def add_captions_to_video(video_path, script, duration, style_id, output_path):
         return video_path
     except Exception as e:
         print(f"   ⚠️ Caption error: {e}")
+        traceback.print_exc()
         return video_path
 
 
@@ -825,8 +852,14 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
     style_hint = platform_style.get(platform, 'Professional, engaging.')
 
     # Ultra-realism global suffix for all video types
+    # CRITICAL: Product preservation is TOP PRIORITY
     realism_suffix = (
-        'CRITICAL: Photorealistic quality. Real textures, authentic lighting. '
+        'ABSOLUTE CRITICAL REQUIREMENT - PRODUCT PRESERVATION: '
+        'The product shown in the source image MUST remain EXACTLY as it appears. '
+        'DO NOT alter, distort, warp, change, or modify the product in ANY way. '
+        'Product shape, color, proportions, details, logos, and text MUST be IDENTICAL to source. '
+        'The product is SACRED - preserve it PERFECTLY. '
+        'Photorealistic quality. Real textures, authentic lighting. '
         'If humans shown: real human skin with pores and natural imperfections, '
         'genuine expressions, authentic movements. NOT CGI, NOT AI-generated look. '
         'Shot like real iPhone/DSLR video. Natural color grading.'
