@@ -29,7 +29,9 @@
       "Bash(npm run:*)",
       "WebFetch(domain:blog.tubikstudio.com)",
       "WebFetch(domain:www.adcreative.ai)",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(zip:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }

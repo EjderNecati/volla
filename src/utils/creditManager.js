@@ -71,8 +71,8 @@ export const CREDIT_COSTS = {
     handsfree: 8,             // Keep existing handsfree cost
 
     // Motion (Video Generation) costs
-    motion_fast: 10,          // 10 credits for Fast mode (veo-3.1-fast-generate-001)
-    motion_pro: 20,           // 20 credits for Pro mode (veo-3.1-generate-001)
+    motion_fast: 8,           // 8 credits for Fast mode (veo-3.1-fast-generate-001)
+    motion_pro: 16,           // 16 credits for Pro mode (veo-3.1-generate-001)
 
     // Creative Studio costs
     creative_studio: 2        // 2 credits per promotional image (same as photo_generation)
