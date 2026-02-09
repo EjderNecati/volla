@@ -227,28 +227,28 @@ CAPTION_STYLES = {
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
-        'base': 'Vertical 9:16 cinematic product video. Product displayed elegantly with smooth camera movement.',
-        'camera': 'Slow dolly in: subject remains stationary, camera glides forward, soft product lighting.'
+        'base': 'Vertical 9:16 cinematic product video. Ultra high-definition 8K quality. Product displayed elegantly with smooth camera movement. Shot on RED camera with anamorphic lens. Professional product photography lighting. Photorealistic render quality.',
+        'camera': 'Slow dolly in: subject remains stationary, camera glides forward, professional softbox lighting with subtle rim light.'
     },
     'hands_demo': {
-        'base': 'Vertical 9:16 hands demonstration video. Elegant hands interact with product. ASMR style.',
-        'camera': 'Static close-up: hands interact with product smoothly, soft natural lighting.'
+        'base': 'Vertical 9:16 hands demonstration video. ULTRA-REALISTIC human hands with visible skin texture, natural pores, subtle veins, authentic nail details. Real human hands - NOT CGI, NOT AI-generated. Shot like iPhone 15 Pro Max video. Natural skin tones, authentic micro-movements. ASMR style with real tactile interaction.',
+        'camera': 'Static close-up: real human hands interact with product smoothly, natural window lighting like real TikTok creator content. No artificial look.'
     },
     'avatar_review': {
-        'base': 'Vertical 9:16 product review video. Person presents product enthusiastically to camera.',
-        'camera': 'Medium shot: presenter holds product, speaks to camera, bright lighting.'
+        'base': 'Vertical 9:16 product review by REAL HUMAN. PHOTOREALISTIC person with authentic skin texture - visible pores, natural skin imperfections, realistic hair strands. Person looks like real TikTok influencer - NOT CGI, NOT AI-generated, NOT 3D render. Natural facial expressions, authentic eye contact. Shot on iPhone like real user-generated content. Real human presenter with genuine enthusiasm.',
+        'camera': 'Medium shot: real human presenter holds product naturally, speaks to camera with authentic expressions, natural daylight from window like real bedroom/home content. Genuine human warmth and presence.'
     },
     'lifestyle': {
-        'base': 'Vertical 9:16 lifestyle video. Product in natural use context, aesthetic influencer content.',
-        'camera': 'Smooth tracking shot: product in lifestyle context, warm natural lighting.'
+        'base': 'Vertical 9:16 lifestyle video. ULTRA-REALISTIC scene with authentic human presence. Real person using product naturally - photorealistic skin, genuine expressions, natural body language. Shot like premium influencer content on iPhone Pro. Authentic lifestyle moment - NOT staged CGI, NOT artificial. Natural environment with real textures and lighting.',
+        'camera': 'Smooth tracking shot: product in authentic lifestyle context, warm golden hour natural lighting, real environmental reflections.'
     },
     'unboxing': {
-        'base': 'Vertical 9:16 unboxing video. Hands carefully open package to reveal product.',
-        'camera': 'Top-down static: hands unbox product with anticipation, soft lighting.'
+        'base': 'Vertical 9:16 unboxing video. ULTRA-REALISTIC human hands with authentic skin texture - visible pores, natural color variation, real fingernails. Genuine anticipation and careful movements. Shot like real TikTok unboxing - NOT CGI hands. Real tactile interaction with packaging, authentic ASMR satisfaction.',
+        'camera': 'Top-down static: real human hands unbox product with genuine anticipation, soft natural window lighting, authentic shadows.'
     },
     'hook_teaser': {
-        'base': 'Vertical 9:16 attention-grabbing hook video. Dramatic presentation, scroll-stopping energy.',
-        'camera': 'Quick zoom in: dramatic reveal, high contrast lighting.'
+        'base': 'Vertical 9:16 attention-grabbing hook video. PHOTOREALISTIC with authentic human elements if shown. Cinematic quality but feels real and genuine like viral TikTok content. Dramatic but not artificial. Real textures, authentic lighting.',
+        'camera': 'Quick zoom in: dramatic reveal, high contrast but natural lighting like professional iPhone videography.'
     }
 }
 
@@ -824,12 +824,21 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
     }
     style_hint = platform_style.get(platform, 'Professional, engaging.')
 
+    # Ultra-realism global suffix for all video types
+    realism_suffix = (
+        'CRITICAL: Photorealistic quality. Real textures, authentic lighting. '
+        'If humans shown: real human skin with pores and natural imperfections, '
+        'genuine expressions, authentic movements. NOT CGI, NOT AI-generated look. '
+        'Shot like real iPhone/DSLR video. Natural color grading.'
+    )
+
     # Build full prompt
     prompt_parts = [
         base_prompt,
         camera_prompt,
         position_hint,
-        f"Style: {style_hint}"
+        f"Style: {style_hint}",
+        realism_suffix
     ]
 
     if script_section:
@@ -840,7 +849,14 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
         age = avatar_config.get('age', 'young')
         style = avatar_config.get('style', 'casual')
         mood = avatar_config.get('mood', 'enthusiastic')
-        prompt_parts.append(f'Presenter: {age} {gender}, {style} style, {mood} energy.')
+        # Ultra-realistic human description
+        prompt_parts.append(
+            f'PHOTOREALISTIC {age} {gender} presenter - real human with authentic skin texture, '
+            f'visible pores, natural skin imperfections, realistic hair with individual strands. '
+            f'{style.capitalize()} style clothing. {mood.capitalize()} genuine expression. '
+            f'NOT CGI, NOT AI-generated, NOT 3D render. Real TikTok influencer appearance. '
+            f'Natural micro-expressions, authentic eye contact, genuine human warmth.'
+        )
 
     return ' '.join(prompt_parts)
 

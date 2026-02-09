@@ -3,7 +3,8 @@ import {
     Upload, Loader2, Download, X, Sparkles, AlertCircle,
     Bookmark, Check, Pencil, Gift, Tag, Percent, Star,
     Truck, Clock, Zap, ShieldCheck, TrendingUp, DollarSign,
-    Award, Flame, Crown, Snowflake, Heart, PartyPopper, Wand2
+    Award, Flame, Crown, Snowflake, Heart, PartyPopper, Wand2,
+    RefreshCcw, Film
 } from 'lucide-react';
 import { generateCreativeImage } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
@@ -1714,43 +1715,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     )}
                                 </button>
 
-                                {/* Generated Reels Video */}
-                                {reelsVideo && (
-                                    <div className="space-y-2">
-                                        <div className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider">
-                                            🎬 Your Viral Reels
-                                        </div>
-                                        <div className="aspect-[9/16] max-h-[400px] bg-black rounded-lg overflow-hidden shadow-xl">
-                                            <video
-                                                src={reelsVideo}
-                                                controls
-                                                className="w-full h-full object-contain"
-                                                autoPlay
-                                                loop
-                                            />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    const a = document.createElement('a');
-                                                    a.href = reelsVideo;
-                                                    a.download = `reels-${reelsPlatform}-${Date.now()}.mp4`;
-                                                    a.click();
-                                                }}
-                                                className="flex-1 py-2 bg-[#1A1A1A] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-[#2A2A2A] transition-colors"
-                                            >
-                                                <Download size={16} />
-                                                Download
-                                            </button>
-                                            <button
-                                                onClick={() => setReelsVideo(null)}
-                                                className="px-4 py-2 bg-[#F5F4F1] text-[#1A1A1A] rounded-lg text-sm font-medium hover:bg-[#E8E7E4] transition-colors"
-                                            >
-                                                🔄 New
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
 
@@ -1904,6 +1868,67 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         </div>
                                     </button>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Generated Reels Video - Below Canvas */}
+                        {mode === 'reels' && reelsVideo && (
+                            <div className="mt-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-xs font-semibold text-[#8C8C8C] uppercase tracking-wider flex items-center gap-2">
+                                        <Film size={14} />
+                                        {t('creative.reels.yourVideo') || 'Your Viral Reels'}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-[#8C8C8C] bg-gradient-to-r from-pink-100 to-purple-100 px-2 py-1 rounded-full">
+                                            {reelsDuration}s • {reelsQuality === 'pro' ? 'Pro' : 'Fast'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Video Player */}
+                                <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl border border-[#E8E7E4]">
+                                    <div className="aspect-[9/16] max-h-[500px] mx-auto">
+                                        <video
+                                            src={reelsVideo}
+                                            controls
+                                            className="w-full h-full object-contain"
+                                            autoPlay
+                                            loop
+                                            playsInline
+                                        />
+                                    </div>
+
+                                    {/* Platform badge */}
+                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
+                                        {reelsPlatform === 'tiktok' && '🎵 TikTok'}
+                                        {reelsPlatform === 'instagram' && '📸 Instagram'}
+                                        {reelsPlatform === 'youtube' && '▶️ YouTube'}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => {
+                                            const a = document.createElement('a');
+                                            a.href = reelsVideo;
+                                            a.download = `reels-${reelsPlatform}-${reelsDuration}s-${Date.now()}.mp4`;
+                                            a.click();
+                                        }}
+                                        className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                                    >
+                                        <Download size={18} />
+                                        {t('common.download') || 'Download'}
+                                    </button>
+                                    <button
+                                        onClick={() => setReelsVideo(null)}
+                                        className="px-6 py-3 bg-[#F5F4F1] hover:bg-[#E8E7E4] text-[#1A1A1A] rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <RefreshCcw size={16} />
+                                        {t('creative.reels.newVideo') || 'New'}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
