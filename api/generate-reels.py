@@ -231,16 +231,16 @@ CONTENT_TYPE_PROMPTS = {
         'camera': 'Slow dolly in: subject remains stationary, camera glides forward, professional softbox lighting with subtle rim light. PRODUCT STAYS PERFECT AND UNALTERED.'
     },
     'hands_demo': {
-        'base': 'Vertical 9:16 hands demonstration video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product. Product shape and details MUST remain IDENTICAL to source image. ULTRA-REALISTIC human hands with visible skin texture, natural pores, subtle veins, authentic nail details. Real human hands - NOT CGI, NOT AI-generated. Shot like iPhone 15 Pro Max video. Natural skin tones, authentic micro-movements. ASMR style with real tactile interaction.',
-        'camera': 'Static close-up: real human hands interact with product smoothly, natural window lighting like real TikTok creator content. No artificial look. PRODUCT STAYS PERFECT.'
+        'base': 'Vertical 9:16 hands demonstration video shot on iPhone. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. HYPER-REALISTIC human hands that are INDISTINGUISHABLE from real footage. Hands must show: visible skin texture and pores, natural wrinkles at knuckles, subtle veins, real nail texture with slight imperfections, natural skin color variation. NO CGI smoothness, NO artificial glow. Hands look exactly like real ASMR TikTok content. Natural slightly imperfect movements.',
+        'camera': 'Static close-up with soft natural window light. Real shadows under fingers. Slightly shallow depth of field. NO artificial lighting setup. PRODUCT STAYS PERFECT AND UNCHANGED.'
     },
     'avatar_review': {
-        'base': 'Vertical 9:16 product review by REAL HUMAN. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product appearance. Product MUST look IDENTICAL to source image. PHOTOREALISTIC person with authentic skin texture - visible pores, natural skin imperfections, realistic hair strands. Person looks like real TikTok influencer - NOT CGI, NOT AI-generated, NOT 3D render. Natural facial expressions, authentic eye contact. Shot on iPhone like real user-generated content. Real human presenter with genuine enthusiasm.',
-        'camera': 'Medium shot: real human presenter holds product naturally, speaks to camera with authentic expressions, natural daylight from window like real bedroom/home content. Genuine human warmth and presence. PRODUCT REMAINS UNCHANGED.'
+        'base': 'Vertical 9:16 product review filmed on iPhone 15 Pro. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST look IDENTICAL to source image. HYPER-REALISTIC human presenter that is INDISTINGUISHABLE from real footage. Skin must have: visible pores at close range, natural sebum shine on T-zone, subtle under-eye texture, real skin color variation, tiny imperfections like small moles or freckles. Hair must show individual strands with natural flyaways. NO artificial glow, NO perfect skin, NO CGI smoothness. Person looks exactly like real TikTok creator filming in their bedroom. Natural hand-held camera shake. Shallow depth of field like iPhone portrait mode.',
+        'camera': 'Medium close-up: soft diffused window light from one side creating natural shadows under chin and nose. NO studio lighting, NO ring light look, NO artificial catchlights. Background slightly out of focus with real bedroom clutter. Camera held at eye level, slight natural movement. PRODUCT REMAINS UNCHANGED AND PERFECT.'
     },
     'lifestyle': {
-        'base': 'Vertical 9:16 lifestyle video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product shape, color, proportions MUST remain IDENTICAL to source image. Do NOT distort or alter the product. ULTRA-REALISTIC scene with authentic human presence. Real person using product naturally - photorealistic skin, genuine expressions, natural body language. Shot like premium influencer content on iPhone Pro. Authentic lifestyle moment - NOT staged CGI, NOT artificial. Natural environment with real textures and lighting.',
-        'camera': 'Smooth tracking shot: product in authentic lifestyle context, warm golden hour natural lighting, real environmental reflections. PRODUCT STAYS PERFECT.'
+        'base': 'Vertical 9:16 lifestyle video shot on iPhone. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. DOCUMENTARY-STYLE realism with REAL human. Person must be INDISTINGUISHABLE from actual footage - imperfect skin with pores and texture, natural hair with flyaways, real clothing wrinkles and fabric texture. NO artificial smoothing, NO CGI glow, NO perfect lighting. Looks exactly like candid footage from a real influencer daily vlog. Natural environment with real dust particles in light, authentic shadows.',
+        'camera': 'Handheld camera feel with natural micro-movements. Soft natural daylight, no artificial lighting setup visible. Slightly overexposed windows like real phone footage. Real depth of field. PRODUCT STAYS PERFECT AND UNCHANGED.'
     },
     'unboxing': {
         'base': 'Vertical 9:16 unboxing video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - the revealed product MUST look IDENTICAL to source image. Do NOT alter or distort the product. ULTRA-REALISTIC human hands with authentic skin texture - visible pores, natural color variation, real fingernails. Genuine anticipation and careful movements. Shot like real TikTok unboxing - NOT CGI hands. Real tactile interaction with packaging, authentic ASMR satisfaction.',
@@ -258,13 +258,13 @@ CONTENT_TYPE_PROMPTS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 TEMPLATE_SCRIPTS = {
-    'product_reveal': 'Wait for it... This product is about to change everything. The quality is unreal.',
-    'pov_customer': 'POV: You finally got that product everyone is talking about. Best decision ever.',
-    'before_after': 'Before vs After using this product. The difference is insane!',
-    'honest_review': 'Honest review: Is this product worth the hype? Let me show you why I love it.',
+    'product_reveal': 'Wait for it. This product is about to change everything. The quality is unreal.',
+    'pov_customer': 'POV You finally got that product everyone is talking about. Best decision ever.',
+    'before_after': 'Before vs After using this product. The difference is insane.',
+    'honest_review': 'Honest review. Is this product worth the hype. Let me show you why I love it.',
     'asmr_unbox': 'ASMR unboxing time. Listen to that satisfying sound. So premium.',
     'day_in_life': 'A day in my life with this amazing product. Cannot live without it anymore.',
-    'get_ready': 'Get ready with me featuring my new favorite product. Game changer!'
+    'get_ready': 'Get ready with me featuring my new favorite product. Game changer.'
 }
 
 
@@ -356,6 +356,37 @@ def trim_video_to_duration(video_path, target_duration, output_path):
 
     except Exception as e:
         print(f"   ⚠️ Trim error: {e}")
+        return video_path
+
+
+def force_aspect_ratio_9_16(video_path, output_path):
+    """Force video to 9:16 aspect ratio (1080x1920) for Reels/TikTok."""
+    try:
+        print(f"   📐 Forcing 9:16 aspect ratio (1080x1920)...")
+
+        # Scale and pad to exactly 1080x1920 (9:16)
+        # This will add black bars if needed or crop/scale to fit
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', video_path,
+            '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black',
+            '-c:v', 'libx264',
+            '-preset', 'fast',
+            '-c:a', 'copy',
+            output_path
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+
+        if result.returncode == 0:
+            print(f"   ✅ Video converted to 9:16 (1080x1920)")
+            return output_path
+        else:
+            print(f"   ⚠️ Aspect ratio conversion failed: {result.stderr.decode()[:100]}")
+            return video_path
+
+    except Exception as e:
+        print(f"   ⚠️ Aspect ratio error: {e}")
         return video_path
 
 
@@ -852,17 +883,17 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
     style_hint = platform_style.get(platform, 'Professional, engaging.')
 
     # Ultra-realism global suffix for all video types
-    # CRITICAL: Product preservation is TOP PRIORITY
+    # CRITICAL: Product preservation AND anti-AI-look
     realism_suffix = (
-        'ABSOLUTE CRITICAL REQUIREMENT - PRODUCT PRESERVATION: '
-        'The product shown in the source image MUST remain EXACTLY as it appears. '
-        'DO NOT alter, distort, warp, change, or modify the product in ANY way. '
-        'Product shape, color, proportions, details, logos, and text MUST be IDENTICAL to source. '
-        'The product is SACRED - preserve it PERFECTLY. '
-        'Photorealistic quality. Real textures, authentic lighting. '
-        'If humans shown: real human skin with pores and natural imperfections, '
-        'genuine expressions, authentic movements. NOT CGI, NOT AI-generated look. '
-        'Shot like real iPhone/DSLR video. Natural color grading.'
+        'ABSOLUTE CRITICAL REQUIREMENTS: '
+        '1) PRODUCT PRESERVATION: Product MUST remain EXACTLY as source image. DO NOT alter shape, color, or details. '
+        '2) ANTI-AI REALISM: If humans shown - they MUST be INDISTINGUISHABLE from real footage. '
+        'NO artificial glow or bloom, NO CGI skin smoothness, NO perfect studio lighting. '
+        'Skin must show: visible pores, natural oil/shine, subtle imperfections, real texture. '
+        'Lighting must be: soft natural daylight, realistic shadows, no ring light catchlights. '
+        'Camera must feel: handheld with micro-shake, iPhone-quality, slightly imperfect focus. '
+        'This must look like REAL user-generated content, not AI-generated. '
+        'Natural color grading like unedited phone video.'
     )
 
     # Build full prompt
@@ -882,13 +913,16 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
         age = avatar_config.get('age', 'young')
         style = avatar_config.get('style', 'casual')
         mood = avatar_config.get('mood', 'enthusiastic')
-        # Ultra-realistic human description
+        # HYPER-REALISTIC human - must be indistinguishable from real footage
         prompt_parts.append(
-            f'PHOTOREALISTIC {age} {gender} presenter - real human with authentic skin texture, '
-            f'visible pores, natural skin imperfections, realistic hair with individual strands. '
-            f'{style.capitalize()} style clothing. {mood.capitalize()} genuine expression. '
-            f'NOT CGI, NOT AI-generated, NOT 3D render. Real TikTok influencer appearance. '
-            f'Natural micro-expressions, authentic eye contact, genuine human warmth.'
+            f'HYPER-REALISTIC {age} {gender} that looks EXACTLY like real iPhone footage. '
+            f'Skin MUST have: visible pores, natural oil shine, subtle texture variation, '
+            f'tiny imperfections like small moles or light freckles, natural under-eye area. '
+            f'Hair with individual strands and natural flyaways, not perfectly styled. '
+            f'{style.capitalize()} style clothing with real fabric texture and wrinkles. '
+            f'{mood.capitalize()} but NATURAL expression - no exaggerated emotions. '
+            f'CRITICAL: NO artificial glow, NO CGI smoothness, NO perfect lighting. '
+            f'Must pass as real TikTok user content. Natural hand movements with slight imperfection.'
         )
 
     return ' '.join(prompt_parts)
@@ -1216,11 +1250,15 @@ class handler(BaseHTTPRequestHandler):
                     music_config = REELS_MUSIC_LIBRARY[music_id]
                     if music_config and music_config.get('url'):
                         music_output = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
-                        final_path = add_audio_overlay(captioned_path, music_config['url'], music_output)
+                        music_path = add_audio_overlay(captioned_path, music_config['url'], music_output)
                     else:
-                        final_path = captioned_path
+                        music_path = captioned_path
                 else:
-                    final_path = captioned_path
+                    music_path = captioned_path
+
+                # Step 5: Force 9:16 aspect ratio for Reels/TikTok
+                aspect_output = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False).name
+                final_path = force_aspect_ratio_9_16(music_path, aspect_output)
 
                 # Convert to base64
                 with open(final_path, 'rb') as f:
@@ -1235,7 +1273,7 @@ class handler(BaseHTTPRequestHandler):
                         except:
                             pass
 
-                for p in [stitched_path, trimmed_path, captioned_path, final_path]:
+                for p in [stitched_path, trimmed_path, captioned_path, music_path, aspect_output, final_path]:
                     if p and os.path.exists(p) and p not in video_paths:
                         try:
                             os.unlink(p)
