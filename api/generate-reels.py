@@ -227,28 +227,72 @@ CAPTION_STYLES = {
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
-        'base': 'Vertical 9:16 cinematic product video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - do NOT alter, distort, or change the product shape, color, or details. Product must remain IDENTICAL to source image. Ultra high-definition 8K quality. Product displayed elegantly with smooth camera movement. Shot on RED camera with anamorphic lens. Professional product photography lighting. Photorealistic render quality.',
-        'camera': 'Slow dolly in: subject remains stationary, camera glides forward, professional softbox lighting with subtle rim light. PRODUCT STAYS PERFECT AND UNALTERED.'
+        'base': (
+            'Vertical 9:16 video of a product displayed elegantly. '
+            'CRITICAL: Keep the product EXACTLY as shown - do not alter shape, color, or details. '
+            'Smooth slow camera movement. Soft professional lighting. Clean background. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Slow dolly in, soft lighting with subtle highlights. Product stays perfect.'
     },
     'hands_demo': {
-        'base': 'Vertical 9:16 hands demonstration video shot on iPhone. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. HYPER-REALISTIC human hands that are INDISTINGUISHABLE from real footage. Hands must show: visible skin texture and pores, natural wrinkles at knuckles, subtle veins, real nail texture with slight imperfections, natural skin color variation. NO CGI smoothness, NO artificial glow. Hands look exactly like real ASMR TikTok content. Natural slightly imperfect movements.',
-        'camera': 'Static close-up with soft natural window light. Real shadows under fingers. Slightly shallow depth of field. NO artificial lighting setup. PRODUCT STAYS PERFECT AND UNCHANGED.'
+        'base': (
+            'Vertical 9:16 video of real hands holding a product. '
+            'CRITICAL: Keep the product EXACTLY as shown in the image. '
+            'The hands look completely natural - like a real person, not CGI. '
+            'Normal skin with visible texture, natural nails, relaxed movements. '
+            'Soft daylight from a window. Cozy home setting. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Close-up, soft natural light, shallow focus. Product unchanged.'
     },
     'avatar_review': {
-        'base': 'Vertical 9:16 product review filmed on iPhone 15 Pro. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST look IDENTICAL to source image. HYPER-REALISTIC human presenter that is INDISTINGUISHABLE from real footage. Skin must have: visible pores at close range, natural sebum shine on T-zone, subtle under-eye texture, real skin color variation, tiny imperfections like small moles or freckles. Hair must show individual strands with natural flyaways. NO artificial glow, NO perfect skin, NO CGI smoothness. Person looks exactly like real TikTok creator filming in their bedroom. Natural hand-held camera shake. Shallow depth of field like iPhone portrait mode.',
-        'camera': 'Medium close-up: soft diffused window light from one side creating natural shadows under chin and nose. NO studio lighting, NO ring light look, NO artificial catchlights. Background slightly out of focus with real bedroom clutter. Camera held at eye level, slight natural movement. PRODUCT REMAINS UNCHANGED AND PERFECT.'
+        'base': (
+            'Vertical 9:16 video of a real person holding a product. '
+            'The person looks completely natural - like a regular social media user, not a model. '
+            'Natural skin with some texture, maybe a small beauty mark or freckle. '
+            'Hair is styled casually, not perfectly. Comfortable everyday clothes. '
+            'Warm natural light from a window, soft shadows. '
+            'Cozy home background, slightly messy like a real bedroom or living room. '
+            'The person smiles genuinely while showing the product. '
+            'CRITICAL: Keep the product EXACTLY as shown in the image. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Soft natural daylight, warm tones, shallow focus on the person. Product perfect.'
     },
     'lifestyle': {
-        'base': 'Vertical 9:16 lifestyle video shot on iPhone. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. DOCUMENTARY-STYLE realism with REAL human. Person must be INDISTINGUISHABLE from actual footage - imperfect skin with pores and texture, natural hair with flyaways, real clothing wrinkles and fabric texture. NO artificial smoothing, NO CGI glow, NO perfect lighting. Looks exactly like candid footage from a real influencer daily vlog. Natural environment with real dust particles in light, authentic shadows.',
-        'camera': 'Handheld camera feel with natural micro-movements. Soft natural daylight, no artificial lighting setup visible. Slightly overexposed windows like real phone footage. Real depth of field. PRODUCT STAYS PERFECT AND UNCHANGED.'
+        'base': (
+            'Vertical 9:16 casual lifestyle video with a real person and product. '
+            'CRITICAL: Keep the product EXACTLY as shown in the image. '
+            'The person looks like someone you would actually meet - not a model. '
+            'Natural appearance, relaxed posture, genuine expressions. '
+            'Everyday setting like a cafe, bedroom, or living room. '
+            'Warm afternoon light, natural shadows. '
+            'The kind of video someone would post on social media. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Natural daylight, casual framing, slight movement. Product unchanged.'
     },
     'unboxing': {
-        'base': 'Vertical 9:16 unboxing video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - the revealed product MUST look IDENTICAL to source image. Do NOT alter or distort the product. ULTRA-REALISTIC human hands with authentic skin texture - visible pores, natural color variation, real fingernails. Genuine anticipation and careful movements. Shot like real TikTok unboxing - NOT CGI hands. Real tactile interaction with packaging, authentic ASMR satisfaction.',
-        'camera': 'Top-down static: real human hands unbox product with genuine anticipation, soft natural window lighting, authentic shadows. PRODUCT REMAINS UNCHANGED.'
+        'base': (
+            'Vertical 9:16 unboxing video with real hands opening a package. '
+            'CRITICAL: The revealed product MUST look EXACTLY as shown in the image. '
+            'Natural hands with real skin texture. Genuine excitement. '
+            'Soft daylight, cozy home setting. '
+            'The satisfying moment of revealing a new product. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Top-down view, soft natural light, focus on hands and product.'
     },
     'hook_teaser': {
-        'base': 'Vertical 9:16 attention-grabbing hook video. CRITICAL: PRESERVE THE PRODUCT EXACTLY - product MUST remain IDENTICAL to source image. Do NOT distort or alter the product appearance. PHOTOREALISTIC with authentic human elements if shown. Cinematic quality but feels real and genuine like viral TikTok content. Dramatic but not artificial. Real textures, authentic lighting.',
-        'camera': 'Quick zoom in: dramatic reveal, high contrast but natural lighting like professional iPhone videography. PRODUCT STAYS PERFECT.'
+        'base': (
+            'Vertical 9:16 attention-grabbing product reveal video. '
+            'CRITICAL: Keep the product EXACTLY as shown in the image. '
+            'Dramatic lighting, quick reveal, exciting energy. '
+            'Clean and cinematic but feels authentic. '
+            'DO NOT add any text, watermarks, UI elements, or overlays to the video.'
+        ),
+        'camera': 'Quick zoom in, dramatic lighting, product perfect.'
     }
 }
 
@@ -870,60 +914,56 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
     # Position context
     position_hints = {
         0: 'Opening shot - introduce and grab attention.',
-        total_clips - 1: 'Final shot - call to action, memorable ending.'
+        total_clips - 1: 'Final shot - memorable ending.'
     }
-    position_hint = position_hints.get(clip_index, 'Continue showcasing, maintain energy.')
+    position_hint = position_hints.get(clip_index, 'Continue showcasing.')
 
     # Platform optimization
     platform_style = {
-        'tiktok': 'Fast-paced, trending, scroll-stopping.',
-        'instagram': 'Aesthetic, polished, aspirational.',
-        'youtube': 'Informative, engaging, personality-driven.'
+        'tiktok': 'Casual, authentic, relatable.',
+        'instagram': 'Aesthetic, warm tones.',
+        'youtube': 'Engaging, natural.'
     }
-    style_hint = platform_style.get(platform, 'Professional, engaging.')
-
-    # Ultra-realism global suffix for all video types
-    # CRITICAL: Product preservation AND anti-AI-look
-    realism_suffix = (
-        'ABSOLUTE CRITICAL REQUIREMENTS: '
-        '1) PRODUCT PRESERVATION: Product MUST remain EXACTLY as source image. DO NOT alter shape, color, or details. '
-        '2) ANTI-AI REALISM: If humans shown - they MUST be INDISTINGUISHABLE from real footage. '
-        'NO artificial glow or bloom, NO CGI skin smoothness, NO perfect studio lighting. '
-        'Skin must show: visible pores, natural oil/shine, subtle imperfections, real texture. '
-        'Lighting must be: soft natural daylight, realistic shadows, no ring light catchlights. '
-        'Camera must feel: handheld with micro-shake, iPhone-quality, slightly imperfect focus. '
-        'This must look like REAL user-generated content, not AI-generated. '
-        'Natural color grading like unedited phone video.'
-    )
+    style_hint = platform_style.get(platform, 'Natural, engaging.')
 
     # Build full prompt
     prompt_parts = [
         base_prompt,
         camera_prompt,
         position_hint,
-        f"Style: {style_hint}",
-        realism_suffix
+        f"Style: {style_hint}"
     ]
 
-    if script_section:
-        prompt_parts.append(f'Narrative: "{script_section}"')
+    # NOTE: Script is NOT sent to Veo - it was causing corrupted text in videos
+    # Script is ONLY used for FFmpeg caption burn-in during finalize step
 
+    # Avatar description - natural language, like describing a real person
     if avatar_config and content_type in ['avatar_review', 'lifestyle']:
         gender = avatar_config.get('gender', 'female')
-        age = avatar_config.get('age', 'young')
+        age_map = {
+            'young': 'in their early 20s',
+            'adult': 'in their 30s',
+            'mature': 'in their 50s'
+        }
+        age_desc = age_map.get(avatar_config.get('age', 'young'), 'in their 20s')
         style = avatar_config.get('style', 'casual')
         mood = avatar_config.get('mood', 'enthusiastic')
-        # HYPER-REALISTIC human - must be indistinguishable from real footage
+
+        # Natural description - like someone you would actually meet
         prompt_parts.append(
-            f'HYPER-REALISTIC {age} {gender} that looks EXACTLY like real iPhone footage. '
-            f'Skin MUST have: visible pores, natural oil shine, subtle texture variation, '
-            f'tiny imperfections like small moles or light freckles, natural under-eye area. '
-            f'Hair with individual strands and natural flyaways, not perfectly styled. '
-            f'{style.capitalize()} style clothing with real fabric texture and wrinkles. '
-            f'{mood.capitalize()} but NATURAL expression - no exaggerated emotions. '
-            f'CRITICAL: NO artificial glow, NO CGI smoothness, NO perfect lighting. '
-            f'Must pass as real TikTok user content. Natural hand movements with slight imperfection.'
+            f'A real {gender} {age_desc}, like someone you would actually meet in a coffee shop. '
+            f'Natural appearance - not a model, not airbrushed. '
+            f'Slightly messy hair, genuine smile, comfortable in front of camera. '
+            f'{style.capitalize()} everyday clothes. {mood.capitalize()} energy but relaxed. '
+            f'The kind of person who makes casual social media videos.'
         )
+
+    # Anti-text/UI instruction (CRITICAL - prevents REC overlay and corrupted text)
+    prompt_parts.append(
+        'IMPORTANT: Do NOT add any text, captions, watermarks, recording indicators, '
+        'phone interfaces, REC symbols, or any written words to the video. '
+        'Keep the video completely clean with no overlays.'
+    )
 
     return ' '.join(prompt_parts)
 
