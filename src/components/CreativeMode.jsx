@@ -542,9 +542,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Compress image to avoid Vercel 413 payload limit
+            // Compress image to avoid Vercel 413 payload limit (4.5MB max)
+            // Using aggressive compression: 1024px max, 0.5 quality
             console.log('📦 Compressing image for Reels API...');
-            const compressedImage = await compressImageForReels(sourceImage, 1280, 0.7);
+            const compressedImage = await compressImageForReels(sourceImage, 1024, 0.5);
 
             // Start video generation via NEW Reels API
             const response = await fetch('/api/generate-reels', {
@@ -571,6 +572,19 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     language: reelsLanguage
                 })
             });
+
+            // Handle 413 Payload Too Large error
+            if (response.status === 413) {
+                throw new Error('Image too large. Please use a smaller image.');
+            }
+
+            // Check for non-JSON response (Vercel error page)
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text.substring(0, 200));
+                throw new Error('Server error. Please try with a smaller image.');
+            }
 
             const result = await response.json();
 
