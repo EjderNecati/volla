@@ -209,29 +209,70 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // IMAGE COMPRESSION FOR REELS (Vercel Payload Limit Fix)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const compressImageForReels = (base64Image, maxDimension = 1280, quality = 0.7) => {
+const compressImageForReels = (base64Image, targetSizeKB = 2000) => {
+    // Smart compression: keeps quality as high as possible while staying under target size
+    // Vercel limit is 4.5MB, we target 2MB for safety margin with JSON overhead
     return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
-            // Calculate new dimensions
-            let { width, height } = img;
-            if (Math.max(width, height) > maxDimension) {
-                const ratio = maxDimension / Math.max(width, height);
-                width = Math.round(width * ratio);
-                height = Math.round(height * ratio);
+            const originalSizeKB = Math.round(base64Image.length * 0.75 / 1024); // base64 is ~33% larger
+            console.log(`📦 Original image: ${originalSizeKB}KB`);
+
+            // If already small enough, return as-is
+            if (originalSizeKB <= targetSizeKB) {
+                console.log(`✅ Image already under ${targetSizeKB}KB, no compression needed`);
+                resolve(base64Image);
+                return;
             }
 
-            // Create canvas and compress
             const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Try different dimension/quality combinations until we hit target
+            const attempts = [
+                { maxDim: 1920, quality: 0.9 },  // Best quality
+                { maxDim: 1920, quality: 0.8 },
+                { maxDim: 1600, quality: 0.8 },
+                { maxDim: 1280, quality: 0.8 },
+                { maxDim: 1280, quality: 0.7 },
+                { maxDim: 1024, quality: 0.7 },
+                { maxDim: 1024, quality: 0.6 },
+                { maxDim: 800, quality: 0.6 },   // Last resort
+            ];
+
+            for (const { maxDim, quality } of attempts) {
+                let { width, height } = img;
+                if (Math.max(width, height) > maxDim) {
+                    const ratio = maxDim / Math.max(width, height);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const compressed = canvas.toDataURL('image/jpeg', quality);
+                const compressedSizeKB = Math.round(compressed.length * 0.75 / 1024);
+
+                if (compressedSizeKB <= targetSizeKB) {
+                    console.log(`📦 Compressed: ${originalSizeKB}KB → ${compressedSizeKB}KB (${maxDim}px, q=${quality})`);
+                    resolve(compressed);
+                    return;
+                }
+            }
+
+            // Fallback: use last attempt even if over target
+            const lastAttempt = attempts[attempts.length - 1];
+            let { width, height } = img;
+            const ratio = lastAttempt.maxDim / Math.max(width, height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
             canvas.width = width;
             canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-
-            // Export as compressed JPEG
-            const compressed = canvas.toDataURL('image/jpeg', quality);
-            console.log(`📦 Image compressed: ${Math.round(base64Image.length / 1024)}KB → ${Math.round(compressed.length / 1024)}KB`);
+            const compressed = canvas.toDataURL('image/jpeg', lastAttempt.quality);
+            console.log(`⚠️ Max compression applied: ${Math.round(compressed.length * 0.75 / 1024)}KB`);
             resolve(compressed);
         };
         img.onerror = () => {
@@ -542,10 +583,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Compress image to avoid Vercel 413 payload limit (4.5MB max)
-            // Using aggressive compression: 1024px max, 0.5 quality
-            console.log('📦 Compressing image for Reels API...');
-            const compressedImage = await compressImageForReels(sourceImage, 1024, 0.5);
+            // Smart compression: keeps quality high while staying under Vercel 4.5MB limit
+            console.log('📦 Smart compressing image for Reels API...');
+            const compressedImage = await compressImageForReels(sourceImage, 2000); // Target 2MB max
 
             // Start video generation via NEW Reels API
             const response = await fetch('/api/generate-reels', {
