@@ -210,9 +210,9 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // SUPER AGGRESSIVE - 400KB limit for 8s/15s videos with longer payloads
-    // This ensures total request stays well under Vercel's 4.5MB limit
-    const TARGET_SIZE_KB = 400;
+    // MAXIMUM AGGRESSIVE - 250KB limit to GUARANTEE we fit
+    // Veo can work with small images, quality comes from AI upscaling
+    const TARGET_SIZE_KB = 250;
 
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -223,17 +223,15 @@ const compressImageForReels = (base64Image) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Start with smaller dimensions and lower quality for faster fit
+            // Start very small - Veo will upscale anyway
             const attempts = [
-                { maxDim: 800, quality: 0.60 },
-                { maxDim: 640, quality: 0.55 },
-                { maxDim: 640, quality: 0.45 },
-                { maxDim: 512, quality: 0.45 },
-                { maxDim: 512, quality: 0.35 },
-                { maxDim: 400, quality: 0.35 },
-                { maxDim: 400, quality: 0.25 },
+                { maxDim: 512, quality: 0.50 },
+                { maxDim: 512, quality: 0.40 },
+                { maxDim: 400, quality: 0.40 },
+                { maxDim: 400, quality: 0.30 },
+                { maxDim: 320, quality: 0.30 },
                 { maxDim: 320, quality: 0.25 },
-                { maxDim: 320, quality: 0.20 },
+                { maxDim: 256, quality: 0.25 },
                 { maxDim: 256, quality: 0.20 },
             ];
 
@@ -584,54 +582,69 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             console.log('📦 Compressing image...');
             setReelsProgress(5);
             const compressedImage = await compressImageForReels(sourceImage);
-            console.log(`📦 Compressed to ${Math.round(compressedImage.length / 1024)}KB`);
+            const imageKB = Math.round(compressedImage.length / 1024);
+            console.log(`📦 Compressed image: ${imageKB}KB`);
             setReelsProgress(10);
 
-            // Send directly to generate-reels (backend will compress further if needed)
+            // Build request body and log total size
+            const requestBody = JSON.stringify({
+                action: 'start',
+                image: compressedImage,
+                contentType: reelsContentType,
+                script: script,
+                duration: reelsDuration,
+                qualityMode: reelsQuality,
+                musicId: reelsMusic,
+                captionStyle: reelsCaptionStyle,
+                platform: reelsPlatform,
+                template: reelsTemplate,
+                avatarConfig: reelsAvatarEnabled ? {
+                    gender: reelsAvatarGender,
+                    age: reelsAvatarAge,
+                    style: reelsAvatarStyle,
+                    mood: reelsAvatarMood
+                } : null,
+                voice: reelsVoice,
+                language: reelsLanguage
+            });
+            const totalKB = Math.round(requestBody.length / 1024);
+            console.log(`📡 Total request payload: ${totalKB}KB (image: ${imageKB}KB, other: ${totalKB - imageKB}KB)`);
+
+            // Warn if payload is too large (Vercel limit is ~4.5MB)
+            if (totalKB > 4000) {
+                console.error(`⚠️ PAYLOAD TOO LARGE: ${totalKB}KB exceeds safe limit!`);
+                throw new Error('Görsel çok büyük. Lütfen daha küçük bir görsel kullanın.');
+            }
+
             const response = await fetch('/api/generate-reels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'start',
-                    image: compressedImage,
-                    contentType: reelsContentType,
-                    script: script,
-                    duration: reelsDuration,
-                    qualityMode: reelsQuality,
-                    musicId: reelsMusic,
-                    captionStyle: reelsCaptionStyle,
-                    platform: reelsPlatform,
-                    template: reelsTemplate,
-                    avatarConfig: reelsAvatarEnabled ? {
-                        gender: reelsAvatarGender,
-                        age: reelsAvatarAge,
-                        style: reelsAvatarStyle,
-                        mood: reelsAvatarMood
-                    } : null,
-                    voice: reelsVoice,
-                    language: reelsLanguage
-                })
+                body: requestBody
             });
 
-            // Handle HTTP errors
-            if (!response.ok) {
-                const errorText = await response.text().catch(() => 'Unknown error');
-                console.error(`HTTP ${response.status}:`, errorText.substring(0, 200));
+            // Handle HTTP errors - check BEFORE trying to parse
+            const responseText = await response.text();
+            console.log(`📡 Response status: ${response.status}, length: ${responseText.length}`);
 
-                if (response.status === 413 || errorText.includes('Request Entity')) {
-                    throw new Error('Image too large. Please try a smaller image or different source.');
+            if (!response.ok || responseText.startsWith('Request') || responseText.startsWith('<!')) {
+                console.error(`HTTP ${response.status}:`, responseText.substring(0, 300));
+
+                if (response.status === 413 || responseText.includes('Request Entity') || responseText.includes('too large')) {
+                    throw new Error('Görsel çok büyük. Lütfen daha küçük bir görsel deneyin.');
                 }
-                throw new Error(`Server error (${response.status}). Please try again.`);
+                if (responseText.startsWith('<!')) {
+                    throw new Error('Sunucu hatası. Lütfen tekrar deneyin.');
+                }
+                throw new Error(`Sunucu hatası (${response.status}). Lütfen tekrar deneyin.`);
             }
 
-            // Safely parse JSON - catch any parsing errors
+            // Safely parse JSON
             let result;
             try {
-                const text = await response.text();
-                result = JSON.parse(text);
+                result = JSON.parse(responseText);
             } catch (parseError) {
-                console.error('JSON parse error:', parseError);
-                throw new Error('Invalid server response. The image might be too large.');
+                console.error('JSON parse error:', parseError, 'Response:', responseText.substring(0, 200));
+                throw new Error('Geçersiz sunucu yanıtı. Görsel çok büyük olabilir.');
             }
 
             if (result.success) {
