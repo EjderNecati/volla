@@ -226,72 +226,72 @@ CAPTION_STYLES = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CINEMATIC REALISM - Describe STYLE not FEATURES
-# "Documentary", "candid", "home video" = realistic without triggering filters
+# NATURAL LIGHTING FOCUS - No studio lights, only available light
 # ═══════════════════════════════════════════════════════════════════════════════
+
+# Lighting instruction to append to all prompts
+NATURAL_LIGHT = (
+    'LIGHTING: Only natural available light. Single window as light source. '
+    'No studio lights, no ring lights, no artificial fill. '
+    'Let shadows fall naturally - do not fill them. '
+    'Overcast daylight or indirect window light. '
+    'Slight underexposure OK. No flat even lighting. '
+)
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
         'base': (
-            '9:16 video, documentary cinematography style. '
-            'Product on surface. Preserve product exactly. '
-            'Shot like authentic home footage. Available window light. '
-            'Gentle handheld movement. Shallow depth of field. Film grain texture. '
+            '9:16 video. Product on table. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Handheld camera feel. Shallow focus. '
             'No text overlays.'
         ),
-        'camera': 'Subtle handheld. Side window light. Cinematic color grade.'
+        'camera': 'Single window light from side. Dark shadows opposite side.'
     },
     'hands_demo': {
         'base': (
-            '9:16 video, intimate candid footage style. '
-            'Hands presenting product. Preserve product exactly. '
-            'Shot on smartphone look. Warm natural indoor light. '
-            'Close personal perspective. Soft focus background. '
+            '9:16 video. Hands holding product. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Close-up. Soft background blur. '
             'No text overlays.'
         ),
-        'camera': 'Intimate close-up. Golden hour warmth. Organic movement.'
+        'camera': 'Window light on hands. Natural shadow under fingers.'
     },
     'avatar_review': {
         'base': (
-            '9:16 video, authentic vlogger footage style. '
-            'Person showing product to camera. Preserve product exactly. '
-            'Genuine home video aesthetic, not commercial production. '
-            'Natural available light with soft shadows. Lived-in background. '
-            'Spontaneous candid moment. Like popular TikTok content creator. '
+            '9:16 video. Person showing product. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Home setting. Candid vlog style. '
             'No text overlays.'
         ),
-        'camera': 'Vlog style framing. Window backlight. Slight lens flare OK.'
+        'camera': 'Face lit by window. One side in shadow. Not flat lighting.'
     },
     'lifestyle': {
         'base': (
-            '9:16 video, slice-of-life documentary style. '
-            'Person using product naturally. Preserve product exactly. '
-            'Captured moment, not staged. Observational camera. '
-            'Natural daylight. Environment with authentic lived-in details. '
-            'Like behind-the-scenes footage. '
+            '9:16 video. Person using product. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Everyday moment. Not staged. '
             'No text overlays.'
         ),
-        'camera': 'Fly-on-wall perspective. Available light. Handheld texture.'
+        'camera': 'Available daylight only. Real indoor lighting conditions.'
     },
     'unboxing': {
         'base': (
-            '9:16 video, satisfying ASMR unboxing style. '
-            'Hands unwrapping product. Preserve product exactly. '
-            'Popular YouTube unboxing aesthetic. Soft diffused lighting. '
-            'Tactile focus on textures. Anticipation and reveal. '
+            '9:16 video. Hands unboxing product. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Desk setting. Anticipation reveal. '
             'No text overlays.'
         ),
-        'camera': 'Top-down angle. Even soft light. Focus pull on reveal.'
+        'camera': 'Overhead window light. Natural desk shadows.'
     },
     'hook_teaser': {
         'base': (
-            '9:16 video, viral social content style. '
-            'Quick product reveal. Preserve product exactly. '
-            'High energy but authentic. Punchy dynamic movement. '
-            'Trending content aesthetic. '
+            '9:16 video. Product reveal. Preserve product exactly. '
+            f'{NATURAL_LIGHT}'
+            'Quick energy. Dynamic. '
             'No text overlays.'
         ),
-        'camera': 'Quick cuts feel. Dynamic angles. Natural light.'
+        'camera': 'Natural light. Quick movement.'
     }
 }
 
@@ -967,9 +967,11 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
             f'Like a popular social media influencer filming casual content at home.'
         )
 
-    # Cinematography style instruction
+    # Natural lighting emphasis
     prompt_parts.append(
-        'Documentary realism. Available light cinematography. Authentic candid moment captured.'
+        'CRITICAL: Natural available light only. No ring light. No studio light. '
+        'Window as single light source. Let one side of face be in shadow. '
+        'Real indoor lighting like actual home video.'
     )
 
     return ' '.join(prompt_parts)
