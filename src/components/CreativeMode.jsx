@@ -210,29 +210,25 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // MAXIMUM AGGRESSIVE - 250KB limit to GUARANTEE we fit
-    // Veo can work with small images, quality comes from AI upscaling
-    const TARGET_SIZE_KB = 250;
+    // EXTREME - 80KB, Veo only needs reference
+    const TARGET_SIZE_KB = 80;
 
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
             const originalSizeKB = Math.round(base64Image.length / 1024);
-            console.log(`📦 Reels compression: ${originalSizeKB}KB → target <${TARGET_SIZE_KB}KB`);
+            console.log(`📦 Reels: ${originalSizeKB}KB → <${TARGET_SIZE_KB}KB`);
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Start very small - Veo will upscale anyway
+            // Tiny - Veo upscales anyway
             const attempts = [
-                { maxDim: 512, quality: 0.50 },
-                { maxDim: 512, quality: 0.40 },
-                { maxDim: 400, quality: 0.40 },
-                { maxDim: 400, quality: 0.30 },
-                { maxDim: 320, quality: 0.30 },
-                { maxDim: 320, quality: 0.25 },
-                { maxDim: 256, quality: 0.25 },
-                { maxDim: 256, quality: 0.20 },
+                { maxDim: 256, quality: 0.40 },
+                { maxDim: 200, quality: 0.35 },
+                { maxDim: 160, quality: 0.30 },
+                { maxDim: 128, quality: 0.30 },
+                { maxDim: 128, quality: 0.20 },
             ];
 
             for (const { maxDim, quality } of attempts) {
@@ -591,7 +587,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 action: 'start',
                 image: compressedImage,
                 contentType: reelsContentType,
-                script: script,
+                script: script ? script.substring(0, 500) : '', // Truncate script to 500 chars
                 duration: reelsDuration,
                 qualityMode: reelsQuality,
                 musicId: reelsMusic,
@@ -608,11 +604,11 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 language: reelsLanguage
             });
             const totalKB = Math.round(requestBody.length / 1024);
-            console.log(`📡 Total request payload: ${totalKB}KB (image: ${imageKB}KB, other: ${totalKB - imageKB}KB)`);
+            console.log(`📡 Payload: ${totalKB}KB (img: ${imageKB}KB)`);
 
-            // Warn if payload is too large (Vercel limit is ~4.5MB)
-            if (totalKB > 4000) {
-                console.error(`⚠️ PAYLOAD TOO LARGE: ${totalKB}KB exceeds safe limit!`);
+            // Safety check - should be well under 500KB now
+            if (totalKB > 500) {
+                console.error(`⚠️ Still too large: ${totalKB}KB`);
                 throw new Error('Görsel çok büyük. Lütfen daha küçük bir görsel kullanın.');
             }
 
