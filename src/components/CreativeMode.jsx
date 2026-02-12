@@ -803,8 +803,22 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     clearInterval(progressInterval);
 
                     if (result.video_url) {
-                        // Finalize: add music and captions
-                        await finalizeReels([result.video_url], initialResult);
+                        // For 8s+ videos with no music/captions, skip finalize to avoid 413
+                        const skipFinalize = reelsDuration >= 8 &&
+                            reelsMusic === 'none' &&
+                            reelsCaptionStyle === 'none';
+
+                        if (skipFinalize) {
+                            console.log('⚡ Skipping finalize for 8s+ video (no music/captions)');
+                            setReelsProgress(100);
+                            setReelsVideo(result.video_url);
+                            setReelsPollingStatus('');
+                            setReelsIsGenerating(false);
+                            saveReelsToHistory(result.video_url);
+                        } else {
+                            // Finalize: add music and captions
+                            await finalizeReels([result.video_url], initialResult);
+                        }
                     } else if (result.error) {
                         throw new Error(result.error);
                     }
