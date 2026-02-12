@@ -664,6 +664,79 @@ def compress_image_for_veo(image_data, max_size_kb=600, max_dimension=1024):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# VIDEO COMPRESSION (for large base64 videos)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def compress_video_base64(video_b64, target_size_mb=3.0):
+    """
+    Compress base64 video to fit within Vercel response limits.
+    Target: 3MB to stay safely under 4.5MB limit with JSON overhead.
+    """
+    try:
+        video_bytes = base64.b64decode(video_b64)
+        original_mb = len(video_bytes) / (1024 * 1024)
+        print(f"   📹 Original video: {original_mb:.1f}MB")
+
+        # If already small enough, return as-is
+        if original_mb <= target_size_mb:
+            print(f"   ✅ Video already under {target_size_mb}MB")
+            return video_b64
+
+        # Save to temp file
+        input_path = '/tmp/input_video.mp4'
+        output_path = '/tmp/compressed_video.mp4'
+
+        with open(input_path, 'wb') as f:
+            f.write(video_bytes)
+
+        # Calculate target bitrate based on video duration (estimate 8s)
+        # target_size_mb * 8 / duration = bitrate in Mbps
+        # For 8s video, 3MB target = 3 Mbps
+        target_bitrate = f"{int(target_size_mb * 8 / 8 * 1000)}k"  # ~3000k for 8s
+
+        # FFmpeg compression with CRF for quality-based encoding
+        cmd = [
+            'ffmpeg', '-y', '-i', input_path,
+            '-c:v', 'libx264',
+            '-preset', 'fast',
+            '-crf', '28',  # Higher CRF = smaller file
+            '-maxrate', target_bitrate,
+            '-bufsize', f"{int(target_size_mb * 1000)}k",
+            '-c:a', 'aac', '-b:a', '64k',
+            '-movflags', '+faststart',
+            output_path
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, timeout=30)
+
+        if result.returncode == 0 and os.path.exists(output_path):
+            with open(output_path, 'rb') as f:
+                compressed_bytes = f.read()
+
+            compressed_mb = len(compressed_bytes) / (1024 * 1024)
+            print(f"   📦 Compressed video: {compressed_mb:.1f}MB (was {original_mb:.1f}MB)")
+
+            # Clean up
+            try:
+                os.remove(input_path)
+                os.remove(output_path)
+            except:
+                pass
+
+            return base64.b64encode(compressed_bytes).decode('utf-8')
+        else:
+            print(f"   ⚠️ FFmpeg compression failed: {result.stderr.decode()[:200]}")
+            return video_b64
+
+    except FileNotFoundError:
+        print("   ⚠️ FFmpeg not found - returning original video")
+        return video_b64
+    except Exception as e:
+        print(f"   ⚠️ Video compression error: {e}")
+        return video_b64
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CAPTION RENDERING (FFmpeg drawtext)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1083,13 +1156,17 @@ def poll_operation(operation_name, model_id, token, proj_id):
                         print(f"   ✅ Found video via gcsUri")
                     elif video.get('bytesBase64Encoded'):
                         mime = video.get('mimeType', 'video/mp4')
-                        video_url = f"data:{mime};base64,{video['bytesBase64Encoded']}"
-                        print(f"   ✅ Found video via bytesBase64Encoded")
+                        # Compress large base64 videos to fit Vercel limits
+                        compressed_b64 = compress_video_base64(video['bytesBase64Encoded'])
+                        video_url = f"data:{mime};base64,{compressed_b64}"
+                        print(f"   ✅ Found video via bytesBase64Encoded (compressed)")
                     elif video.get('video', {}).get('bytesBase64Encoded'):
                         # Nested structure
                         mime = video.get('video', {}).get('mimeType', 'video/mp4')
-                        video_url = f"data:{mime};base64,{video['video']['bytesBase64Encoded']}"
-                        print(f"   ✅ Found video via nested video.bytesBase64Encoded")
+                        # Compress large base64 videos to fit Vercel limits
+                        compressed_b64 = compress_video_base64(video['video']['bytesBase64Encoded'])
+                        video_url = f"data:{mime};base64,{compressed_b64}"
+                        print(f"   ✅ Found video via nested video.bytesBase64Encoded (compressed)")
 
                     if video_url:
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video_url, 'done': True}
