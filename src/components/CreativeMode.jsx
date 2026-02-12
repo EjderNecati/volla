@@ -210,19 +210,18 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // Target 3MB for upload (Vercel limit 4.5MB minus JSON overhead)
-    // This is just to fit the upload - PIL will do quality compression server-side
-    const TARGET_SIZE_KB = 3000;
+    // STRICT 2MB limit - Vercel has 4.5MB limit, need headroom for JSON
+    const TARGET_SIZE_KB = 2000;
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
             const originalSizeKB = Math.round(base64Image.length / 1024);
             console.log(`📦 Original: ${originalSizeKB}KB, Target: <${TARGET_SIZE_KB}KB`);
 
-            // If already small enough, return as-is (preserve quality for PIL)
+            // If already small enough, return as-is
             if (originalSizeKB <= TARGET_SIZE_KB) {
-                console.log(`✅ Already under limit, no pre-compression needed`);
+                console.log(`✅ Already under ${TARGET_SIZE_KB}KB`);
                 resolve(base64Image);
                 return;
             }
@@ -230,16 +229,18 @@ const compressImageForReels = (base64Image) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Progressive resize - keep quality high, just reduce dimensions
+            // AGGRESSIVE compression - prioritize fitting within limit
             const attempts = [
-                { maxDim: 2048, quality: 0.92 },
-                { maxDim: 1920, quality: 0.90 },
-                { maxDim: 1600, quality: 0.88 },
-                { maxDim: 1400, quality: 0.85 },
-                { maxDim: 1200, quality: 0.82 },
-                { maxDim: 1024, quality: 0.80 },
-                { maxDim: 900, quality: 0.75 },
-                { maxDim: 800, quality: 0.70 },
+                { maxDim: 1280, quality: 0.80 },
+                { maxDim: 1024, quality: 0.75 },
+                { maxDim: 1024, quality: 0.65 },
+                { maxDim: 800, quality: 0.65 },
+                { maxDim: 800, quality: 0.55 },
+                { maxDim: 640, quality: 0.55 },
+                { maxDim: 640, quality: 0.45 },
+                { maxDim: 512, quality: 0.45 },
+                { maxDim: 512, quality: 0.35 },
+                { maxDim: 400, quality: 0.35 },
             ];
 
             for (const { maxDim, quality } of attempts) {
@@ -255,26 +256,27 @@ const compressImageForReels = (base64Image) => {
                 const compressed = canvas.toDataURL('image/jpeg', quality);
                 const sizeKB = Math.round(compressed.length / 1024);
 
-                console.log(`   Trying ${maxDim}px q=${quality}: ${sizeKB}KB`);
-
                 if (sizeKB <= TARGET_SIZE_KB) {
-                    console.log(`✅ Pre-compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height})`);
+                    console.log(`✅ Compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height}, q=${quality})`);
                     resolve(compressed);
                     return;
                 }
             }
 
-            // Fallback - should rarely reach here
-            canvas.width = 800;
-            canvas.height = Math.round(800 * img.height / img.width);
+            // GUARANTEED small fallback - 400px at very low quality
+            console.log(`⚠️ Using minimum fallback...`);
+            const ratio = 400 / Math.max(img.width, img.height);
+            canvas.width = Math.round(img.width * ratio);
+            canvas.height = Math.round(img.height * ratio);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.65);
-            console.log(`⚠️ Fallback compression: ${Math.round(compressed.length / 1024)}KB`);
+            const compressed = canvas.toDataURL('image/jpeg', 0.30);
+            console.log(`⚠️ Minimum compression: ${Math.round(compressed.length / 1024)}KB`);
             resolve(compressed);
         };
-        img.onerror = () => {
-            console.error('❌ Image failed to load for compression');
-            resolve(base64Image);
+        img.onerror = (e) => {
+            console.error('❌ Image failed to load:', e);
+            // DON'T return original - that's what was causing 413!
+            reject(new Error('Failed to load image for compression'));
         };
         img.src = base64Image;
     });
