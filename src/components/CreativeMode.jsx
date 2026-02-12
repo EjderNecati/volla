@@ -210,30 +210,23 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // STRICT 2MB limit - Vercel has 4.5MB limit, need headroom for JSON
-    const TARGET_SIZE_KB = 2000;
+    // ULTRA STRICT - 800KB limit to guarantee we fit in Vercel's 4.5MB with room for JSON
+    // Base64 adds ~33% overhead, so 800KB base64 = ~600KB raw
+    const TARGET_SIZE_KB = 800;
 
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
             const originalSizeKB = Math.round(base64Image.length / 1024);
-            console.log(`📦 Original: ${originalSizeKB}KB, Target: <${TARGET_SIZE_KB}KB`);
-
-            // If already small enough, return as-is
-            if (originalSizeKB <= TARGET_SIZE_KB) {
-                console.log(`✅ Already under ${TARGET_SIZE_KB}KB`);
-                resolve(base64Image);
-                return;
-            }
+            console.log(`📦 Reels compression: ${originalSizeKB}KB → target <${TARGET_SIZE_KB}KB`);
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // AGGRESSIVE compression - prioritize fitting within limit
+            // ALWAYS compress - don't skip even if under target (ensures consistent quality)
+            // Start aggressive, go more aggressive until we fit
             const attempts = [
-                { maxDim: 1280, quality: 0.80 },
-                { maxDim: 1024, quality: 0.75 },
-                { maxDim: 1024, quality: 0.65 },
+                { maxDim: 1024, quality: 0.70 },
                 { maxDim: 800, quality: 0.65 },
                 { maxDim: 800, quality: 0.55 },
                 { maxDim: 640, quality: 0.55 },
@@ -241,6 +234,8 @@ const compressImageForReels = (base64Image) => {
                 { maxDim: 512, quality: 0.45 },
                 { maxDim: 512, quality: 0.35 },
                 { maxDim: 400, quality: 0.35 },
+                { maxDim: 400, quality: 0.25 },
+                { maxDim: 320, quality: 0.25 },
             ];
 
             for (const { maxDim, quality } of attempts) {
@@ -257,25 +252,29 @@ const compressImageForReels = (base64Image) => {
                 const sizeKB = Math.round(compressed.length / 1024);
 
                 if (sizeKB <= TARGET_SIZE_KB) {
-                    console.log(`✅ Compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height}, q=${quality})`);
+                    console.log(`✅ Reels compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height}, q=${quality})`);
                     resolve(compressed);
                     return;
                 }
             }
 
-            // GUARANTEED small fallback - 400px at very low quality
-            console.log(`⚠️ Using minimum fallback...`);
-            const ratio = 400 / Math.max(img.width, img.height);
+            // ABSOLUTE MINIMUM - 320px at 20% quality - this MUST fit
+            console.log(`⚠️ Using absolute minimum compression...`);
+            const ratio = 320 / Math.max(img.width, img.height);
             canvas.width = Math.round(img.width * ratio);
             canvas.height = Math.round(img.height * ratio);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.30);
-            console.log(`⚠️ Minimum compression: ${Math.round(compressed.length / 1024)}KB`);
+            const compressed = canvas.toDataURL('image/jpeg', 0.20);
+            const finalSizeKB = Math.round(compressed.length / 1024);
+            console.log(`⚠️ Absolute minimum: ${finalSizeKB}KB (${canvas.width}x${canvas.height})`);
+
+            if (finalSizeKB > TARGET_SIZE_KB) {
+                console.error(`❌ STILL too big at ${finalSizeKB}KB! This shouldn't happen.`);
+            }
             resolve(compressed);
         };
         img.onerror = (e) => {
-            console.error('❌ Image failed to load:', e);
-            // DON'T return original - that's what was causing 413!
+            console.error('❌ Image failed to load for compression:', e);
             reject(new Error('Failed to load image for compression'));
         };
         img.src = base64Image;
@@ -615,20 +614,26 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 })
             });
 
-            // Handle 413 Payload Too Large error
-            if (response.status === 413) {
-                throw new Error('Image too large. Please use a smaller image.');
+            // Handle HTTP errors
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => 'Unknown error');
+                console.error(`HTTP ${response.status}:`, errorText.substring(0, 200));
+
+                if (response.status === 413 || errorText.includes('Request Entity')) {
+                    throw new Error('Image too large. Please try a smaller image or different source.');
+                }
+                throw new Error(`Server error (${response.status}). Please try again.`);
             }
 
-            // Check for non-JSON response (Vercel error page)
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
+            // Safely parse JSON - catch any parsing errors
+            let result;
+            try {
                 const text = await response.text();
-                console.error('Non-JSON response:', text.substring(0, 200));
-                throw new Error('Server error. Please try with a smaller image.');
+                result = JSON.parse(text);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Invalid server response. The image might be too large.');
             }
-
-            const result = await response.json();
 
             if (result.success) {
                 if (result.operations && result.operations.length > 1) {
