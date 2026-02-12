@@ -118,16 +118,6 @@ const REELS_QUALITY_MODES = [
     { id: 'pro', label: 'Pro', description: 'Higher quality' }
 ];
 
-// Music Library for Reels (same as Motion)
-const REELS_MUSIC = [
-    { id: 'none', label: 'No Music', icon: '🔇' },
-    { id: 'trending_beat', label: 'Trending Beat', icon: '🔥', url: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b0939c8.mp3' },
-    { id: 'chill_lofi', label: 'Chill Lo-Fi', icon: '🎧', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3' },
-    { id: 'upbeat_pop', label: 'Upbeat Pop', icon: '🎵', url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_8cb749d484.mp3' },
-    { id: 'cinematic', label: 'Cinematic', icon: '🎬', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3' },
-    { id: 'energetic', label: 'Energetic', icon: '⚡', url: 'https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3' }
-];
-
 // Caption/Subtitle Styles
 const REELS_CAPTION_STYLES = [
     { id: 'none', label: 'No Captions', icon: '🚫' },
@@ -381,7 +371,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     const [reelsPollingStatus, setReelsPollingStatus] = useState('');
 
     // Reels v2.0 - Enhanced features
-    const [reelsMusic, setReelsMusic] = useState('none');
     const [reelsCaptionStyle, setReelsCaptionStyle] = useState('none');
     const [reelsVoice, setReelsVoice] = useState('auto');
     const [reelsLanguage, setReelsLanguage] = useState('en');
@@ -562,7 +551,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                         contentType: reelsContentType,
                         duration: reelsDuration,
                         quality: reelsQuality,
-                        music: reelsMusic,
                         captionStyle: reelsCaptionStyle,
                         template: reelsTemplate,
                         mode: 'reels'
@@ -617,7 +605,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             console.log('🎬 Generating Reels:', {
                 contentType: reelsContentType,
                 duration: reelsDuration,
-                music: reelsMusic,
                 captions: reelsCaptionStyle,
                 template: reelsTemplate
             });
@@ -803,9 +790,8 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     clearInterval(progressInterval);
 
                     if (result.video_url) {
-                        // For 8s+ videos with no music/captions, skip finalize to avoid 413
+                        // For 8s+ videos with no captions, skip finalize to avoid 413
                         const skipFinalize = reelsDuration >= 8 &&
-                            reelsMusic === 'none' &&
                             reelsCaptionStyle === 'none';
 
                         if (skipFinalize) {
@@ -954,7 +940,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 body: JSON.stringify({
                     action: 'finalize',
                     videoUrls,
-                    musicId: initialResult.music_id || reelsMusic,
+                    musicId: 'none',
                     captionStyle: initialResult.caption_style || reelsCaptionStyle,
                     script: initialResult.script || reelsScript,
                     targetDuration: initialResult.target_duration || reelsDuration,
@@ -1795,28 +1781,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                                 }`}
                                             >
                                                 {d.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Background Music */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
-                                        🎵 Background Music
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-1">
-                                        {REELS_MUSIC.map((m) => (
-                                            <button
-                                                key={m.id}
-                                                onClick={() => setReelsMusic(m.id)}
-                                                className={`px-2 py-1.5 rounded text-[9px] font-medium border transition-all ${
-                                                    reelsMusic === m.id
-                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                }`}
-                                            >
-                                                {m.icon} {m.label}
                                             </button>
                                         ))}
                                     </div>
