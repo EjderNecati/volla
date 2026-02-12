@@ -568,17 +568,35 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Smart compression: keeps quality high while staying under Vercel 4.5MB limit
-            console.log('📦 Smart compressing image for Reels API...');
-            const compressedImage = await compressImageForReels(sourceImage);
+            // Phase 1: Compress image server-side (PIL is better quality than canvas)
+            console.log('📦 Uploading image for server-side compression...');
+            setReelsProgress(5);
 
-            // Start video generation via NEW Reels API
+            const uploadResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: sourceImage })
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload image');
+            }
+
+            const uploadResult = await uploadResponse.json();
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.error || 'Image compression failed');
+            }
+
+            console.log(`✅ Image compressed: ${uploadResult.sizeKB}KB (${uploadResult.dimensions[0]}x${uploadResult.dimensions[1]})`);
+            setReelsProgress(10);
+
+            // Phase 2: Start video generation with compressed image
             const response = await fetch('/api/generate-reels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'start',
-                    image: compressedImage,
+                    image: uploadResult.image,
                     contentType: reelsContentType,
                     script: script,
                     duration: reelsDuration,
