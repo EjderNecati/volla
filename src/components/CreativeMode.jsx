@@ -723,7 +723,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             setReelsProgress(Math.round(simulatedProgress));
         }, 2000);
 
-        const maxAttempts = 60;
+        const maxAttempts = 120; // 6 minutes total (120 * 3s = 360s)
         let attempts = 0;
 
         const poll = async () => {
@@ -758,7 +758,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                         setTimeout(poll, 3000);
                     } else {
                         clearInterval(progressInterval);
-                        throw new Error('Video generation timed out');
+                        throw new Error('Video generation timed out. Please try again.');
                     }
                 }
             } catch (err) {
