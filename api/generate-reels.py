@@ -1022,8 +1022,10 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
             error_msg = "Rate limited. Please wait a moment and try again."
         elif response.status_code == 500:
             error_msg = "Veo service error. Please try again later."
+        elif response.status_code == 503:
+            error_msg = "Veo service temporarily unavailable. Please try again in a few minutes."
 
-        return {'success': False, 'error': error_msg, 'details': error_body, 'status_code': response.status_code}
+        return {'success': False, 'error': error_msg, 'details': error_body, 'status_code': response.status_code, 'retryable': response.status_code in [429, 500, 503]}
 
     except requests.exceptions.Timeout:
         print(f"   ❌ Request timeout")
@@ -1122,10 +1124,17 @@ def poll_operation(operation_name, model_id, token, proj_id):
                 progress = result.get('metadata', {}).get('progressPercent', 0)
                 return {'success': True, 'status': 'PROCESSING', 'progress': progress, 'done': False}
 
-        return {'success': False, 'status': 'ERROR', 'error': f"Poll Error: {response.status_code}"}
+        # Handle specific poll errors
+        if response.status_code == 503:
+            return {'success': False, 'status': 'ERROR', 'error': 'Veo service temporarily unavailable. Please try again in a few minutes.', 'retryable': True}
+        elif response.status_code == 500:
+            return {'success': False, 'status': 'ERROR', 'error': 'Veo service error. Please try again.', 'retryable': True}
+        elif response.status_code == 429:
+            return {'success': False, 'status': 'ERROR', 'error': 'Rate limited. Please wait and try again.', 'retryable': True}
+        return {'success': False, 'status': 'ERROR', 'error': f"Poll Error: {response.status_code}", 'retryable': response.status_code >= 500}
 
     except Exception as e:
-        return {'success': False, 'status': 'ERROR', 'error': str(e)}
+        return {'success': False, 'status': 'ERROR', 'error': str(e), 'retryable': False}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
