@@ -622,10 +622,12 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Use EXACT same compression as Motion (1500KB, 0.8 quality)
-            console.log('📦 Using Motion compression (1500KB, 0.8)...');
+            // More aggressive compression for longer videos to stay under Vercel limits
+            const maxKB = reelsDuration >= 8 ? 800 : 1500;
+            const quality = reelsDuration >= 8 ? 0.6 : 0.8;
+            console.log(`📦 Compressing (${maxKB}KB, ${quality})...`);
             setReelsProgress(5);
-            const compressedImage = await compressImage(sourceImage, 1500, 0.8);
+            const compressedImage = await compressImage(sourceImage, maxKB, quality);
             const imageKB = Math.round(compressedImage.length / 1024);
             console.log(`📦 Compressed: ${imageKB}KB`);
             setReelsProgress(10);
@@ -785,6 +787,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     })
                 });
 
+                // Handle HTTP errors before JSON parse
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Poll HTTP ${response.status}:`, errorText.substring(0, 200));
+                    if (response.status === 413) {
+                        throw new Error('Sunucu yanıtı çok büyük. Lütfen tekrar deneyin.');
+                    }
+                    throw new Error(`Sunucu hatası (${response.status})`);
+                }
+
                 const result = await response.json();
 
                 if (result.done || result.status === 'COMPLETE') {
@@ -854,6 +866,15 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 modelId: op.model_id
                             })
                         });
+
+                        // Handle HTTP errors before JSON parse
+                        if (!response.ok) {
+                            console.error(`Poll HTTP ${response.status} for clip ${op.clip_index + 1}`);
+                            op.completed = true;
+                            op.failed = true;
+                            completedCount++;
+                            continue;
+                        }
 
                         const result = await response.json();
 
@@ -926,6 +947,16 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     contentType: reelsContentType  // For dynamic transitions
                 })
             });
+
+            // Handle HTTP errors before JSON parse
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Finalize HTTP ${response.status}:`, errorText.substring(0, 200));
+                if (response.status === 413) {
+                    throw new Error('Video çok büyük. Lütfen daha kısa süre deneyin.');
+                }
+                throw new Error(`Finalize hatası (${response.status})`);
+            }
 
             const result = await response.json();
 
