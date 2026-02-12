@@ -210,9 +210,9 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // Vercel serverless limit: 4.5MB total payload
-    // Target: 800KB base64 string (leaves room for JSON overhead)
-    const TARGET_SIZE_KB = 800;
+    // Target 3MB for upload (Vercel limit 4.5MB minus JSON overhead)
+    // This is just to fit the upload - PIL will do quality compression server-side
+    const TARGET_SIZE_KB = 3000;
 
     return new Promise((resolve) => {
         const img = new Image();
@@ -220,19 +220,26 @@ const compressImageForReels = (base64Image) => {
             const originalSizeKB = Math.round(base64Image.length / 1024);
             console.log(`📦 Original: ${originalSizeKB}KB, Target: <${TARGET_SIZE_KB}KB`);
 
+            // If already small enough, return as-is (preserve quality for PIL)
+            if (originalSizeKB <= TARGET_SIZE_KB) {
+                console.log(`✅ Already under limit, no pre-compression needed`);
+                resolve(base64Image);
+                return;
+            }
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Aggressive compression steps
+            // Progressive resize - keep quality high, just reduce dimensions
             const attempts = [
-                { maxDim: 1024, quality: 0.7 },
-                { maxDim: 1024, quality: 0.6 },
-                { maxDim: 800, quality: 0.6 },
-                { maxDim: 800, quality: 0.5 },
-                { maxDim: 640, quality: 0.5 },
-                { maxDim: 640, quality: 0.4 },
-                { maxDim: 512, quality: 0.4 },
-                { maxDim: 512, quality: 0.3 },
+                { maxDim: 2048, quality: 0.92 },
+                { maxDim: 1920, quality: 0.90 },
+                { maxDim: 1600, quality: 0.88 },
+                { maxDim: 1400, quality: 0.85 },
+                { maxDim: 1200, quality: 0.82 },
+                { maxDim: 1024, quality: 0.80 },
+                { maxDim: 900, quality: 0.75 },
+                { maxDim: 800, quality: 0.70 },
             ];
 
             for (const { maxDim, quality } of attempts) {
@@ -248,22 +255,27 @@ const compressImageForReels = (base64Image) => {
                 const compressed = canvas.toDataURL('image/jpeg', quality);
                 const sizeKB = Math.round(compressed.length / 1024);
 
+                console.log(`   Trying ${maxDim}px q=${quality}: ${sizeKB}KB`);
+
                 if (sizeKB <= TARGET_SIZE_KB) {
-                    console.log(`✅ Compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height}, q=${quality})`);
+                    console.log(`✅ Pre-compressed: ${originalSizeKB}KB → ${sizeKB}KB (${width}x${height})`);
                     resolve(compressed);
                     return;
                 }
             }
 
-            // Absolute minimum
-            canvas.width = 512;
-            canvas.height = Math.round(512 * img.height / img.width);
+            // Fallback - should rarely reach here
+            canvas.width = 800;
+            canvas.height = Math.round(800 * img.height / img.width);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.3);
-            console.log(`⚠️ Max compression: ${Math.round(compressed.length / 1024)}KB`);
+            const compressed = canvas.toDataURL('image/jpeg', 0.65);
+            console.log(`⚠️ Fallback compression: ${Math.round(compressed.length / 1024)}KB`);
             resolve(compressed);
         };
-        img.onerror = () => resolve(base64Image);
+        img.onerror = () => {
+            console.error('❌ Image failed to load for compression');
+            resolve(base64Image);
+        };
         img.src = base64Image;
     });
 };
@@ -568,14 +580,20 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Phase 1: Compress image server-side (PIL is better quality than canvas)
-            console.log('📦 Uploading image for server-side compression...');
+            // Phase 1: Quick frontend resize to fit Vercel 4.5MB limit
+            console.log('📦 Pre-compressing for upload...');
             setReelsProgress(5);
 
+            // Quick resize to fit upload limit (3MB target - leaves room for JSON overhead)
+            const preCompressed = await compressImageForReels(sourceImage);
+            console.log(`📦 Pre-compressed to ${Math.round(preCompressed.length / 1024)}KB`);
+
+            // Phase 2: Server-side PIL compression (higher quality than canvas)
+            console.log('🔄 Sending to server for quality compression...');
             const uploadResponse = await fetch('/api/upload-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: sourceImage })
+                body: JSON.stringify({ image: preCompressed })
             });
 
             if (!uploadResponse.ok) {
