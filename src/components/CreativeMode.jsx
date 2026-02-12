@@ -1454,49 +1454,53 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                             </div>
                         )}
 
-                        {/* Aspect Ratio */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                {t('creative.aspectRatio') || 'Aspect Ratio'}
+                        {/* Aspect Ratio - Only for Auto/Manual modes */}
+                        {mode !== 'reels' && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                    {t('creative.aspectRatio') || 'Aspect Ratio'}
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {ASPECT_RATIOS.map((ratio) => (
+                                        <button
+                                            key={ratio.id}
+                                            onClick={() => setAspectRatio(ratio.id)}
+                                            className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
+                                                aspectRatio === ratio.id
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                    : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            {ratio.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-1.5">
-                                {ASPECT_RATIOS.map((ratio) => (
-                                    <button
-                                        key={ratio.id}
-                                        onClick={() => setAspectRatio(ratio.id)}
-                                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
-                                            aspectRatio === ratio.id
-                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                        }`}
-                                    >
-                                        {ratio.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        )}
 
-                        {/* Output Count */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                {t('creative.outputCount') || 'Output Count'}
+                        {/* Output Count - Only for Auto/Manual modes */}
+                        {mode !== 'reels' && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
+                                    {t('creative.outputCount') || 'Output Count'}
+                                </div>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {OUTPUT_COUNTS.map((count) => (
+                                        <button
+                                            key={count}
+                                            onClick={() => setOutputCount(count)}
+                                            className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
+                                                outputCount === count
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                    : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            {count}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-4 gap-1.5">
-                                {OUTPUT_COUNTS.map((count) => (
-                                    <button
-                                        key={count}
-                                        onClick={() => setOutputCount(count)}
-                                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${
-                                            outputCount === count
-                                                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                        }`}
-                                    >
-                                        {count}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        )}
 
                         {/* REELS MODE OPTIONS - TOP TIER v2.0 */}
                         {mode === 'reels' && (
