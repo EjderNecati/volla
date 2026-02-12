@@ -87,18 +87,11 @@ const REELS_AVATAR_AGES = [
     { id: 'mature', label: 'Mature (50+)', value: 'mature person in their 50s' }
 ];
 
-const REELS_AVATAR_STYLES = [
-    { id: 'casual', label: 'Casual', value: 'casual everyday clothes' },
-    { id: 'professional', label: 'Professional', value: 'professional business attire' },
-    { id: 'trendy', label: 'Trendy', value: 'trendy fashionable outfit' },
-    { id: 'minimal', label: 'Minimal', value: 'minimal clean style clothing' }
-];
-
 const REELS_AVATAR_MOODS = [
-    { id: 'enthusiastic', label: 'Enthusiastic', value: 'enthusiastic excited expression' },
-    { id: 'calm', label: 'Calm', value: 'calm relaxed demeanor' },
-    { id: 'friendly', label: 'Friendly', value: 'warm friendly smile' },
-    { id: 'professional', label: 'Professional', value: 'professional confident manner' }
+    { id: 'enthusiastic', label: 'Excited', icon: '😄', value: 'enthusiastic excited expression' },
+    { id: 'calm', label: 'Calm', icon: '😌', value: 'calm relaxed demeanor' },
+    { id: 'friendly', label: 'Friendly', icon: '😊', value: 'warm friendly smile' },
+    { id: 'professional', label: 'Pro', icon: '💼', value: 'professional confident manner' }
 ];
 
 const REELS_PLATFORMS = [
@@ -337,7 +330,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
     const [reelsAvatarEnabled, setReelsAvatarEnabled] = useState(false);
     const [reelsAvatarGender, setReelsAvatarGender] = useState('female');
     const [reelsAvatarAge, setReelsAvatarAge] = useState('young');
-    const [reelsAvatarStyle, setReelsAvatarStyle] = useState('casual');
     const [reelsAvatarMood, setReelsAvatarMood] = useState('enthusiastic');
     const [reelsPlatform, setReelsPlatform] = useState('tiktok');
     const [reelsDuration, setReelsDuration] = useState(6);
@@ -599,7 +591,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 avatarConfig: reelsAvatarEnabled ? {
                     gender: reelsAvatarGender,
                     age: reelsAvatarAge,
-                    style: reelsAvatarStyle,
                     mood: reelsAvatarMood
                 } : null
             });
@@ -672,9 +663,8 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         if (hasAvatar) {
             const gender = REELS_AVATAR_GENDERS.find(g => g.id === reelsAvatarGender);
             const age = REELS_AVATAR_AGES.find(a => a.id === reelsAvatarAge);
-            const style = REELS_AVATAR_STYLES.find(s => s.id === reelsAvatarStyle);
             const mood = REELS_AVATAR_MOODS.find(m => m.id === reelsAvatarMood);
-            avatarDesc = `${age?.value || 'young person'} ${gender?.id === 'female' ? 'woman' : 'man'} wearing ${style?.value || 'casual clothes'}, ${mood?.value || 'enthusiastic expression'}`;
+            avatarDesc = `${age?.value || 'young person'} ${gender?.id === 'female' ? 'woman' : 'man'}, ${mood?.value || 'enthusiastic expression'}`;
         }
 
         // Get platform-specific style
@@ -1593,64 +1583,65 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
                                 {/* Avatar Options - Only show if content type requires avatar */}
                                 {REELS_CONTENT_TYPES.find(t => t.id === reelsContentType)?.hasAvatar && (
-                                    <div className="space-y-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                                    <div className="space-y-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                                         <div className="text-[10px] font-semibold uppercase tracking-wider text-purple-600">
-                                            👤 Avatar & Voice
+                                            👤 Avatar
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">Gender</span>
-                                                <div className="flex gap-1">
-                                                    {REELS_AVATAR_GENDERS.map((g) => (
-                                                        <button
-                                                            key={g.id}
-                                                            onClick={() => setReelsAvatarGender(g.id)}
-                                                            className={`flex-1 px-2 py-1 rounded text-[9px] ${
-                                                                reelsAvatarGender === g.id
-                                                                    ? 'bg-purple-500 text-white'
-                                                                    : 'bg-white border border-[#E8E7E4]'
-                                                            }`}
-                                                        >
-                                                            {g.icon}
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                        {/* Gender */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C] font-medium">Gender</span>
+                                            <div className="flex gap-1">
+                                                {REELS_AVATAR_GENDERS.map((g) => (
+                                                    <button
+                                                        key={g.id}
+                                                        onClick={() => setReelsAvatarGender(g.id)}
+                                                        className={`flex-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+                                                            reelsAvatarGender === g.id
+                                                                ? 'bg-purple-500 text-white shadow-sm'
+                                                                : 'bg-white border border-[#E8E7E4] hover:bg-purple-50'
+                                                        }`}
+                                                    >
+                                                        {g.icon} {g.label}
+                                                    </button>
+                                                ))}
                                             </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">Age</span>
-                                                <select
-                                                    value={reelsAvatarAge}
-                                                    onChange={(e) => setReelsAvatarAge(e.target.value)}
-                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
-                                                >
-                                                    {REELS_AVATAR_AGES.map((a) => (
-                                                        <option key={a.id} value={a.id}>{a.label}</option>
-                                                    ))}
-                                                </select>
+                                        </div>
+                                        {/* Age */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C] font-medium">Age</span>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {REELS_AVATAR_AGES.map((a) => (
+                                                    <button
+                                                        key={a.id}
+                                                        onClick={() => setReelsAvatarAge(a.id)}
+                                                        className={`px-2 py-1 rounded text-[9px] font-medium transition-all ${
+                                                            reelsAvatarAge === a.id
+                                                                ? 'bg-purple-500 text-white'
+                                                                : 'bg-white border border-[#E8E7E4] hover:bg-purple-50'
+                                                        }`}
+                                                    >
+                                                        {a.label}
+                                                    </button>
+                                                ))}
                                             </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">Style</span>
-                                                <select
-                                                    value={reelsAvatarStyle}
-                                                    onChange={(e) => setReelsAvatarStyle(e.target.value)}
-                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
-                                                >
-                                                    {REELS_AVATAR_STYLES.map((s) => (
-                                                        <option key={s.id} value={s.id}>{s.label}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">Mood</span>
-                                                <select
-                                                    value={reelsAvatarMood}
-                                                    onChange={(e) => setReelsAvatarMood(e.target.value)}
-                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
-                                                >
-                                                    {REELS_AVATAR_MOODS.map((m) => (
-                                                        <option key={m.id} value={m.id}>{m.label}</option>
-                                                    ))}
-                                                </select>
+                                        </div>
+                                        {/* Mood */}
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] text-[#8C8C8C] font-medium">Mood</span>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {REELS_AVATAR_MOODS.map((m) => (
+                                                    <button
+                                                        key={m.id}
+                                                        onClick={() => setReelsAvatarMood(m.id)}
+                                                        className={`px-2 py-1 rounded text-[9px] font-medium transition-all ${
+                                                            reelsAvatarMood === m.id
+                                                                ? 'bg-purple-500 text-white'
+                                                                : 'bg-white border border-[#E8E7E4] hover:bg-purple-50'
+                                                        }`}
+                                                    >
+                                                        {m.icon} {m.label}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
