@@ -641,8 +641,12 @@ def add_audio_overlay(video_path, audio_url, output_path, volume=0.3):
         return video_path
 
 
-def compress_image_for_veo(image_data, max_size_mb=3, max_dimension=1920):
-    """Compress image to fit within Vercel payload limits."""
+def compress_image_for_veo(image_data, max_size_kb=600, max_dimension=1024):
+    """
+    ULTRA-AGGRESSIVE compression for Reels.
+    Target: 600KB to ensure total payload stays under Vercel 4.5MB limit.
+    Reels has more payload data than Motion (script, avatarConfig, music, etc.)
+    """
     try:
         if 'base64,' in image_data:
             b64 = image_data.split('base64,')[1]
@@ -650,33 +654,46 @@ def compress_image_for_veo(image_data, max_size_mb=3, max_dimension=1920):
             b64 = image_data
 
         image_bytes = base64.b64decode(b64)
+        original_size_kb = len(image_bytes) / 1024
+        print(f"   📦 Original image: {original_size_kb:.0f}KB")
+
+        # If already small enough and JPEG, might be already compressed from frontend
+        if original_size_kb <= max_size_kb:
+            print(f"   ✅ Image already under {max_size_kb}KB, using as-is")
+            return b64, 'image/jpeg'
+
         img = Image.open(io.BytesIO(image_bytes))
 
         if img.mode in ('RGBA', 'P'):
             img = img.convert('RGB')
 
         width, height = img.size
+
+        # ALWAYS resize if larger than max_dimension (1024 for Reels vs 1920 for Motion)
         if max(width, height) > max_dimension:
             ratio = max_dimension / max(width, height)
             new_size = (int(width * ratio), int(height * ratio))
             img = img.resize(new_size, Image.Resampling.LANCZOS)
-            print(f"   📐 Resized image: {width}x{height} → {new_size[0]}x{new_size[1]}")
+            print(f"   📐 Resized: {width}x{height} → {new_size[0]}x{new_size[1]}")
 
-        quality = 90
-        while quality >= 50:
+        # Start with lower quality (70 vs 90) for faster convergence
+        quality = 70
+        while quality >= 30:
             buffer = io.BytesIO()
             img.save(buffer, format='JPEG', quality=quality, optimize=True)
-            size_mb = len(buffer.getvalue()) / (1024 * 1024)
+            size_kb = len(buffer.getvalue()) / 1024
 
-            if size_mb <= max_size_mb:
-                print(f"   📦 Compressed image: {size_mb:.2f}MB (quality={quality})")
+            if size_kb <= max_size_kb:
+                print(f"   📦 Compressed: {size_kb:.0f}KB (quality={quality})")
                 return base64.b64encode(buffer.getvalue()).decode('utf-8'), 'image/jpeg'
 
             quality -= 10
 
+        # Final attempt with very low quality
         buffer = io.BytesIO()
-        img.save(buffer, format='JPEG', quality=50, optimize=True)
-        print(f"   ⚠️ Image compressed to minimum quality")
+        img.save(buffer, format='JPEG', quality=25, optimize=True)
+        size_kb = len(buffer.getvalue()) / 1024
+        print(f"   ⚠️ Min quality compression: {size_kb:.0f}KB (quality=25)")
         return base64.b64encode(buffer.getvalue()).decode('utf-8'), 'image/jpeg'
 
     except Exception as e:
@@ -969,18 +986,26 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
 
 
 def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration, token, proj_id):
-    """Start Veo 3.1 video generation."""
+    """Start Veo 3.1 video generation with robust error handling."""
     # Veo only supports 16:9 and 9:16
     valid_ratios = ['16:9', '9:16']
     if aspect_ratio not in valid_ratios:
         aspect_ratio = '9:16'  # Default to portrait for Reels
 
-    # Compress image server-side (same approach as Motion)
+    # ULTRA-AGGRESSIVE compression for Reels (600KB target vs Motion's 3MB)
     base64_clean, mime_type = compress_image_for_veo(image_data)
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
+
+    # Log payload size for debugging
+    image_size_kb = len(base64_clean) / 1024
+    print(f"   📊 Image payload: {image_size_kb:.0f}KB")
+
+    # Safety check - if still too large, warn
+    if image_size_kb > 1000:
+        print(f"   ⚠️ WARNING: Image still large ({image_size_kb:.0f}KB), may cause payload errors")
 
     url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{proj_id}/locations/us-central1/publishers/google/models/{model_id}:predictLongRunning"
 
@@ -1007,6 +1032,10 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
         }
     }
 
+    # Log total payload size
+    payload_json = json.dumps(payload)
+    total_size_kb = len(payload_json) / 1024
+    print(f"   📊 Total Veo payload: {total_size_kb:.0f}KB")
     print(f"   🎬 Starting Veo 3.1 ({model_id})...")
 
     try:
@@ -1016,18 +1045,47 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
             result = response.json()
             operation_name = result.get('name')
             if operation_name:
-                print(f"   ✅ Operation started")
+                print(f"   ✅ Operation started: {operation_name[:50]}...")
                 return {
                     'success': True,
                     'operation_name': operation_name,
                     'model_id': model_id,
                     'status': 'PENDING'
                 }
+            else:
+                print(f"   ⚠️ No operation name in response: {result}")
+                return {'success': False, 'error': 'No operation name returned', 'details': str(result)[:200]}
 
+        # Handle specific error codes
         error_body = response.text[:500] if response.text else 'No response body'
         print(f"   ❌ Veo API Error {response.status_code}: {error_body}")
-        return {'success': False, 'error': f"API Error: {response.status_code}", 'details': error_body}
 
+        # Parse error for better messages
+        error_msg = f"Veo API Error: {response.status_code}"
+        if response.status_code == 400:
+            if 'payload' in error_body.lower() or 'size' in error_body.lower():
+                error_msg = "Image too large for Veo. Please try a smaller image."
+            elif 'prompt' in error_body.lower():
+                error_msg = "Invalid prompt. Please try different settings."
+            else:
+                error_msg = f"Bad request: {error_body[:100]}"
+        elif response.status_code == 401:
+            error_msg = "Authentication failed. Please check credentials."
+        elif response.status_code == 403:
+            error_msg = "Access denied. Veo API may not be enabled for this project."
+        elif response.status_code == 429:
+            error_msg = "Rate limited. Please wait a moment and try again."
+        elif response.status_code == 500:
+            error_msg = "Veo service error. Please try again later."
+
+        return {'success': False, 'error': error_msg, 'details': error_body, 'status_code': response.status_code}
+
+    except requests.exceptions.Timeout:
+        print(f"   ❌ Request timeout")
+        return {'success': False, 'error': 'Request timed out. Please try again.'}
+    except requests.exceptions.ConnectionError as e:
+        print(f"   ❌ Connection error: {e}")
+        return {'success': False, 'error': 'Connection failed. Please check your network.'}
     except Exception as e:
         print(f"   ❌ Request exception: {e}")
         return {'success': False, 'error': str(e)}
@@ -1126,13 +1184,21 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             content_length = int(self.headers['Content-Length'])
+
+            # Log incoming payload size for debugging
+            payload_size_kb = content_length / 1024
+            print(f"\n{'='*60}")
+            print(f"🎬 REELS STUDIO v1.0 - TOP TIER")
+            print(f"   📦 Incoming payload: {payload_size_kb:.0f}KB")
+
+            # Warn if payload is large (Vercel limit is ~4.5MB)
+            if payload_size_kb > 3000:
+                print(f"   ⚠️ WARNING: Large payload ({payload_size_kb:.0f}KB) - may hit Vercel limits!")
+
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
 
             action = data.get('action', 'start')
-
-            print(f"\n{'='*60}")
-            print(f"🎬 REELS STUDIO v1.0 - TOP TIER")
             print(f"   Action: {action}")
             print(f"{'='*60}")
 
@@ -1151,6 +1217,10 @@ class handler(BaseHTTPRequestHandler):
 
                 if not image_data:
                     raise ValueError("No image provided")
+
+                # Log incoming image size (from frontend)
+                image_size_kb = len(image_data) / 1024
+                print(f"   📷 Incoming image: {image_size_kb:.0f}KB (from frontend)")
 
                 # Use template script if custom script not provided
                 if not script and template != 'custom' and template in TEMPLATE_SCRIPTS:
