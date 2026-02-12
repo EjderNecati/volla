@@ -975,8 +975,13 @@ def start_video_generation(image_data, prompt, model_id, aspect_ratio, duration,
     if aspect_ratio not in valid_ratios:
         aspect_ratio = '9:16'  # Default to portrait for Reels
 
-    # Compress image
-    base64_clean, mime_type = compress_image_for_veo(image_data)
+    # Extract base64 (already compressed by upload-image endpoint)
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+        mime_type = 'image/jpeg'
+    else:
+        base64_clean = image_data
+        mime_type = 'image/jpeg'
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
     if missing_padding:
