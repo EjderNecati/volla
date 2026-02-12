@@ -226,63 +226,67 @@ CAPTION_STYLES = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# COMPACT HYPER-REALISTIC PROMPTS (Shorter = fits in payload limit)
+# SAFE PROMPTS - Avoid RAI content filters
+# Focus on PRODUCT, avoid detailed human descriptions
 # ═══════════════════════════════════════════════════════════════════════════════
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
         'base': (
-            '9:16 video. Product on real surface. '
-            'KEEP PRODUCT EXACT. Slow camera movement. '
-            'Natural window light, real shadows. Real room background. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical product video. Product displayed on a surface. '
+            'Preserve product exactly as shown. Slow gentle camera push-in. '
+            'Soft natural lighting. Clean background. '
+            'No text or overlays.'
         ),
-        'camera': 'Slow push. Side window light. Real shadows.'
+        'camera': 'Slow dolly. Soft light.'
     },
     'hands_demo': {
         'base': (
-            '9:16 video. Real hands holding product. '
-            'KEEP PRODUCT EXACT. Hands with visible pores, veins, natural nails. '
-            'Natural window light. Blurred real home background. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical video. Hands presenting the product. '
+            'Preserve product exactly as shown. '
+            'Soft daylight. Cozy indoor setting. '
+            'No text or overlays.'
         ),
-        'camera': 'Close-up. Window light. Shallow focus.'
+        'camera': 'Close-up. Soft light. Shallow focus.'
     },
     'avatar_review': {
         'base': (
-            '9:16 video. Real person showing product. '
-            'KEEP PRODUCT EXACT. Person has real skin pores, imperfections, flyaway hair. '
-            'Natural window light with real shadows. Real room with some clutter. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical video. Someone enthusiastically showing a product. '
+            'Preserve product exactly as shown. '
+            'Warm indoor lighting. Casual home setting. '
+            'Friendly presentation style. '
+            'No text or overlays.'
         ),
-        'camera': 'Window light. Real face shadows. Warm tone.'
+        'camera': 'Medium shot. Warm light.'
     },
     'lifestyle': {
         'base': (
-            '9:16 lifestyle video. Real person using product. '
-            'KEEP PRODUCT EXACT. Person looks natural, not a model. '
-            'Real environment. Natural available light only. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical lifestyle video. Someone using the product naturally. '
+            'Preserve product exactly as shown. '
+            'Everyday setting. Natural daylight. '
+            'Casual authentic feel. '
+            'No text or overlays.'
         ),
-        'camera': 'Available light. Slight handheld feel.'
+        'camera': 'Natural light. Casual framing.'
     },
     'unboxing': {
         'base': (
-            '9:16 unboxing video. Real hands opening package. '
-            'KEEP PRODUCT EXACT. Hands with real skin texture, natural nails. '
-            'Real desk. Natural room light. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical unboxing video. Hands opening a package to reveal product. '
+            'Preserve product exactly as shown. '
+            'Desk or table setting. Soft room lighting. '
+            'Satisfying reveal moment. '
+            'No text or overlays.'
         ),
-        'camera': 'Top-down. Ambient light. Soft shadows.'
+        'camera': 'Top-down view. Soft light.'
     },
     'hook_teaser': {
         'base': (
-            '9:16 product reveal video. Quick energetic movement. '
-            'KEEP PRODUCT EXACT. Real footage look. '
-            'Natural light only. Real environment. '
-            'NO text/watermarks/overlays.'
+            '9:16 vertical product reveal video. Quick dynamic movement. '
+            'Preserve product exactly as shown. '
+            'Eye-catching presentation. '
+            'No text or overlays.'
         ),
-        'camera': 'Quick movement. Natural light.'
+        'camera': 'Dynamic movement. Clean look.'
     }
 }
 
@@ -954,15 +958,12 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
 
         # Compact but effective realism description
         prompt_parts.append(
-            f'PERSON: Real {gender} in {age_desc}. '
-            f'Real skin with pores and imperfections. Flyaway hair. '
-            f'{style.capitalize()} clothes. {mood.capitalize()} expression. '
-            f'Looks like a real TikToker, NOT CGI.'
+            f'A {gender} in their {age_desc}, casual {style} style, {mood} expression.'
         )
 
-    # Compact anti-AI instruction
+    # Simple quality instruction (avoid triggering content filters)
     prompt_parts.append(
-        'REAL FOOTAGE look. No AI glow. No plastic skin. No text/overlays.'
+        'Natural authentic look. No text or overlays.'
     )
 
     return ' '.join(prompt_parts)
@@ -1136,6 +1137,20 @@ def poll_operation(operation_name, model_id, token, proj_id):
                         # CRITICAL: This fallback was MISSING in Reels but exists in Motion!
                         print(f"   ✅ Found video via uri")
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video['uri'], 'done': True}
+
+                # Log RAI filter reasons if present
+                rai_count = resp.get('raiMediaFilteredCount', 0)
+                rai_reasons = resp.get('raiMediaFilteredReasons', [])
+                if rai_count > 0 or rai_reasons:
+                    print(f"   🚫 RAI CONTENT FILTER TRIGGERED!")
+                    print(f"   🚫 Filtered count: {rai_count}")
+                    print(f"   🚫 Reasons: {rai_reasons}")
+                    return {
+                        'success': False,
+                        'status': 'FILTERED',
+                        'error': f'Content filtered by Google AI safety. Reasons: {rai_reasons}',
+                        'rai_reasons': rai_reasons
+                    }
 
                 # Log full response for debugging
                 print(f"   ⚠️ No video found. Response keys: {list(resp.keys())}")
