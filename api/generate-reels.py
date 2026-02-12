@@ -231,28 +231,28 @@ CAPTION_STYLES = {
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
-        'base': '9:16 video. Product on table. Preserve product. Window light, natural shadows. No text.',
-        'camera': 'Window side light. Shadow opposite.'
+        'base': 'Vertical video filling entire 9:16 frame. Product on table. Preserve product exactly. Window light, natural shadows. No black bars. No letterboxing. No text.',
+        'camera': 'Full frame vertical composition.'
     },
     'hands_demo': {
-        'base': '9:16 video. Hands with product. Preserve product. Window light. Close-up. No text.',
-        'camera': 'Natural hand shadows.'
+        'base': 'Vertical video filling entire 9:16 frame. Hands with product. Preserve product exactly. Window light. Close-up fills frame. No black bars. No text.',
+        'camera': 'Full frame close-up.'
     },
     'avatar_review': {
-        'base': '9:16 video. Person showing product. Preserve product. Window light, face half shadow. Home vlog style. No text.',
-        'camera': 'Side window light on face.'
+        'base': 'Vertical video filling entire 9:16 frame. Person showing product. Preserve product exactly. Window light, face half shadow. Fills entire frame top to bottom. No black bars. No text.',
+        'camera': 'Vertical full frame composition.'
     },
     'lifestyle': {
-        'base': '9:16 video. Person using product. Preserve product. Natural daylight only. Candid moment. No text.',
-        'camera': 'Available light. Not staged.'
+        'base': 'Vertical video filling entire 9:16 frame. Person using product. Preserve product exactly. Natural daylight. Scene fills entire frame. No black bars. No text.',
+        'camera': 'Full vertical frame.'
     },
     'unboxing': {
-        'base': '9:16 video. Hands unboxing. Preserve product. Desk with window light. Natural shadows. No text.',
-        'camera': 'Top-down. Window shadows.'
+        'base': 'Vertical video filling entire 9:16 frame. Hands unboxing. Preserve product exactly. Desk with window light. No black bars. No letterboxing. No text.',
+        'camera': 'Full frame top-down.'
     },
     'hook_teaser': {
-        'base': '9:16 video. Product reveal. Preserve product. Natural light. Quick dynamic. No text.',
-        'camera': 'Fast movement. Natural light.'
+        'base': 'Vertical video filling entire 9:16 frame. Product reveal. Preserve product exactly. Natural light. Dynamic movement. No black bars. No text.',
+        'camera': 'Full frame vertical.'
     }
 }
 

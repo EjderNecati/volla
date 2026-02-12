@@ -11,6 +11,7 @@ import { createProject, saveProject } from '../utils/projectManager';
 import { addToLibrary } from '../utils/libraryManager';
 import { useTranslation } from '../i18n';
 import { useCredits } from '../contexts/CreditContext';
+import { calculateReelsCost } from '../utils/creditManager';
 import InsufficientCreditsModal from './InsufficientCreditsModal';
 import SourceSelectionModal from './SourceSelectionModal';
 
@@ -582,26 +583,19 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             console.log(`📦 Compressed: ${imageKB}KB`);
             setReelsProgress(10);
 
-            // Build request body and log total size
+            // Simplified request - only essential fields
             const requestBody = JSON.stringify({
                 action: 'start',
                 image: compressedImage,
                 contentType: reelsContentType,
-                script: script ? script.substring(0, 500) : '', // Truncate script to 500 chars
                 duration: reelsDuration,
                 qualityMode: reelsQuality,
-                musicId: reelsMusic,
-                captionStyle: reelsCaptionStyle,
-                platform: reelsPlatform,
-                template: reelsTemplate,
                 avatarConfig: reelsAvatarEnabled ? {
                     gender: reelsAvatarGender,
                     age: reelsAvatarAge,
                     style: reelsAvatarStyle,
                     mood: reelsAvatarMood
-                } : null,
-                voice: reelsVoice,
-                language: reelsLanguage
+                } : null
             });
             const totalKB = Math.round(requestBody.length / 1024);
             console.log(`📡 Payload: ${totalKB}KB (img: ${imageKB}KB)`);
@@ -1687,95 +1681,25 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     </div>
                                 )}
 
-                                {/* Music Selection */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                        🎵 {t('creative.reels.music') || 'Background Music'}
+                                {/* Duration Only */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                        ⏱️ Duration
                                     </div>
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        {REELS_MUSIC.map((m) => (
+                                    <div className="flex gap-1">
+                                        {REELS_DURATIONS_EXTENDED.slice(0, 4).map((d) => (
                                             <button
-                                                key={m.id}
-                                                onClick={() => setReelsMusic(m.id)}
-                                                className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
-                                                    reelsMusic === m.id
+                                                key={d.id}
+                                                onClick={() => setReelsDuration(d.id)}
+                                                className={`flex-1 px-2 py-2 rounded text-[10px] font-medium border ${
+                                                    reelsDuration === d.id
                                                         ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                        : 'bg-[#F5F4F1] border-[#E8E7E4]'
                                                 }`}
                                             >
-                                                {m.icon} {m.label}
+                                                {d.label}
                                             </button>
                                         ))}
-                                    </div>
-                                </div>
-
-                                {/* Caption Style */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                        💬 {t('creative.reels.captions') || 'Caption Style'}
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        {REELS_CAPTION_STYLES.map((c) => (
-                                            <button
-                                                key={c.id}
-                                                onClick={() => setReelsCaptionStyle(c.id)}
-                                                className={`px-2 py-1.5 rounded-lg text-[9px] font-medium transition-all border ${
-                                                    reelsCaptionStyle === c.id
-                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                        : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
-                                                }`}
-                                                title={c.style}
-                                            >
-                                                {c.icon} {c.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Platform & Duration Row */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    {/* Platform */}
-                                    <div className="space-y-1.5">
-                                        <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
-                                            📱 Platform
-                                        </div>
-                                        <div className="flex gap-1">
-                                            {REELS_PLATFORMS.map((p) => (
-                                                <button
-                                                    key={p.id}
-                                                    onClick={() => setReelsPlatform(p.id)}
-                                                    className={`flex-1 px-1 py-1.5 rounded text-[8px] font-medium border ${
-                                                        reelsPlatform === p.id
-                                                            ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                            : 'bg-[#F5F4F1] border-[#E8E7E4]'
-                                                    }`}
-                                                >
-                                                    {p.icon}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Duration */}
-                                    <div className="space-y-1.5">
-                                        <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
-                                            ⏱️ Duration
-                                        </div>
-                                        <div className="flex gap-1">
-                                            {REELS_DURATIONS_EXTENDED.slice(0, 4).map((d) => (
-                                                <button
-                                                    key={d.id}
-                                                    onClick={() => setReelsDuration(d.id)}
-                                                    className={`flex-1 px-1 py-1.5 rounded text-[8px] font-medium border ${
-                                                        reelsDuration === d.id
-                                                            ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                                                            : 'bg-[#F5F4F1] border-[#E8E7E4]'
-                                                    }`}
-                                                >
-                                                    {d.label}
-                                                </button>
-                                            ))}
-                                        </div>
                                     </div>
                                 </div>
 
@@ -1815,11 +1739,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                             <Sparkles size={18} />
                                             <span>🎬 Generate Viral Reels</span>
                                             <span className="absolute right-4 text-xs text-white/70">
-                                                {(() => {
-                                                    const clips = REELS_DURATIONS_EXTENDED.find(d => d.id === reelsDuration)?.clips || 1;
-                                                    const baseCost = reelsQuality === 'pro' ? 16 : 8;
-                                                    return baseCost * clips;
-                                                })()} credits
+                                                {calculateReelsCost(reelsDuration, reelsQuality)} credits
                                             </span>
                                         </>
                                     )}
@@ -2009,11 +1929,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         />
                                     </div>
 
-                                    {/* Platform badge */}
-                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
-                                        {reelsPlatform === 'tiktok' && '🎵 TikTok'}
-                                        {reelsPlatform === 'instagram' && '📸 Instagram'}
-                                        {reelsPlatform === 'youtube' && '▶️ YouTube'}
+                                    {/* Duration badge */}
+                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
+                                        🎬 {reelsDuration}s Reels
                                     </div>
                                 </div>
 
@@ -2023,7 +1941,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         onClick={() => {
                                             const a = document.createElement('a');
                                             a.href = reelsVideo;
-                                            a.download = `reels-${reelsPlatform}-${reelsDuration}s-${Date.now()}.mp4`;
+                                            a.download = `reels-${reelsDuration}s-${Date.now()}.mp4`;
                                             a.click();
                                         }}
                                         className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
