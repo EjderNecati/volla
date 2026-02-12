@@ -226,72 +226,33 @@ CAPTION_STYLES = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# NATURAL LIGHTING FOCUS - No studio lights, only available light
+# COMPACT PROMPTS - Short but with natural lighting cues
 # ═══════════════════════════════════════════════════════════════════════════════
-
-# Lighting instruction to append to all prompts
-NATURAL_LIGHT = (
-    'LIGHTING: Only natural available light. Single window as light source. '
-    'No studio lights, no ring lights, no artificial fill. '
-    'Let shadows fall naturally - do not fill them. '
-    'Overcast daylight or indirect window light. '
-    'Slight underexposure OK. No flat even lighting. '
-)
 
 CONTENT_TYPE_PROMPTS = {
     'product_showcase': {
-        'base': (
-            '9:16 video. Product on table. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Handheld camera feel. Shallow focus. '
-            'No text overlays.'
-        ),
-        'camera': 'Single window light from side. Dark shadows opposite side.'
+        'base': '9:16 video. Product on table. Preserve product. Window light, natural shadows. No text.',
+        'camera': 'Window side light. Shadow opposite.'
     },
     'hands_demo': {
-        'base': (
-            '9:16 video. Hands holding product. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Close-up. Soft background blur. '
-            'No text overlays.'
-        ),
-        'camera': 'Window light on hands. Natural shadow under fingers.'
+        'base': '9:16 video. Hands with product. Preserve product. Window light. Close-up. No text.',
+        'camera': 'Natural hand shadows.'
     },
     'avatar_review': {
-        'base': (
-            '9:16 video. Person showing product. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Home setting. Candid vlog style. '
-            'No text overlays.'
-        ),
-        'camera': 'Face lit by window. One side in shadow. Not flat lighting.'
+        'base': '9:16 video. Person showing product. Preserve product. Window light, face half shadow. Home vlog style. No text.',
+        'camera': 'Side window light on face.'
     },
     'lifestyle': {
-        'base': (
-            '9:16 video. Person using product. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Everyday moment. Not staged. '
-            'No text overlays.'
-        ),
-        'camera': 'Available daylight only. Real indoor lighting conditions.'
+        'base': '9:16 video. Person using product. Preserve product. Natural daylight only. Candid moment. No text.',
+        'camera': 'Available light. Not staged.'
     },
     'unboxing': {
-        'base': (
-            '9:16 video. Hands unboxing product. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Desk setting. Anticipation reveal. '
-            'No text overlays.'
-        ),
-        'camera': 'Overhead window light. Natural desk shadows.'
+        'base': '9:16 video. Hands unboxing. Preserve product. Desk with window light. Natural shadows. No text.',
+        'camera': 'Top-down. Window shadows.'
     },
     'hook_teaser': {
-        'base': (
-            '9:16 video. Product reveal. Preserve product exactly. '
-            f'{NATURAL_LIGHT}'
-            'Quick energy. Dynamic. '
-            'No text overlays.'
-        ),
-        'camera': 'Natural light. Quick movement.'
+        'base': '9:16 video. Product reveal. Preserve product. Natural light. Quick dynamic. No text.',
+        'camera': 'Fast movement. Natural light.'
     }
 }
 
@@ -961,18 +922,10 @@ def build_clip_prompt(content_type, script_section, clip_index, total_clips, pla
         style = avatar_config.get('style', 'casual')
         mood = avatar_config.get('mood', 'friendly')
 
-        # Describe the VIBE/AESTHETIC not physical features
-        prompt_parts.append(
-            f'Content creator vibe: {gender} in {age_desc}, {style} aesthetic, {mood} energy. '
-            f'Like a popular social media influencer filming casual content at home.'
-        )
+        prompt_parts.append(f'{gender} in {age_desc}, {style}, {mood}.')
 
-    # Natural lighting emphasis
-    prompt_parts.append(
-        'CRITICAL: Natural available light only. No ring light. No studio light. '
-        'Window as single light source. Let one side of face be in shadow. '
-        'Real indoor lighting like actual home video.'
-    )
+    # Short lighting cue
+    prompt_parts.append('Window light. Natural shadows. No ring light.')
 
     return ' '.join(prompt_parts)
 
