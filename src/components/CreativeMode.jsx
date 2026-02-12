@@ -544,6 +544,53 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         }
     };
 
+    // Save Reels video to history
+    const saveReelsToHistory = async (videoUrl) => {
+        try {
+            const reelsName = `Reels: ${reelsContentType} ${reelsDuration}s`;
+
+            const project = createProject(
+                reelsName,
+                marketplace || 'creative',
+                sourceImage,
+                [{
+                    id: `reels_${Date.now()}`,
+                    type: 'REELS',
+                    url: videoUrl,
+                    createdAt: Date.now(),
+                    metadata: {
+                        contentType: reelsContentType,
+                        duration: reelsDuration,
+                        quality: reelsQuality,
+                        music: reelsMusic,
+                        captionStyle: reelsCaptionStyle,
+                        template: reelsTemplate,
+                        mode: 'reels'
+                    }
+                }],
+                null,
+                {
+                    featureType: 'reels',
+                    mode: 'reels',
+                    contentType: reelsContentType,
+                    duration: reelsDuration,
+                    quality: reelsQuality
+                }
+            );
+
+            if (currentProjectId) {
+                project.id = currentProjectId;
+            } else {
+                setCurrentProjectId(project.id);
+            }
+
+            await saveProject(project);
+            console.log('✅ Reels saved to history');
+        } catch (err) {
+            console.warn('Failed to save reels to history:', err);
+        }
+    };
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // REELS VIDEO GENERATION
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -886,6 +933,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 setReelsProgress(100);
                 setReelsVideo(result.video_url);
                 setReelsPollingStatus('');
+                saveReelsToHistory(result.video_url);
             } else {
                 throw new Error(result.error || 'Finalization failed');
             }
@@ -1691,7 +1739,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         ⏱️ Duration
                                     </div>
                                     <div className="flex gap-1">
-                                        {REELS_DURATIONS_EXTENDED.slice(0, 4).map((d) => (
+                                        {REELS_DURATIONS_EXTENDED.slice(0, 3).map((d) => (
                                             <button
                                                 key={d.id}
                                                 onClick={() => setReelsDuration(d.id)}
