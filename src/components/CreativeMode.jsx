@@ -582,41 +582,20 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Phase 1: Quick frontend resize to fit Vercel 4.5MB limit
-            console.log('📦 Pre-compressing for upload...');
+            // Frontend compression to fit Vercel limit - same approach as Motion
+            console.log('📦 Compressing image...');
             setReelsProgress(5);
-
-            // Quick resize to fit upload limit (3MB target - leaves room for JSON overhead)
-            const preCompressed = await compressImageForReels(sourceImage);
-            console.log(`📦 Pre-compressed to ${Math.round(preCompressed.length / 1024)}KB`);
-
-            // Phase 2: Server-side PIL compression (higher quality than canvas)
-            console.log('🔄 Sending to server for quality compression...');
-            const uploadResponse = await fetch('/api/upload-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: preCompressed })
-            });
-
-            if (!uploadResponse.ok) {
-                throw new Error('Failed to upload image');
-            }
-
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) {
-                throw new Error(uploadResult.error || 'Image compression failed');
-            }
-
-            console.log(`✅ Image compressed: ${uploadResult.sizeKB}KB (${uploadResult.dimensions[0]}x${uploadResult.dimensions[1]})`);
+            const compressedImage = await compressImageForReels(sourceImage);
+            console.log(`📦 Compressed to ${Math.round(compressedImage.length / 1024)}KB`);
             setReelsProgress(10);
 
-            // Phase 2: Start video generation with compressed image
+            // Send directly to generate-reels (backend will compress further if needed)
             const response = await fetch('/api/generate-reels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'start',
-                    image: uploadResult.image,
+                    image: compressedImage,
                     contentType: reelsContentType,
                     script: script,
                     duration: reelsDuration,
