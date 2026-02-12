@@ -1066,19 +1066,27 @@ def poll_operation(operation_name, model_id, token, proj_id):
 
                 if videos:
                     video = videos[0]
+                    print(f"   📹 Video object keys: {list(video.keys())}")
                     video_url = None
                     if video.get('gcsUri'):
                         video_url = video['gcsUri']
                     elif video.get('bytesBase64Encoded'):
                         mime = video.get('mimeType', 'video/mp4')
                         video_url = f"data:{mime};base64,{video['bytesBase64Encoded']}"
+                    elif video.get('video', {}).get('bytesBase64Encoded'):
+                        # Nested structure
+                        mime = video.get('video', {}).get('mimeType', 'video/mp4')
+                        video_url = f"data:{mime};base64,{video['video']['bytesBase64Encoded']}"
 
                     if video_url:
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video_url, 'done': True}
                     elif video.get('videoUri'):
                         return {'success': True, 'status': 'COMPLETE', 'video_url': video['videoUri'], 'done': True}
 
-                return {'success': False, 'status': 'FAILED', 'error': 'No video in response'}
+                # Log full response for debugging
+                print(f"   ⚠️ No video found. Response keys: {list(resp.keys())}")
+                print(f"   ⚠️ Full result keys: {list(result.keys())}")
+                return {'success': False, 'status': 'FAILED', 'error': 'No video in response', 'debug': str(result)[:500]}
             else:
                 progress = result.get('metadata', {}).get('progressPercent', 0)
                 return {'success': True, 'status': 'PROCESSING', 'progress': progress, 'done': False}
