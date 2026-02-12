@@ -1703,6 +1703,28 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     </div>
                                 </div>
 
+                                {/* Background Music */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                        🎵 Background Music
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {REELS_MUSIC.map((m) => (
+                                            <button
+                                                key={m.id}
+                                                onClick={() => setReelsMusic(m.id)}
+                                                className={`px-2 py-1.5 rounded text-[9px] font-medium border transition-all ${
+                                                    reelsMusic === m.id
+                                                        ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                                        : 'bg-[#F5F4F1] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                                }`}
+                                            >
+                                                {m.icon} {m.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Quality Mode */}
                                 <div className="flex gap-1.5">
                                     {REELS_QUALITY_MODES.map((q) => (
