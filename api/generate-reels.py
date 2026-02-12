@@ -1047,8 +1047,11 @@ def poll_operation(operation_name, model_id, token, proj_id):
 
         if response.status_code == 200:
             result = response.json()
+            print(f"   📊 Poll result keys: {list(result.keys())}")
 
             if result.get('done'):
+                print(f"   ✅ Generation done!")
+
                 if result.get('error'):
                     error_info = result.get('error', {})
                     error_msg = error_info.get('message', str(error_info))
