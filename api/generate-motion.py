@@ -770,16 +770,28 @@ SAFE_CAMERA_INSTRUCTIONS = {
 }
 
 
-def build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan=None, retry_count=0):
+def build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan=None, retry_count=0, aspect_ratio='16:9'):
     """Build Veo prompt - uses Director AI plan if available, otherwise falls back to safe prompts."""
     _ = retry_count  # Suppress unused warning
+
+    # Aspect ratio frame expansion instruction
+    aspect_instruction = ""
+    if aspect_ratio == '9:16':
+        aspect_instruction = "Fill entire vertical 9:16 frame. Expand scene naturally above and below while preserving product exactly. No black bars. No letterboxing."
+    elif aspect_ratio == '1:1':
+        aspect_instruction = "Fill entire square 1:1 frame. Expand scene naturally while preserving product exactly. No black bars."
 
     # If Director AI provided a specific prompt, USE IT (this describes the actual product!)
     if director_plan:
         prompt = director_plan
+        # Add aspect ratio instruction
+        if aspect_instruction:
+            prompt = f"{aspect_instruction} {prompt}"
         # Add custom directive if provided
         if custom_directive:
             prompt = f"{prompt} {custom_directive}"
+        # Always add product preservation rule
+        prompt = f"{prompt} CRITICAL: Product must remain 100% identical - no morphing, no distortion."
         print(f"   📝 Director AI prompt: {prompt[:100]}...")
         return prompt
 
@@ -802,8 +814,16 @@ def build_motion_prompt(shot_type, speed, duration, custom_directive, director_p
     }
 
     prompt = VEO31_PROMPTS.get(shot_type, 'Smooth camera movement: subject remains stationary, soft lighting.')
+
+    # Add aspect ratio instruction for fallback prompts too
+    if aspect_instruction:
+        prompt = f"{aspect_instruction} {prompt}"
+
     if custom_directive:
         prompt = f"{prompt} {custom_directive}"
+
+    # Always add product preservation rule
+    prompt = f"{prompt} CRITICAL: Product must remain 100% identical."
 
     print(f"   📝 Veo 3.1 prompt: {prompt}")
     return prompt
@@ -1424,7 +1444,7 @@ class handler(BaseHTTPRequestHandler):
                 director_plan = director_analyze_and_plan(image_data, shot_type, speed, duration, custom_directive, 0)
 
                 # Stage 2: Build final prompt (uses Director plan if available)
-                prompt = build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan, 0)
+                prompt = build_motion_prompt(shot_type, speed, duration, custom_directive, director_plan, 0, aspect_ratio)
 
                 # Stage 3: Start generation
                 model_id = 'veo-3.1-generate-001' if quality_mode == 'pro' else 'veo-3.1-fast-generate-001'
@@ -1519,10 +1539,19 @@ class handler(BaseHTTPRequestHandler):
                 if not token:
                     raise ValueError("OAuth2 not available")
 
-                prompt = f"""Professional product video with edit:
-{edit_prompt}
+                # Build aspect-aware edit prompt
+                aspect_instruction = ""
+                if aspect_ratio == '9:16':
+                    aspect_instruction = "Fill entire vertical 9:16 frame. No black bars. No letterboxing."
+                elif aspect_ratio == '1:1':
+                    aspect_instruction = "Fill entire square 1:1 frame. No black bars."
 
-CRITICAL: Product must remain IDENTICAL - no morphing/distortion.
+                prompt = f"""{aspect_instruction} Professional product video with requested edit: {edit_prompt}
+
+CRITICAL RULES:
+1. Product must remain 100% IDENTICAL - absolutely no morphing, no distortion, no changes to product appearance
+2. Only apply the requested edit to the scene/environment
+3. Preserve product shape, color, texture, and all details exactly as in source image
 STYLE: Premium commercial quality."""
 
                 model_id = 'veo-3.1-generate-001' if quality_mode == 'pro' else 'veo-3.1-fast-generate-001'
