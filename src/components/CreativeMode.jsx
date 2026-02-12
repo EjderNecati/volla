@@ -210,9 +210,9 @@ const ToggleSwitch = ({ enabled, onChange, color = 'emerald' }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const compressImageForReels = (base64Image) => {
-    // ULTRA STRICT - 800KB limit to guarantee we fit in Vercel's 4.5MB with room for JSON
-    // Base64 adds ~33% overhead, so 800KB base64 = ~600KB raw
-    const TARGET_SIZE_KB = 800;
+    // SUPER AGGRESSIVE - 400KB limit for 8s/15s videos with longer payloads
+    // This ensures total request stays well under Vercel's 4.5MB limit
+    const TARGET_SIZE_KB = 400;
 
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -223,12 +223,9 @@ const compressImageForReels = (base64Image) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // ALWAYS compress - don't skip even if under target (ensures consistent quality)
-            // Start aggressive, go more aggressive until we fit
+            // Start with smaller dimensions and lower quality for faster fit
             const attempts = [
-                { maxDim: 1024, quality: 0.70 },
-                { maxDim: 800, quality: 0.65 },
-                { maxDim: 800, quality: 0.55 },
+                { maxDim: 800, quality: 0.60 },
                 { maxDim: 640, quality: 0.55 },
                 { maxDim: 640, quality: 0.45 },
                 { maxDim: 512, quality: 0.45 },
@@ -236,6 +233,8 @@ const compressImageForReels = (base64Image) => {
                 { maxDim: 400, quality: 0.35 },
                 { maxDim: 400, quality: 0.25 },
                 { maxDim: 320, quality: 0.25 },
+                { maxDim: 320, quality: 0.20 },
+                { maxDim: 256, quality: 0.20 },
             ];
 
             for (const { maxDim, quality } of attempts) {
