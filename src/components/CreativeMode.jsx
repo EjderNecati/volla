@@ -6,7 +6,7 @@ import {
     Award, Flame, Crown, Snowflake, Heart, PartyPopper, Wand2,
     RefreshCcw, Film
 } from 'lucide-react';
-import { generateCreativeImage } from '../utils/aiHelpers';
+import { generateCreativeImage, compressImage } from '../utils/aiHelpers';
 import { createProject, saveProject } from '../utils/projectManager';
 import { addToLibrary } from '../utils/libraryManager';
 import { useTranslation } from '../i18n';
@@ -574,12 +574,12 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                 template: reelsTemplate
             });
 
-            // Frontend compression to fit Vercel limit - same approach as Motion
-            console.log('📦 Compressing image...');
+            // Use EXACT same compression as Motion (1500KB, 0.8 quality)
+            console.log('📦 Using Motion compression (1500KB, 0.8)...');
             setReelsProgress(5);
-            const compressedImage = await compressImageForReels(sourceImage);
+            const compressedImage = await compressImage(sourceImage, 1500, 0.8);
             const imageKB = Math.round(compressedImage.length / 1024);
-            console.log(`📦 Compressed image: ${imageKB}KB`);
+            console.log(`📦 Compressed: ${imageKB}KB`);
             setReelsProgress(10);
 
             // Build request body and log total size
@@ -606,9 +606,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             const totalKB = Math.round(requestBody.length / 1024);
             console.log(`📡 Payload: ${totalKB}KB (img: ${imageKB}KB)`);
 
-            // Safety check - should be well under 500KB now
-            if (totalKB > 500) {
-                console.error(`⚠️ Still too large: ${totalKB}KB`);
+            // Same limit as Motion (4MB safe limit for Vercel)
+            if (totalKB > 4000) {
+                console.error(`⚠️ Too large: ${totalKB}KB`);
                 throw new Error('Görsel çok büyük. Lütfen daha küçük bir görsel kullanın.');
             }
 
