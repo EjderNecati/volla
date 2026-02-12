@@ -128,29 +128,6 @@ const REELS_CAPTION_STYLES = [
     { id: 'aesthetic', label: 'Aesthetic', icon: '🌸', style: 'stylized font, soft colors, trendy' }
 ];
 
-// Voice Options for Avatar
-const REELS_VOICES = [
-    { id: 'auto', label: 'Auto (Match Avatar)', icon: '🤖' },
-    { id: 'female_young', label: 'Young Female', icon: '👩' },
-    { id: 'female_mature', label: 'Mature Female', icon: '👩‍💼' },
-    { id: 'male_young', label: 'Young Male', icon: '👨' },
-    { id: 'male_mature', label: 'Mature Male', icon: '👨‍💼' },
-    { id: 'energetic', label: 'Energetic', icon: '⚡' },
-    { id: 'calm', label: 'Calm & Soothing', icon: '😌' }
-];
-
-// Language Options
-const REELS_LANGUAGES = [
-    { id: 'en', label: 'English', flag: '🇺🇸' },
-    { id: 'tr', label: 'Türkçe', flag: '🇹🇷' },
-    { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
-    { id: 'fr', label: 'Français', flag: '🇫🇷' },
-    { id: 'es', label: 'Español', flag: '🇪🇸' },
-    { id: 'it', label: 'Italiano', flag: '🇮🇹' },
-    { id: 'pt', label: 'Português', flag: '🇧🇷' },
-    { id: 'nl', label: 'Nederlands', flag: '🇳🇱' }
-];
-
 // Trending Templates (viral formats)
 const REELS_TEMPLATES = [
     { id: 'custom', label: 'Custom', icon: '✏️', description: 'Create your own style' },
@@ -372,12 +349,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
     // Reels v2.0 - Enhanced features
     const [reelsCaptionStyle, setReelsCaptionStyle] = useState('none');
-    const [reelsVoice, setReelsVoice] = useState('auto');
-    const [reelsLanguage, setReelsLanguage] = useState('en');
     const [reelsTemplate, setReelsTemplate] = useState('custom');
-    const [reelsScript, setReelsScript] = useState('');
-    const [reelsScriptEdited, setReelsScriptEdited] = useState(false);
-    const [showScriptPreview, setShowScriptPreview] = useState(false);
 
     // Generation state
     const [isGenerating, setIsGenerating] = useState(false);
@@ -600,8 +572,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
         setError(null);
 
         try {
-            const script = reelsScriptEdited && reelsScript ? reelsScript : '';
-
             console.log('🎬 Generating Reels:', {
                 contentType: reelsContentType,
                 duration: reelsDuration,
@@ -707,14 +677,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             avatarDesc = `${age?.value || 'young person'} ${gender?.id === 'female' ? 'woman' : 'man'} wearing ${style?.value || 'casual clothes'}, ${mood?.value || 'enthusiastic expression'}`;
         }
 
-        // Get language instruction
-        const langInfo = REELS_LANGUAGES.find(l => l.id === reelsLanguage);
-        const langInstruction = reelsLanguage !== 'en' ? ` Speaking in ${langInfo?.label || 'English'}.` : '';
-
-        // Get voice instruction
-        const voiceInfo = REELS_VOICES.find(v => v.id === reelsVoice);
-        const voiceInstruction = reelsVoice !== 'auto' ? ` Voice style: ${voiceInfo?.label || 'natural'}.` : '';
-
         // Get platform-specific style
         const platformStyles = {
             tiktok: 'TikTok viral style, fast-paced, engaging hooks',
@@ -722,11 +684,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
             youtube: 'YouTube Shorts style, informative, clear presentation'
         };
         const platformStyle = platformStyles[reelsPlatform] || platformStyles.tiktok;
-
-        // If user has custom script, use it
-        if (reelsScriptEdited && reelsScript) {
-            return `Vertical 9:16 video. ${platformStyle}. ${hasAvatar ? `A ${avatarDesc} presents the product.${langInstruction}${voiceInstruction}` : 'Product showcase.'} The narrative: "${reelsScript}" Professional lighting. ${reelsDuration} seconds.`;
-        }
 
         // If template has a script, incorporate it
         const template = REELS_TEMPLATES.find(t => t.id === reelsTemplate);
@@ -738,9 +695,9 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
             hands_demo: `Vertical 9:16 video. ${platformStyle}. Elegant hands pick up and examine the product. Hands slowly rotate product, touch the material, show details.${templateScript} ASMR style, deliberate slow movements. Soft natural window lighting. Close-up focus. Satisfying product demonstration. ${reelsDuration} seconds.`,
 
-            avatar_review: `Vertical 9:16 video. ${platformStyle}. A ${avatarDesc} holds the product, looking directly at camera, speaking with genuine enthusiasm.${langInstruction}${voiceInstruction}${templateScript} Shows product features, turns it around to display details. Natural daylight, modern room background. Authentic feel, relatable content. ${reelsDuration} seconds.`,
+            avatar_review: `Vertical 9:16 video. ${platformStyle}. A ${avatarDesc} holds the product, looking directly at camera, presenting with genuine enthusiasm.${templateScript} Shows product features, turns it around to display details. Natural daylight, modern room background. Authentic feel, relatable content. ${reelsDuration} seconds.`,
 
-            lifestyle: `Vertical 9:16 lifestyle video. ${platformStyle}. A ${avatarDesc} naturally using the product in everyday setting.${langInstruction}${templateScript} Candid moment, aesthetic influencer content style. Soft natural lighting, cinematic color grade, warm tones. ${reelsDuration} seconds.`,
+            lifestyle: `Vertical 9:16 lifestyle video. ${platformStyle}. A ${avatarDesc} naturally using the product in everyday setting.${templateScript} Candid moment, aesthetic influencer content style. Soft natural lighting, cinematic color grade, warm tones. ${reelsDuration} seconds.`,
 
             unboxing: `Vertical 9:16 unboxing video. ${platformStyle}. Hands carefully open a package to reveal the product inside.${templateScript} Slow reveal, satisfying movements. ASMR unboxing style. Clean minimal background, soft lighting. Focus on anticipation and reveal moment. ${reelsDuration} seconds.`,
 
@@ -942,7 +899,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                     videoUrls,
                     musicId: 'none',
                     captionStyle: initialResult.caption_style || reelsCaptionStyle,
-                    script: initialResult.script || reelsScript,
                     targetDuration: initialResult.target_duration || reelsDuration,
                     contentType: reelsContentType  // For dynamic transitions
                 })
@@ -1593,13 +1549,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         {REELS_TEMPLATES.map((tmpl) => (
                                             <button
                                                 key={tmpl.id}
-                                                onClick={() => {
-                                                    setReelsTemplate(tmpl.id);
-                                                    if (tmpl.script) {
-                                                        setReelsScript(tmpl.script);
-                                                        setReelsScriptEdited(false);
-                                                    }
-                                                }}
+                                                onClick={() => setReelsTemplate(tmpl.id)}
                                                 className={`px-2 py-2 rounded-lg text-[9px] font-medium transition-all border text-center ${
                                                     reelsTemplate === tmpl.id
                                                         ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-500'
@@ -1639,37 +1589,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                             </button>
                                         ))}
                                     </div>
-                                </div>
-
-                                {/* Script Preview & Edit */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5 text-[#8C8C8C] text-[10px] font-semibold uppercase tracking-wider">
-                                            📝 {t('creative.reels.script') || 'Script / Narrative'}
-                                        </div>
-                                        <button
-                                            onClick={() => setShowScriptPreview(!showScriptPreview)}
-                                            className="text-[9px] text-purple-500 hover:text-purple-700"
-                                        >
-                                            {showScriptPreview ? 'Hide' : 'Edit'}
-                                        </button>
-                                    </div>
-                                    {showScriptPreview && (
-                                        <textarea
-                                            value={reelsScript}
-                                            onChange={(e) => {
-                                                setReelsScript(e.target.value);
-                                                setReelsScriptEdited(true);
-                                            }}
-                                            placeholder="AI will generate a script based on your product, or write your own..."
-                                            className="w-full h-20 p-2 text-[11px] bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        />
-                                    )}
-                                    {!showScriptPreview && reelsScript && (
-                                        <div className="text-[10px] text-[#8C8C8C] bg-[#F5F4F1] p-2 rounded-lg truncate">
-                                            {reelsScript.substring(0, 50)}...
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Avatar Options - Only show if content type requires avatar */}
@@ -1730,33 +1649,6 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                                 >
                                                     {REELS_AVATAR_MOODS.map((m) => (
                                                         <option key={m.id} value={m.id}>{m.label}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        {/* Voice & Language */}
-                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-purple-200">
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">🎤 Voice</span>
-                                                <select
-                                                    value={reelsVoice}
-                                                    onChange={(e) => setReelsVoice(e.target.value)}
-                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
-                                                >
-                                                    {REELS_VOICES.map((v) => (
-                                                        <option key={v.id} value={v.id}>{v.icon} {v.label}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] text-[#8C8C8C]">🌍 Language</span>
-                                                <select
-                                                    value={reelsLanguage}
-                                                    onChange={(e) => setReelsLanguage(e.target.value)}
-                                                    className="w-full px-2 py-1 text-[9px] bg-white border border-[#E8E7E4] rounded"
-                                                >
-                                                    {REELS_LANGUAGES.map((l) => (
-                                                        <option key={l.id} value={l.id}>{l.flag} {l.label}</option>
                                                     ))}
                                                 </select>
                                             </div>
