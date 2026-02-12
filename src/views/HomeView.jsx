@@ -45,6 +45,10 @@ export default function HomeView({
 
     // Handle feature card click - navigate to studio with selected mode
     const handleFeatureClick = (mode) => {
+        // Clear any loaded project when switching modes to prevent auto-redirect
+        if (onLoadProject) {
+            onLoadProject(null);
+        }
         if (onModeChange) {
             onModeChange(mode);
         }
