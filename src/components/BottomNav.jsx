@@ -60,7 +60,7 @@ export default function BottomNav({
                         <button
                             key={id}
                             onClick={() => onTabChange(id)}
-                            className="flex flex-col items-center gap-0.5 min-w-[50px]"
+                            className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[48px] active:scale-95 transition-transform"
                         >
                             <Icon
                                 className="w-5 h-5 transition-colors"
@@ -103,7 +103,7 @@ export default function BottomNav({
                         <button
                             key={id}
                             onClick={() => onTabChange(id)}
-                            className="flex flex-col items-center gap-0.5 min-w-[50px]"
+                            className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[48px] active:scale-95 transition-transform"
                         >
                             <Icon
                                 className="w-5 h-5 transition-colors"

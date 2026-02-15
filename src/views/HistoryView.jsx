@@ -311,19 +311,19 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
 
                 {/* Empty State */}
                 {projects.length === 0 ? (
-                    <div className="bg-white border border-[#E8E7E4] rounded-2xl p-12 text-center">
-                        <div className="w-20 h-20 bg-[#F5F4F1] rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Image className="w-10 h-10 text-[#8C8C8C]" />
+                    <div className="bg-white border border-[#E8E7E4] rounded-2xl p-16 text-center shadow-sm">
+                        <div className="w-24 h-24 bg-gradient-to-br from-[#F5F4F1] to-[#E8E7E4] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                            <Image className="w-12 h-12 text-[#B8B8B8]" strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">
+                        <h3 className="text-xl font-semibold text-[#1A1A1A] mb-3">
                             {t('history.noProjects')}
                         </h3>
-                        <p className="text-[#5C5C5C] text-sm max-w-sm mx-auto mb-6">
+                        <p className="text-[#6B6B6B] text-sm max-w-sm mx-auto mb-8 leading-relaxed">
                             {t('history.startScanning')}
                         </p>
                         <button
                             onClick={() => onNavigate && onNavigate('studio')}
-                            className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl font-medium transition-colors"
+                            className="inline-flex items-center gap-2 px-8 py-4 text-white rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
                             style={{ backgroundColor: color.primary }}
                         >
                             <Sparkles className="w-5 h-5" />
@@ -340,7 +340,7 @@ export default function HistoryView({ onNavigate, onLoadProject, marketplace }) 
                                 <button
                                     key={project.id}
                                     onClick={() => handleResumeProject(project)}
-                                    className="group bg-white border border-[#E8E7E4] rounded-xl overflow-hidden hover:shadow-lg hover:border-[#1A1A1A]/20 transition-all text-left"
+                                    className="group bg-white border border-[#E8E7E4] rounded-xl overflow-hidden hover:shadow-xl hover:border-[#D4D3D0] hover:-translate-y-1 transition-all duration-200 ease-out text-left active:scale-[0.98]"
                                 >
                                     {/* Thumbnail Grid */}
                                     <div className="aspect-square relative overflow-hidden bg-[#F5F4F1]">

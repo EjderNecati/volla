@@ -511,7 +511,7 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                                 value={manualDirective}
                                 onChange={(e) => setManualDirective(e.target.value)}
                                 placeholder={t('handsfree.customDirectivePlaceholder')}
-                                className="w-full px-3 py-2 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1A1A] transition-colors text-sm"
+                                className="w-full px-3 py-2 bg-[#F5F4F1] border border-[#E8E7E4] rounded-lg text-[#1A1A1A] placeholder-[#8C8C8C] focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-sm"
                             />
                         </div>
 

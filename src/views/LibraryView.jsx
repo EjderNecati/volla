@@ -146,17 +146,19 @@ export default function LibraryView({ onNavigate, onSelectAsset, marketplace }) 
     const renderAssetGrid = () => {
         if (assets.length === 0) {
             return (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <FolderOpen className="w-16 h-16 text-[#E8E7E4] mb-4" />
-                    <h3 className="text-lg font-medium text-[#5C5C5C] mb-2">
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-24 h-24 bg-gradient-to-br from-[#F5F4F1] to-[#E8E7E4] rounded-full flex items-center justify-center mb-6 shadow-inner">
+                        <FolderOpen className="w-12 h-12 text-[#B8B8B8]" strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-xl font-semibold text-[#1A1A1A] mb-3">
                         {t('library.empty') || 'Your library is empty'}
                     </h3>
-                    <p className="text-sm text-[#8C8C8C] mb-6 max-w-sm">
+                    <p className="text-sm text-[#6B6B6B] mb-8 max-w-sm leading-relaxed">
                         {t('library.emptyDescription') || 'Upload photos and videos to use them across all modes without re-uploading.'}
                     </p>
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:shadow-md"
+                        className="flex items-center gap-2 px-8 py-4 rounded-xl text-white font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
                         style={{ backgroundColor: color.primary }}
                     >
                         <Upload className="w-5 h-5" />
@@ -172,10 +174,10 @@ export default function LibraryView({ onNavigate, onSelectAsset, marketplace }) 
                     <div
                         key={asset.id}
                         onClick={() => handleSelectAsset(asset)}
-                        className={`relative group aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                        className={`relative group aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] ${
                             selectedAsset?.id === asset.id
-                                ? 'border-[#E06847] ring-2 ring-[#E06847]/30'
-                                : 'border-[#E8E7E4] hover:border-[#1A1A1A]'
+                                ? 'border-[#E06847] ring-2 ring-[#E06847]/30 shadow-md'
+                                : 'border-[#E8E7E4] hover:border-[#D4D3D0]'
                         }`}
                     >
                         {asset.type === 'video' ? (

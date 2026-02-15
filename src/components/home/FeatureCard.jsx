@@ -43,7 +43,7 @@ export default function FeatureCard({ icon: Icon, mode, onClick }) {
     return (
         <button
             onClick={onClick}
-            className="group relative bg-white border border-[#E8E7E4] rounded-2xl overflow-hidden hover:shadow-xl hover:border-transparent transition-all duration-300 text-left w-full flex flex-col"
+            className="group relative bg-white border border-[#E8E7E4] rounded-2xl overflow-hidden hover:shadow-xl hover:border-transparent hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 ease-out text-left w-full flex flex-col"
         >
             {/* Header with gradient strip - always at top */}
             <div className={`h-2 w-full flex-shrink-0 bg-gradient-to-r ${config.gradient}`} />
