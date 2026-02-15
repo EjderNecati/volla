@@ -276,6 +276,7 @@
         "outputCount": "Nombre de Sorties",
         "generate": "Générer",
         "generating": "Génération...",
+        "creatingUltimate": "Création du créatif ULTIMATE...",
         "canvas": {
             "original": "Original",
             "generated": "Généré"
@@ -285,6 +286,16 @@
             "placeholder": "Décrivez les modifications à apporter...",
             "selectFirst": "Sélectionnez une image générée à modifier...",
             "button": "Modifier"
+        },
+        "outputPreview": {
+            "title": "Aperçu de Sortie",
+            "autoDescription": "Vous recevrez des images promotionnelles avec:",
+            "manualDescription": "Créatif personnalisé basé sur votre prompt:",
+            "reelsDescription": "Vous recevrez une vidéo virale avec:",
+            "images": "images",
+            "customPrompt": "Prompt Personnalisé",
+            "vertical": "Vertical",
+            "footer": "💡 Ajustez les paramètres dans le panneau de gauche"
         },
         "errors": {
             "noImage": "Veuillez d'abord télécharger une image",

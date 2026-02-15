@@ -276,6 +276,7 @@
         "outputCount": "出力数",
         "generate": "生成",
         "generating": "生成中...",
+        "creatingUltimate": "ULTIMATEクリエイティブを作成中...",
         "canvas": {
             "original": "オリジナル",
             "generated": "生成済み"
@@ -285,6 +286,16 @@
             "placeholder": "変更内容を説明してください...",
             "selectFirst": "編集する生成画像を選択してください...",
             "button": "編集"
+        },
+        "outputPreview": {
+            "title": "出力プレビュー",
+            "autoDescription": "以下の特徴を持つプロモーション画像を受け取ります：",
+            "manualDescription": "プロンプトに基づくカスタムクリエイティブ：",
+            "reelsDescription": "以下の特徴を持つバイラル動画を受け取ります：",
+            "images": "枚",
+            "customPrompt": "カスタムプロンプト",
+            "vertical": "縦向き",
+            "footer": "💡 左パネルで設定を調整してください"
         },
         "errors": {
             "noImage": "まず画像をアップロードしてください",

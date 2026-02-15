@@ -1669,23 +1669,48 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                     </div>
                                 </div>
 
-                                {/* Quality Mode */}
-                                <div className="flex gap-1.5">
-                                    {REELS_QUALITY_MODES.map((q) => (
+                                {/* Quality Mode - Fast and Pro separated */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1 text-[#8C8C8C] text-[9px] font-semibold uppercase">
+                                        🎬 {t('creative.reels.quality') || 'Model Quality'}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {/* Fast Model */}
                                         <button
-                                            key={q.id}
-                                            onClick={() => setReelsQuality(q.id)}
-                                            className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-medium transition-all border ${
-                                                reelsQuality === q.id
-                                                    ? q.id === 'pro'
-                                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500'
-                                                        : 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                                            onClick={() => setReelsQuality('fast')}
+                                            className={`p-3 rounded-xl text-[10px] font-medium transition-all border text-left ${
+                                                reelsQuality === 'fast'
+                                                    ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-lg'
                                                     : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                             }`}
                                         >
-                                            {q.id === 'pro' ? '💎 Pro' : '⚡ Fast'}
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-base">⚡</span>
+                                                <span className="font-bold">{t('creative.reels.qualities.fast') || 'Fast'}</span>
+                                            </div>
+                                            <p className={`text-[9px] ${reelsQuality === 'fast' ? 'text-white/70' : 'text-[#8C8C8C]'}`}>
+                                                {t('creative.reels.fastDesc') || 'Quick generation, good quality'}
+                                            </p>
                                         </button>
-                                    ))}
+
+                                        {/* Pro Model */}
+                                        <button
+                                            onClick={() => setReelsQuality('pro')}
+                                            className={`p-3 rounded-xl text-[10px] font-medium transition-all border text-left ${
+                                                reelsQuality === 'pro'
+                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500 shadow-lg'
+                                                    : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-base">💎</span>
+                                                <span className="font-bold">{t('creative.reels.qualities.pro') || 'Pro'}</span>
+                                            </div>
+                                            <p className={`text-[9px] ${reelsQuality === 'pro' ? 'text-white/70' : 'text-[#8C8C8C]'}`}>
+                                                {t('creative.reels.proDesc') || 'Higher quality, more details'}
+                                            </p>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Reels Generate Button */}
@@ -1815,7 +1840,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
                                             <Loader2 size={48} className="animate-spin text-pink-400 mb-4" />
                                             <p className="text-white font-medium">{t('creative.generating') || 'Generating...'}</p>
-                                            <p className="text-white/60 text-sm mt-2">Creating ULTIMATE creative...</p>
+                                            <p className="text-white/60 text-sm mt-2">{t('creative.creatingUltimate') || 'Creating ULTIMATE creative...'}</p>
                                         </div>
                                     )}
                                 </>
@@ -1830,6 +1855,111 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                 </div>
                             )}
                         </div>
+
+                        {/* Output Preview Section - Dynamic based on mode */}
+                        {sourceImage && (
+                            <div className="mt-4 p-4 bg-gradient-to-r from-[#F5F4F1] to-[#FAFAF9] rounded-xl border border-[#E8E7E4]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider">
+                                        {t('creative.outputPreview.title') || 'Output Preview'}
+                                    </span>
+                                </div>
+
+                                {mode === 'auto' && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-[#1A1A1A]">
+                                            {t('creative.outputPreview.autoDescription') || 'You will receive promotional images with:'}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="px-2 py-1 bg-[#1A1A1A] text-white text-[10px] rounded-lg font-medium">
+                                                🎨 {t(`creative.autoMode.themes.${selectedTheme}`) || THEMES.find(th => th.id === selectedTheme)?.label}
+                                            </span>
+                                            {selectedDiscount !== 'none' && (
+                                                <span className="px-2 py-1 bg-rose-500 text-white text-[10px] rounded-lg font-medium">
+                                                    💰 {DISCOUNTS.find(d => d.id === selectedDiscount)?.label} {t('creative.autoMode.discount') || 'Off'}
+                                                </span>
+                                            )}
+                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
+                                                📐 {aspectRatio}
+                                            </span>
+                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
+                                                🖼️ {outputCount} {t('creative.outputPreview.images') || 'images'}
+                                            </span>
+                                            {showSocialProof && (
+                                                <span className="px-2 py-1 bg-amber-500 text-white text-[10px] rounded-lg font-medium">
+                                                    {SOCIAL_PROOF_TYPES.find(sp => sp.id === socialProofType)?.icon} {t(`creative.socialProof.types.${socialProofType}`) || SOCIAL_PROOF_TYPES.find(sp => sp.id === socialProofType)?.label}
+                                                </span>
+                                            )}
+                                            {showTrustBadges && (
+                                                <span className="px-2 py-1 bg-emerald-500 text-white text-[10px] rounded-lg font-medium">
+                                                    ✓ {t('creative.trustBadges.title') || 'Trust Badges'}
+                                                </span>
+                                            )}
+                                            {showUrgency && (
+                                                <span className="px-2 py-1 bg-red-500 text-white text-[10px] rounded-lg font-medium">
+                                                    ⏰ {t('creative.urgency.title') || 'Urgency Timer'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {mode === 'manual' && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-[#1A1A1A]">
+                                            {t('creative.outputPreview.manualDescription') || 'Custom creative based on your prompt:'}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
+                                                📐 {aspectRatio}
+                                            </span>
+                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
+                                                🖼️ {outputCount} {t('creative.outputPreview.images') || 'images'}
+                                            </span>
+                                            <span className="px-2 py-1 bg-purple-500 text-white text-[10px] rounded-lg font-medium">
+                                                ✏️ {t('creative.outputPreview.customPrompt') || 'Custom Prompt'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {mode === 'reels' && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-[#1A1A1A]">
+                                            {t('creative.outputPreview.reelsDescription') || 'You will receive a viral video with:'}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-lg font-medium">
+                                                🎬 {t(`creative.reels.contentTypes.${reelsContentType}`) || REELS_CONTENT_TYPES.find(ct => ct.id === reelsContentType)?.label}
+                                            </span>
+                                            <span className="px-2 py-1 bg-[#1A1A1A] text-white text-[10px] rounded-lg font-medium">
+                                                ⏱️ {reelsDuration}s
+                                            </span>
+                                            <span className={`px-2 py-1 text-white text-[10px] rounded-lg font-medium ${
+                                                reelsQuality === 'pro'
+                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                                    : 'bg-[#1A1A1A]'
+                                            }`}>
+                                                {reelsQuality === 'pro' ? '💎' : '⚡'} {t(`creative.reels.qualities.${reelsQuality}`) || reelsQuality.charAt(0).toUpperCase() + reelsQuality.slice(1)}
+                                            </span>
+                                            {reelsTemplate !== 'custom' && (
+                                                <span className="px-2 py-1 bg-orange-500 text-white text-[10px] rounded-lg font-medium">
+                                                    🔥 {REELS_TEMPLATES.find(tmpl => tmpl.id === reelsTemplate)?.label}
+                                                </span>
+                                            )}
+                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
+                                                📱 9:16 {t('creative.outputPreview.vertical') || 'Vertical'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <p className="mt-3 text-[10px] text-[#8C8C8C] italic">
+                                    {t('creative.outputPreview.footer') || '💡 Adjust settings on the left panel to customize your output'}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Film Strip - Generated Images */}
                         {sourceImage && generatedImages.length > 0 && (

@@ -277,6 +277,7 @@
         "outputCount": "Ausgabeanzahl",
         "generate": "Generieren",
         "generating": "Generierung...",
+        "creatingUltimate": "ULTIMATE Kreativ wird erstellt...",
         "canvas": {
             "original": "Original",
             "generated": "Generiert"
@@ -286,6 +287,16 @@
             "placeholder": "Beschreiben Sie die gewünschten Änderungen...",
             "selectFirst": "Wählen Sie ein generiertes Bild zum Bearbeiten...",
             "button": "Bearbeiten"
+        },
+        "outputPreview": {
+            "title": "Ausgabevorschau",
+            "autoDescription": "Sie erhalten Werbebilder mit:",
+            "manualDescription": "Benutzerdefiniertes Kreativ basierend auf Ihrem Prompt:",
+            "reelsDescription": "Sie erhalten ein virales Video mit:",
+            "images": "Bilder",
+            "customPrompt": "Benutzerdefinierter Prompt",
+            "vertical": "Vertikal",
+            "footer": "💡 Passen Sie die Einstellungen im linken Panel an"
         },
         "errors": {
             "noImage": "Bitte laden Sie zuerst ein Bild hoch",

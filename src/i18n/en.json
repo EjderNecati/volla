@@ -44,6 +44,7 @@
         "export": "Export",
         "import": "Import",
         "optional": "optional",
+        "live": "LIVE",
         "dragOrClick": "Click or drag & drop",
         "tryAgain": "Try Again",
         "select": "Select"
@@ -184,11 +185,13 @@
                 "30s": "30s - Full story",
                 "60s": "60s - Complete video"
             },
-            "quality": "Quality",
+            "quality": "Model Quality",
             "qualities": {
                 "fast": "Fast",
                 "pro": "Pro"
             },
+            "fastDesc": "Quick generation, good quality",
+            "proDesc": "Higher quality, more details",
             "music": "Background Music",
             "musicOptions": {
                 "none": "No Music",
@@ -287,6 +290,7 @@
         "outputCount": "Output Count",
         "generate": "Generate",
         "generating": "Generating...",
+        "creatingUltimate": "Creating ULTIMATE creative...",
         "canvas": {
             "original": "Original",
             "generated": "Generated"
@@ -339,6 +343,16 @@
             "autoDetectDesc": "Auto-detect product category",
             "customCta": "Custom CTA Text",
             "customCtaPlaceholder": "Leave empty for theme default"
+        },
+        "outputPreview": {
+            "title": "Output Preview",
+            "autoDescription": "You will receive promotional images with:",
+            "manualDescription": "Custom creative based on your prompt:",
+            "reelsDescription": "You will receive a viral video with:",
+            "images": "images",
+            "customPrompt": "Custom Prompt",
+            "vertical": "Vertical",
+            "footer": "💡 Adjust settings on the left panel to customize your output"
         },
         "errors": {
             "noImage": "Please upload an image first",
@@ -614,7 +628,29 @@
         "generateSEO": "Generate SEO Content",
         "apiKeyNotice": "Add your Gemini API key in Settings to get started",
         "noHistory": "No analysis history yet",
-        "analysesWillAppear": "Your analyses will appear here"
+        "analysesWillAppear": "Your analyses will appear here",
+        "competitorHint": "Add a competitor listing to compare prices, ratings, and tags"
+    },
+    "marketInsights": {
+        "title": "Market Insights",
+        "realMarketData": "REAL MARKET DATA",
+        "fetchingData": "Fetching real market data...",
+        "noData": "Add a competitor URL to see market insights",
+        "someDataUnavailable": "Some data unavailable",
+        "competitorAnalysis": "Competitor Analysis",
+        "marketPrices": "Market Prices",
+        "popularTags": "Popular Tags",
+        "searchTrends": "Search Trends",
+        "risingKeywords": "Rising Keywords",
+        "price": "Price",
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "sales": "Sales",
+        "favorites": "Favorites",
+        "competitorTags": "Competitor Tags",
+        "listings": "listings",
+        "average": "Average",
+        "etsyApiKeyMissing": "Add ETSY_API_KEY to Vercel for market data"
     },
     "studio": {
         "title": "AI Studio",

@@ -327,11 +327,13 @@
                 "30s": "30sn - Tam hikaye",
                 "60s": "60sn - Komple video"
             },
-            "quality": "Kalite",
+            "quality": "Model Kalitesi",
             "qualities": {
                 "fast": "Hızlı",
                 "pro": "Pro"
             },
+            "fastDesc": "Hızlı üretim, iyi kalite",
+            "proDesc": "Daha yüksek kalite, daha fazla detay",
             "music": "Arka Plan Müziği",
             "musicOptions": {
                 "none": "Müzik Yok",
@@ -430,6 +432,7 @@
         "outputCount": "Çıktı Sayısı",
         "generate": "Oluştur",
         "generating": "Oluşturuluyor...",
+        "creatingUltimate": "ULTIMATE kreatif oluşturuluyor...",
         "canvas": {
             "original": "Orijinal",
             "generated": "Oluşturulan"
@@ -482,6 +485,16 @@
             "autoDetectDesc": "Ürün kategorisini otomatik algıla",
             "customCta": "Özel CTA Metni",
             "customCtaPlaceholder": "Tema varsayılanı için boş bırakın"
+        },
+        "outputPreview": {
+            "title": "Çıktı Önizleme",
+            "autoDescription": "Şu özelliklere sahip promosyon görselleri alacaksınız:",
+            "manualDescription": "Prompt'unuza göre özel kreatif:",
+            "reelsDescription": "Şu özelliklere sahip viral video alacaksınız:",
+            "images": "görsel",
+            "customPrompt": "Özel Prompt",
+            "vertical": "Dikey",
+            "footer": "💡 Çıktınızı özelleştirmek için sol panelden ayarları değiştirin"
         },
         "errors": {
             "noImage": "Lütfen önce bir görsel yükleyin",
@@ -593,19 +606,27 @@
     },
     "analysis": {
         "title": "Ürün Analizi",
+        "subtitle": "Ürün bilgilerinden SEO optimize içerik oluşturun",
         "recentAnalyses": "Son Analizler",
         "newAnalysis": "Yeni Analiz",
         "newScan": "Yeni Tarama",
         "marketplace": "Pazar Yeri",
+        "productName": "Ürün Adı",
+        "productDescription": "Ürün Açıklaması",
+        "referenceLink": "Rakip / Referans Linki",
         "inputMode": "Giriş Modu",
         "imageMode": "Görsel",
         "textMode": "Metin",
         "analyzingFor": "{{marketplace}} için AI analiz ediyor...",
+        "analysisCompleteFor": "{{marketplace}} için analiz tamamlandı",
+        "analyzeAnother": "Başka Ürün Analiz Et",
         "preparingImage": "Görsel hazırlanıyor...",
         "processingText": "{{marketplace}} için metin işleniyor...",
         "generateSEO": "SEO İçeriği Oluştur",
+        "apiKeyNotice": "Başlamak için Ayarlar'dan Gemini API anahtarınızı ekleyin",
         "noHistory": "Henüz analiz geçmişi yok",
-        "analysesWillAppear": "Analizleriniz burada görünecek"
+        "analysesWillAppear": "Analizleriniz burada görünecek",
+        "competitorHint": "Fiyat, puan ve etiketleri karşılaştırmak için rakip listesi ekleyin"
     },
     "studio": {
         "title": "AI Stüdyo",

@@ -277,6 +277,7 @@
         "outputCount": "输出数量",
         "generate": "生成",
         "generating": "生成中...",
+        "creatingUltimate": "正在创建ULTIMATE创意...",
         "canvas": {
             "original": "原图",
             "generated": "已生成"
@@ -286,6 +287,16 @@
             "placeholder": "描述要进行的更改...",
             "selectFirst": "选择要编辑的生成图片...",
             "button": "编辑"
+        },
+        "outputPreview": {
+            "title": "输出预览",
+            "autoDescription": "您将收到具有以下特点的促销图片：",
+            "manualDescription": "基于您的提示词的自定义创意：",
+            "reelsDescription": "您将收到具有以下特点的病毒视频：",
+            "images": "张图片",
+            "customPrompt": "自定义提示词",
+            "vertical": "竖版",
+            "footer": "💡 在左侧面板调整设置以自定义输出"
         },
         "errors": {
             "noImage": "请先上传图片",

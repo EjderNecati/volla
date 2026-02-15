@@ -276,6 +276,7 @@
         "outputCount": "Aantal Outputs",
         "generate": "Genereren",
         "generating": "Genereren...",
+        "creatingUltimate": "ULTIMATE creatief wordt gemaakt...",
         "canvas": {
             "original": "Origineel",
             "generated": "Gegenereerd"
@@ -285,6 +286,16 @@
             "placeholder": "Beschrijf de gewenste wijzigingen...",
             "selectFirst": "Selecteer een gegenereerde afbeelding om te bewerken...",
             "button": "Bewerken"
+        },
+        "outputPreview": {
+            "title": "Uitvoervoorbeeld",
+            "autoDescription": "Je ontvangt promotieafbeeldingen met:",
+            "manualDescription": "Aangepast creatief gebaseerd op je prompt:",
+            "reelsDescription": "Je ontvangt een virale video met:",
+            "images": "afbeeldingen",
+            "customPrompt": "Aangepaste Prompt",
+            "vertical": "Verticaal",
+            "footer": "💡 Pas de instellingen aan in het linkerpaneel"
         },
         "errors": {
             "noImage": "Upload eerst een afbeelding",
