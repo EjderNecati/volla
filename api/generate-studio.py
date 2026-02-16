@@ -556,6 +556,91 @@ def generate_with_imagen3_edit(image_data, custom_prompt=None, aspect_ratio='1:1
     return None
 
 
+def generate_with_gemini_3_pro(image_data, custom_prompt=None, aspect_ratio='1:1'):
+    """Generate studio image using Gemini 3 Pro Image via Vertex AI REST API - BEST for product preservation"""
+
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available")
+        return None
+
+    prompt_to_use = custom_prompt or BGSWAP_PROMPT
+
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+
+    # Gemini 3 Pro Image requires global location
+    url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Enhanced prompt for studio shots with product preservation
+    enhanced_prompt = f"""CRITICAL: Place this EXACT product on a clean studio background.
+The product MUST remain 100% IDENTICAL - same colors, textures, materials, shape, and ALL details.
+DO NOT modify, change, or alter the product in ANY way. Only change the BACKGROUND.
+
+{prompt_to_use}
+
+ABSOLUTE RULES FOR STUDIO SHOTS:
+- Product colors MUST be EXACT (same RGB values)
+- Product textures MUST be IDENTICAL
+- Product shape and proportions MUST NOT change
+- Any text/logos/graphics MUST be preserved exactly
+- ONLY the background changes to clean studio setting
+- Product stays PERFECTLY IDENTICAL"""
+
+    # Build generation config with aspect ratio
+    gen_config = {
+        "responseModalities": ["IMAGE", "TEXT"]
+    }
+    if aspect_ratio and aspect_ratio != '1:1':
+        gen_config["aspectRatio"] = aspect_ratio
+
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"text": enhanced_prompt},
+                {"inlineData": {"mimeType": "image/jpeg", "data": base64_clean}}
+            ]
+        }],
+        "generationConfig": gen_config
+    }
+
+    try:
+        print(f"   🎨 Calling Gemini 3 Pro Image API (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            if "candidates" in result:
+                for candidate in result["candidates"]:
+                    if "content" in candidate and "parts" in candidate["content"]:
+                        for part in candidate["content"]["parts"]:
+                            if "inlineData" in part:
+                                img_data = part["inlineData"]["data"]
+                                img_mime = part["inlineData"].get("mimeType", "image/png")
+                                print(f"   ✅ Gemini 3 Pro Image success!")
+                                return f"data:{img_mime};base64,{img_data}"
+
+        print(f"   ⚠️ Gemini 3 Pro Image: {response.status_code} - {response.text[:200]}")
+
+    except Exception as e:
+        print(f"   ❌ Gemini 3 Pro Image error: {e}")
+
+    return None
+
+
 # HANDLER
 class handler(BaseHTTPRequestHandler):
     
@@ -633,21 +718,21 @@ class handler(BaseHTTPRequestHandler):
             error_message = None
 
             if image_data:
-                # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
-                print(f"🎨 Generating {output_count} studio image(s) (Imagen 3 PRIMARY, Gemini fallback)...")
+                # Try Gemini 3 Pro Image FIRST (PRIMARY), then fall back to Gemini 2.0 Flash
+                print(f"🎨 Generating {output_count} studio image(s) (Gemini 3 Pro Image PRIMARY)...")
 
                 for i in range(output_count):
                     try:
                         print(f"   📸 Generating image {i+1}/{output_count}...")
                         img_result = None
 
-                        # PRIMARY: Imagen 3 Edit API (with reference image)
-                        print(f"      🎨 Trying Imagen 3 Edit API (PRIMARY)...")
-                        img_result = generate_with_imagen3_edit(image_data, dynamic_prompt, aspect_ratio)
+                        # PRIMARY: Gemini 3 Pro Image via REST API (best product preservation)
+                        print(f"      🎨 Trying Gemini 3 Pro Image (PRIMARY)...")
+                        img_result = generate_with_gemini_3_pro(image_data, dynamic_prompt, aspect_ratio)
 
-                        # FALLBACK: Gemini if Imagen 3 fails
+                        # FALLBACK: Gemini 2.0 Flash if Gemini 3 Pro fails
                         if not img_result:
-                            print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+                            print(f"      🔄 Gemini 3 Pro failed, falling back to Gemini 2.0 Flash...")
                             img_result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
 
                         if img_result:
@@ -656,13 +741,13 @@ class handler(BaseHTTPRequestHandler):
                                 result = img_result  # First successful result
                             print(f"   ✅ Image {i+1} generated successfully")
                         else:
-                            print(f"   ⚠️ Image {i+1} failed (both Imagen 3 and Gemini)")
+                            print(f"   ⚠️ Image {i+1} failed")
                     except Exception as e:
                         error_message = str(e)
                         print(f"   ⚠️ Image {i+1} error: {str(e)[:50]}")
 
                 if results_array:
-                    method_used = 'Imagen 3' if 'Imagen' in str(results_array[0][:50]) else 'Gemini Studio'
+                    method_used = 'Gemini 3 Pro Image'
                     print(f"✅ Studio Success! Generated {len(results_array)}/{output_count} images")
             else:
                 error_message = "No image provided"
@@ -679,7 +764,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             response = {
-                'success': method_used in ['Gemini Studio', 'Imagen 3'],
+                'success': method_used in ['Gemini 3 Pro Image', 'Gemini Studio'],
                 'generated_image': result,
                 'generated_images': results_array,  # NEW: Array of all generated images
                 'image_url': result,
@@ -709,4 +794,4 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
 
 
-print("✅ AI Studio - Imagen 3 Mode ready")
+print("✅ AI Studio ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")

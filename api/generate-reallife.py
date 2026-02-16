@@ -45,7 +45,7 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-print("✅ Using REST API for all calls (Imagen 3 PRIMARY, Gemini fallback)")
+print("✅ Using Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback")
 
 
 def generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio='1:1'):
@@ -260,6 +260,80 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             # Break inner loop if we didn't get a retry condition
             if not (try_with_aspect and response.status_code != 200):
                 break
+
+    return None
+
+
+def call_gemini_3_pro_image(prompt, image_bytes, aspect_ratio='1:1'):
+    """Call Gemini 3 Pro Image via Vertex AI REST API - BEST for product preservation"""
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available")
+        return None
+
+    # Encode image to base64
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+
+    # Gemini 3 Pro Image requires global location
+    url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Enhanced prompt for product preservation
+    enhanced_prompt = f"""CRITICAL INSTRUCTION: You must preserve the product in this image EXACTLY as it appears.
+The product's colors, textures, text, logos, and all details MUST be IDENTICAL to the original.
+DO NOT change or modify the product in any way.
+
+{prompt}
+
+ABSOLUTE RULES:
+- Product colors MUST be EXACT (same RGB values)
+- Product textures MUST be IDENTICAL (if smooth stay smooth, if textured stay textured)
+- Any text/logos MUST be PIXEL-PERFECT copies
+- Product shape and proportions MUST NOT change
+- Only the BACKGROUND/ENVIRONMENT should change, product stays IDENTICAL"""
+
+    # Build generation config with aspect ratio
+    gen_config = {
+        "responseModalities": ["IMAGE", "TEXT"]
+    }
+    if aspect_ratio and aspect_ratio != '1:1':
+        gen_config["aspectRatio"] = aspect_ratio
+
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"text": enhanced_prompt},
+                {"inlineData": {"mimeType": "image/jpeg", "data": image_b64}}
+            ]
+        }],
+        "generationConfig": gen_config
+    }
+
+    try:
+        print(f"      🎨 Calling Gemini 3 Pro Image API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            if "candidates" in result:
+                for candidate in result["candidates"]:
+                    if "content" in candidate and "parts" in candidate["content"]:
+                        for part in candidate["content"]["parts"]:
+                            if "inlineData" in part:
+                                img_data = part["inlineData"]["data"]
+                                img_mime = part["inlineData"].get("mimeType", "image/png")
+                                print(f"      ✅ Gemini 3 Pro Image success!")
+                                return f"data:{img_mime};base64,{img_data}"
+
+        print(f"      ⚠️ Gemini 3 Pro Image: {response.status_code} - {response.text[:200]}")
+
+    except Exception as e:
+        print(f"      ❌ Gemini 3 Pro Image error: {e}")
 
     return None
 
@@ -647,18 +721,18 @@ class handler(BaseHTTPRequestHandler):
                 if custom_prompt:
                     prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
 
-                # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
+                # Try Gemini 3 Pro Image FIRST (PRIMARY) - best product preservation
                 shot_image = None
 
-                # PRIMARY: Imagen 3 Edit API (with reference image)
-                print(f"      🎨 Trying Imagen 3 Edit API (PRIMARY)...")
-                shot_image = generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio)
+                # PRIMARY: Gemini 3 Pro Image via REST API (better product preservation)
+                print(f"      🎨 Trying Gemini 3 Pro Image (PRIMARY)...")
+                shot_image = call_gemini_3_pro_image(prompt, image_bytes, aspect_ratio)
 
-                # FALLBACK: Gemini if Imagen 3 fails
+                # FALLBACK: Gemini 2.0 Flash if Gemini 3 Pro fails
                 if not shot_image:
-                    print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+                    print(f"      🔄 Gemini 3 Pro failed, falling back to Gemini 2.0 Flash...")
                     for attempt in range(2):
-                        print(f"      🎨 Gemini attempt {attempt+1}/2...")
+                        print(f"      🎨 Gemini 2.0 Flash attempt {attempt+1}/2...")
                         shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
                         if shot_image:
                             break
@@ -700,4 +774,4 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(results).encode())
 
 
-print("✅ Real Life Generator - Product Preservation Mode ready")
+print("✅ Real Life Generator ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")

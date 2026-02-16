@@ -19,7 +19,7 @@ import requests
 from http.server import BaseHTTPRequestHandler
 
 print("=" * 60)
-print("🎬 MULTI-ANGLE GENERATOR - Imagen 3 Mode (REST API)")
+print("🎬 MULTI-ANGLE GENERATOR - Gemini 3 Pro Image Mode")
 print("=" * 60)
 
 # Environment
@@ -195,6 +195,81 @@ def call_gemini_image_generation(prompt, image_bytes, aspect_ratio='1:1'):
             # Break inner loop if we didn't get a retry condition
             if not (try_with_aspect and response.status_code != 200):
                 break
+
+    return None
+
+
+def call_gemini_3_pro_image(prompt, image_bytes, aspect_ratio='1:1'):
+    """Call Gemini 3 Pro Image via Vertex AI REST API - BEST for product preservation"""
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available")
+        return None
+
+    # Encode image to base64
+    image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+
+    # Gemini 3 Pro Image requires global location
+    url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Enhanced prompt for angle shots with product preservation
+    enhanced_prompt = f"""CRITICAL: You are photographing the EXACT SAME product from a different camera angle.
+The product MUST remain 100% IDENTICAL - same colors, textures, materials, shape, and ALL details.
+DO NOT modify, change, or alter the product in ANY way.
+
+{prompt}
+
+ABSOLUTE RULES FOR ANGLE SHOTS:
+- Product colors MUST be EXACT (same RGB values)
+- Product textures MUST be IDENTICAL
+- Product shape and proportions MUST NOT change
+- Any text/logos/graphics MUST be preserved exactly
+- Only the CAMERA POSITION/ANGLE changes
+- Product stays PERFECTLY IDENTICAL"""
+
+    # Build generation config with aspect ratio
+    gen_config = {
+        "responseModalities": ["IMAGE", "TEXT"]
+    }
+    if aspect_ratio and aspect_ratio != '1:1':
+        gen_config["aspectRatio"] = aspect_ratio
+
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"text": enhanced_prompt},
+                {"inlineData": {"mimeType": "image/jpeg", "data": image_b64}}
+            ]
+        }],
+        "generationConfig": gen_config
+    }
+
+    try:
+        print(f"      🎨 Calling Gemini 3 Pro Image API...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            if "candidates" in result:
+                for candidate in result["candidates"]:
+                    if "content" in candidate and "parts" in candidate["content"]:
+                        for part in candidate["content"]["parts"]:
+                            if "inlineData" in part:
+                                img_data = part["inlineData"]["data"]
+                                img_mime = part["inlineData"].get("mimeType", "image/png")
+                                print(f"      ✅ Gemini 3 Pro Image success!")
+                                return f"data:{img_mime};base64,{img_data}"
+
+        print(f"      ⚠️ Gemini 3 Pro Image: {response.status_code} - {response.text[:200]}")
+
+    except Exception as e:
+        print(f"      ❌ Gemini 3 Pro Image error: {e}")
 
     return None
 
@@ -418,31 +493,31 @@ Generate the image now."""
         aspect_desc = aspect_map.get(aspect_ratio, f'{aspect_ratio} aspect ratio')
         prompt += f"\n\nIMAGE FORMAT: Generate this image in {aspect_desc}. The output image dimensions MUST match this aspect ratio."
 
-    # Try Imagen 3 Edit FIRST (PRIMARY), then fall back to Gemini
+    # Try Gemini 3 Pro Image FIRST (PRIMARY) - best for product preservation
     result = None
 
-    # PRIMARY: Imagen 3 Edit API (with reference image)
-    print(f"      🎨 Trying Imagen 3 Edit API (PRIMARY)...")
-    result = generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio)
+    # PRIMARY: Gemini 3 Pro Image via REST API (better product preservation)
+    print(f"      🎨 Trying Gemini 3 Pro Image (PRIMARY)...")
+    result = call_gemini_3_pro_image(prompt, image_bytes, aspect_ratio)
 
     if result:
-        print(f"      ✅ Angle shot success with Imagen 3 Edit!")
+        print(f"      ✅ Angle shot success with Gemini 3 Pro Image!")
         return result
 
-    # FALLBACK: Gemini if Imagen 3 fails
-    print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+    # FALLBACK: Gemini 2.0 Flash if Gemini 3 Pro fails
+    print(f"      🔄 Gemini 3 Pro failed, falling back to Gemini 2.0 Flash...")
     for attempt in range(2):
-        print(f"      🎨 Gemini attempt {attempt+1}/2...")
+        print(f"      🎨 Gemini 2.0 Flash attempt {attempt+1}/2...")
         result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
         if result:
-            print(f"      ✅ Angle shot success with Gemini!")
+            print(f"      ✅ Angle shot success with Gemini 2.0 Flash!")
             return result
 
         if attempt < 1:
             time.sleep(1)
 
-    print(f"      ❌ All attempts failed for angle shot (both Imagen 3 and Gemini)")
+    print(f"      ❌ All attempts failed for angle shot")
     return None
 
 
@@ -700,4 +775,4 @@ def generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio='1:1'):
     return None
 
 
-print("✅ Multi-Angle Generator - REST API Mode ready (Imagen 3 Edit PRIMARY)")
+print("✅ Multi-Angle Generator ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")

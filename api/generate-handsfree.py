@@ -312,22 +312,15 @@ class handler(BaseHTTPRequestHandler):
             result = None
             method_used = 'none'
 
-            # Method 1: Try Imagen 3 Edit FIRST (PRIMARY) - with reference image
-            print("🔄 Trying Imagen 3 Edit API (PRIMARY)...")
-            result = generate_with_imagen3_edit(image_data, custom_prompt, aspect_ratio)
-            if result:
-                method_used = 'Imagen 3 Edit'
+            # Method 1: Try Gemini 3 Pro Image FIRST (PRIMARY) - best for image generation
+            token = get_fresh_token()
+            if token and project_id:
+                print("🔄 Trying Gemini 3 Pro Image via REST API (PRIMARY)...")
+                result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio)
+                if result:
+                    method_used = 'Gemini 3 Pro Image'
 
-            # Method 2: Fallback to Gemini 3 Pro via REST API
-            if not result:
-                token = get_fresh_token()
-                if token and project_id:
-                    print("🔄 Imagen 3 failed, trying Gemini 3 Pro via REST API...")
-                    result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio)
-                    if result:
-                        method_used = 'Gemini 3 Pro (REST API)'
-
-            # Method 3: Fallback to gemini-2.0-flash-exp with API key
+            # Method 2: Fallback to gemini-2.0-flash-exp with API key
             if not result and genai_fallback:
                 print("🔄 Gemini 3 Pro failed, trying Gemini 2.0 Flash Exp fallback...")
                 result = generate_with_fallback(image_data, custom_prompt, aspect_ratio)
@@ -547,4 +540,4 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting.""
     return None
 
 
-print("✅ Handsfree Mode ready (Imagen 3 Edit PRIMARY, Gemini fallback)")
+print("✅ Handsfree Mode ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")
