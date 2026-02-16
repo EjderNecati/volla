@@ -1545,10 +1545,10 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                                         ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-500'
                                                         : 'bg-[#F5F4F1] text-[#1A1A1A] border-[#E8E7E4] hover:bg-[#E8E7E4]'
                                                 }`}
-                                                title={tmpl.description}
+                                                title={t(`creative.reels.templateDescriptions.${tmpl.id}`) || tmpl.description}
                                             >
                                                 <div className="text-sm mb-0.5">{tmpl.icon}</div>
-                                                <div className="truncate">{tmpl.label}</div>
+                                                <div className="truncate">{t(`creative.reels.templates.${tmpl.id}`) || tmpl.label}</div>
                                             </button>
                                         ))}
                                     </div>
@@ -1926,30 +1926,35 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
 
                                 {mode === 'reels' && (
                                     <div className="space-y-2">
-                                        <p className="text-xs text-[#1A1A1A]">
-                                            {t('creative.outputPreview.reelsDescription') || 'You will receive a viral video with:'}
+                                        <p className="text-xs text-[#1A1A1A] leading-relaxed">
+                                            {t('creative.outputPreview.reelsFullDescription', {
+                                                contentType: t(`creative.reels.contentTypes.${reelsContentType}`) || REELS_CONTENT_TYPES.find(ct => ct.id === reelsContentType)?.label,
+                                                duration: reelsDuration,
+                                                quality: reelsQuality === 'pro' ? 'Google Veo 3.1 Pro' : 'Google Veo 3.1 Fast',
+                                                template: reelsTemplate !== 'custom' ? (t(`creative.reels.templates.${reelsTemplate}`) || REELS_TEMPLATES.find(tmpl => tmpl.id === reelsTemplate)?.label) : ''
+                                            }) || `Your product's ${t(`creative.reels.contentTypes.${reelsContentType}`) || REELS_CONTENT_TYPES.find(ct => ct.id === reelsContentType)?.label?.toLowerCase()} video will be generated using ${reelsQuality === 'pro' ? 'Google Veo 3.1 Pro' : 'Google Veo 3.1 Fast'} as a ${reelsDuration}-second vertical (9:16) output${reelsTemplate !== 'custom' ? ` in ${t(`creative.reels.templates.${reelsTemplate}`) || REELS_TEMPLATES.find(tmpl => tmpl.id === reelsTemplate)?.label} style` : ''}.`}
                                         </p>
-                                        <div className="flex flex-wrap gap-2">
-                                            <span className="px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-lg font-medium">
-                                                🎬 {t(`creative.reels.contentTypes.${reelsContentType}`) || REELS_CONTENT_TYPES.find(ct => ct.id === reelsContentType)?.label}
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                            <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] rounded font-medium">
+                                                {t(`creative.reels.contentTypes.${reelsContentType}`) || REELS_CONTENT_TYPES.find(ct => ct.id === reelsContentType)?.label}
                                             </span>
-                                            <span className="px-2 py-1 bg-[#1A1A1A] text-white text-[10px] rounded-lg font-medium">
-                                                ⏱️ {reelsDuration}s
+                                            <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-[9px] rounded font-medium">
+                                                {reelsDuration}s
                                             </span>
-                                            <span className={`px-2 py-1 text-white text-[10px] rounded-lg font-medium ${
+                                            <span className={`px-2 py-0.5 text-white text-[9px] rounded font-medium ${
                                                 reelsQuality === 'pro'
                                                     ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                                                     : 'bg-[#1A1A1A]'
                                             }`}>
-                                                {reelsQuality === 'pro' ? '💎' : '⚡'} {t(`creative.reels.qualities.${reelsQuality}`) || reelsQuality.charAt(0).toUpperCase() + reelsQuality.slice(1)}
+                                                {reelsQuality === 'pro' ? 'Pro' : 'Fast'}
                                             </span>
                                             {reelsTemplate !== 'custom' && (
-                                                <span className="px-2 py-1 bg-orange-500 text-white text-[10px] rounded-lg font-medium">
-                                                    🔥 {REELS_TEMPLATES.find(tmpl => tmpl.id === reelsTemplate)?.label}
+                                                <span className="px-2 py-0.5 bg-orange-500 text-white text-[9px] rounded font-medium">
+                                                    {t(`creative.reels.templates.${reelsTemplate}`) || REELS_TEMPLATES.find(tmpl => tmpl.id === reelsTemplate)?.label}
                                                 </span>
                                             )}
-                                            <span className="px-2 py-1 bg-[#E8E7E4] text-[#1A1A1A] text-[10px] rounded-lg font-medium">
-                                                📱 9:16 {t('creative.outputPreview.vertical') || 'Vertical'}
+                                            <span className="px-2 py-0.5 bg-[#E8E7E4] text-[#1A1A1A] text-[9px] rounded font-medium">
+                                                9:16
                                             </span>
                                         </div>
                                     </div>

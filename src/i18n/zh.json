@@ -181,7 +181,10 @@
         "editing": "编辑中...",
         "generating": "生成中...",
         "promptPlaceholder": "在此粘贴生成的提示词，或编写自己的提示词来生成新图片...",
-        "editPromptPlaceholder": "编辑此图片：例如「移除背景中的汽车」「将灯光改为日落效果」..."
+        "editPromptPlaceholder": "编辑此图片：例如「移除背景中的汽车」「将灯光改为日落效果」...",
+        "outputPreview": {
+            "description": "将使用{{angle}}摄像角度、{{scale}}取景、{{lens}}镜头，以{{aspectRatio}}宽高比生成专业产品图片。"
+        }
     },
     "motion": {
         "title": "动态",
@@ -235,7 +238,11 @@
         "step1": "选择摄像机移动（平移、缩放、轨道等）",
         "step2": "选择速度和时长",
         "step3": "选择质量模式（快速或专业）",
-        "step4": "点击生成视频，等待魔法发生！"
+        "step4": "点击生成视频，等待魔法发生！",
+        "processingTip": "视频生成通常需要1-3分钟",
+        "outputPreview": {
+            "description": "将使用{{movement}}摄像机移动、{{quality}}，以{{aspectRatio}}宽高比生成{{duration}}秒的产品视频。"
+        }
     },
     "creative": {
         "title": "创意工作室",
@@ -247,7 +254,94 @@
         "modeToggle": {
             "title": "模式",
             "auto": "自动",
-            "manual": "手动"
+            "manual": "手动",
+            "reels": "短视频"
+        },
+        "reels": {
+            "contentType": "内容类型",
+            "contentTypes": {
+                "product_showcase": "产品展示",
+                "hands_demo": "手部演示",
+                "avatar_review": "虚拟形象评测",
+                "lifestyle": "生活方式",
+                "unboxing": "开箱",
+                "hook_teaser": "钩子/预告"
+            },
+            "avatarSettings": "虚拟形象设置",
+            "gender": "性别",
+            "genders": {
+                "female": "女性",
+                "male": "男性"
+            },
+            "age": "年龄",
+            "ages": {
+                "young": "年轻（20多岁）",
+                "adult": "成年（30-40多岁）",
+                "mature": "成熟（50岁以上）"
+            },
+            "style": "风格",
+            "styles": {
+                "casual": "休闲",
+                "professional": "专业",
+                "trendy": "时尚",
+                "minimal": "简约"
+            },
+            "mood": "情绪",
+            "moods": {
+                "enthusiastic": "热情",
+                "calm": "平静",
+                "friendly": "友好",
+                "professional": "专业"
+            },
+            "platform": "平台",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram Reels",
+                "youtube": "YouTube Shorts"
+            },
+            "duration": "时长",
+            "durations": {
+                "4s": "4秒 - 快速钩子",
+                "6s": "6秒 - 短内容",
+                "8s": "8秒 - 标准",
+                "15s": "15秒 - TikTok最佳时长",
+                "30s": "30秒 - 完整故事",
+                "60s": "60秒 - 完整视频"
+            },
+            "quality": "模型质量",
+            "qualities": {
+                "fast": "快速",
+                "pro": "专业"
+            },
+            "fastDesc": "快速生成，质量良好",
+            "proDesc": "更高质量，更多细节",
+            "template": "病毒式模板",
+            "templates": {
+                "custom": "自定义",
+                "product_reveal": "产品揭秘",
+                "pov_customer": "POV: 顾客",
+                "before_after": "前后对比",
+                "honest_review": "真实评测",
+                "asmr_unbox": "ASMR开箱",
+                "day_in_life": "我的一天",
+                "get_ready": "和我一起准备"
+            },
+            "templateDescriptions": {
+                "custom": "创建您独特的风格",
+                "product_reveal": "「等等看...」风格的戏剧性揭秘",
+                "pov_customer": "POV风格的共鸣内容",
+                "before_after": "变身内容",
+                "honest_review": "真实评测风格",
+                "asmr_unbox": "令人满足的开箱内容",
+                "day_in_life": "生活方式融合",
+                "get_ready": "GRWM格式"
+            },
+            "generate": "生成病毒式短视频",
+            "generating": "正在生成短视频",
+            "result": "您的病毒式短视频",
+            "download": "下载短视频",
+            "newReels": "新建短视频",
+            "credits": "积分"
         },
         "autoMode": {
             "theme": "主题",
@@ -293,6 +387,7 @@
             "autoDescription": "您将收到具有以下特点的促销图片：",
             "manualDescription": "基于您的提示词的自定义创意：",
             "reelsDescription": "您将收到具有以下特点的病毒视频：",
+            "reelsFullDescription": "您的产品{{contentType}}视频将使用{{quality}}生成为{{duration}}秒的竖版（9:16）输出{{template}}。",
             "images": "张图片",
             "customPrompt": "自定义提示词",
             "vertical": "竖版",

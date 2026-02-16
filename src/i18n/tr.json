@@ -203,7 +203,10 @@
         "editing": "Düzenleniyor...",
         "generating": "Oluşturuluyor...",
         "promptPlaceholder": "Oluşturulan prompt'unuzu buraya yapıştırın veya yeni bir görsel oluşturmak için kendi prompt'unuzu yazın...",
-        "editPromptPlaceholder": "Bu görseli düzenle: örn. 'arka plandaki arabayı kaldır', 'aydınlatmayı gün batımı yap'..."
+        "editPromptPlaceholder": "Bu görseli düzenle: örn. 'arka plandaki arabayı kaldır', 'aydınlatmayı gün batımı yap'...",
+        "outputPreview": {
+            "description": "{{angle}} kamera açısı, {{scale}} kadrajı, {{lens}} lens ile {{aspectRatio}} en boy oranında profesyonel ürün görseli oluşturulacak."
+        }
     },
     "motion": {
         "title": "Hareket",
@@ -261,7 +264,10 @@
         "step2": "Hız ve süreyi belirleyin",
         "step3": "Kalite modunu seçin (Hızlı veya Pro)",
         "step4": "Video Oluştur'a tıklayın ve sihrin gerçekleşmesini bekleyin!",
-        "processingTip": "Video üretimi genellikle 1-3 dakika sürer"
+        "processingTip": "Video üretimi genellikle 1-3 dakika sürer",
+        "outputPreview": {
+            "description": "{{movement}} kamera hareketi ile {{quality}} kullanılarak {{aspectRatio}} en boy oranında {{duration}} saniyelik ürün videosu oluşturulacak."
+        }
     },
     "creative": {
         "title": "Kreatif Stüdyo",
@@ -389,6 +395,16 @@
                 "day_in_life": "Hayatımdan Bir Gün",
                 "get_ready": "Benimle Hazırlan"
             },
+            "templateDescriptions": {
+                "custom": "Kendi benzersiz tarzınızı oluşturun",
+                "product_reveal": "\"Bekle...\" tarzı dramatik açılış",
+                "pov_customer": "POV tarzı ilişkilendirilebilir içerik",
+                "before_after": "Dönüşüm içeriği",
+                "honest_review": "Otantik inceleme tarzı",
+                "asmr_unbox": "Tatmin edici kutu açma içeriği",
+                "day_in_life": "Yaşam tarzı entegrasyonu",
+                "get_ready": "Benimle hazırlan formatı"
+            },
             "script": "Senaryo / Anlatı",
             "scriptPlaceholder": "AI ürününüze göre senaryo oluşturacak veya kendiniz yazın...",
             "generate": "Viral Reels Oluştur",
@@ -491,6 +507,7 @@
             "autoDescription": "Şu özelliklere sahip promosyon görselleri alacaksınız:",
             "manualDescription": "Prompt'unuza göre özel kreatif:",
             "reelsDescription": "Şu özelliklere sahip viral video alacaksınız:",
+            "reelsFullDescription": "Ürününüzün {{contentType}} videosu {{quality}} kullanılarak {{duration}} saniyelik dikey (9:16) formatta oluşturulacak{{template}}.",
             "images": "görsel",
             "customPrompt": "Özel Prompt",
             "vertical": "Dikey",

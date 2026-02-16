@@ -180,7 +180,10 @@
         "editing": "編集中...",
         "generating": "生成中...",
         "promptPlaceholder": "生成したプロンプトをここに貼り付けるか、新しい画像を生成するために独自のプロンプトを書いてください...",
-        "editPromptPlaceholder": "この画像を編集：例「背景から車を削除」「照明を夕暮れに変更」..."
+        "editPromptPlaceholder": "この画像を編集：例「背景から車を削除」「照明を夕暮れに変更」...",
+        "outputPreview": {
+            "description": "{{angle}}カメラアングル、{{scale}}フレーミング、{{lens}}レンズを使用し、{{aspectRatio}}のアスペクト比でプロフェッショナルな商品画像が生成されます。"
+        }
     },
     "motion": {
         "title": "モーション",
@@ -234,7 +237,11 @@
         "step1": "カメラ移動を選択（パン、ズーム、軌道など）",
         "step2": "速度と長さを選択",
         "step3": "品質モードを選択（高速またはPro）",
-        "step4": "動画を生成をクリックして魔法を待つ！"
+        "step4": "動画を生成をクリックして魔法を待つ！",
+        "processingTip": "動画生成には通常1〜3分かかります",
+        "outputPreview": {
+            "description": "{{movement}}カメラ移動、{{quality}}を使用し、{{aspectRatio}}のアスペクト比で{{duration}}秒の商品動画が生成されます。"
+        }
     },
     "creative": {
         "title": "クリエイティブスタジオ",
@@ -246,7 +253,94 @@
         "modeToggle": {
             "title": "モード",
             "auto": "自動",
-            "manual": "手動"
+            "manual": "手動",
+            "reels": "リール"
+        },
+        "reels": {
+            "contentType": "コンテンツタイプ",
+            "contentTypes": {
+                "product_showcase": "商品ショーケース",
+                "hands_demo": "ハンズデモ",
+                "avatar_review": "アバターレビュー",
+                "lifestyle": "ライフスタイル",
+                "unboxing": "アンボクシング",
+                "hook_teaser": "フック/ティーザー"
+            },
+            "avatarSettings": "アバター設定",
+            "gender": "性別",
+            "genders": {
+                "female": "女性",
+                "male": "男性"
+            },
+            "age": "年齢",
+            "ages": {
+                "young": "若い（20代）",
+                "adult": "大人（30-40代）",
+                "mature": "成熟（50代以上）"
+            },
+            "style": "スタイル",
+            "styles": {
+                "casual": "カジュアル",
+                "professional": "プロフェッショナル",
+                "trendy": "トレンディ",
+                "minimal": "ミニマル"
+            },
+            "mood": "ムード",
+            "moods": {
+                "enthusiastic": "熱狂的",
+                "calm": "落ち着いた",
+                "friendly": "フレンドリー",
+                "professional": "プロフェッショナル"
+            },
+            "platform": "プラットフォーム",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram リール",
+                "youtube": "YouTube ショート"
+            },
+            "duration": "長さ",
+            "durations": {
+                "4s": "4秒 - クイックフック",
+                "6s": "6秒 - 短いコンテンツ",
+                "8s": "8秒 - 標準",
+                "15s": "15秒 - TikTokスイートスポット",
+                "30s": "30秒 - フルストーリー",
+                "60s": "60秒 - 完全な動画"
+            },
+            "quality": "モデル品質",
+            "qualities": {
+                "fast": "高速",
+                "pro": "Pro"
+            },
+            "fastDesc": "高速生成、良い品質",
+            "proDesc": "高品質、より多くの詳細",
+            "template": "バイラルテンプレート",
+            "templates": {
+                "custom": "カスタム",
+                "product_reveal": "商品リビール",
+                "pov_customer": "POV: 顧客",
+                "before_after": "ビフォーアフター",
+                "honest_review": "正直なレビュー",
+                "asmr_unbox": "ASMRアンボクシング",
+                "day_in_life": "私の1日",
+                "get_ready": "一緒に準備しよう"
+            },
+            "templateDescriptions": {
+                "custom": "独自のスタイルを作成",
+                "product_reveal": "「待って...」スタイルのドラマチックな公開",
+                "pov_customer": "POVスタイルの共感できるコンテンツ",
+                "before_after": "変身コンテンツ",
+                "honest_review": "本物のレビュースタイル",
+                "asmr_unbox": "満足感のあるアンボクシングコンテンツ",
+                "day_in_life": "ライフスタイル統合",
+                "get_ready": "GRWMフォーマット"
+            },
+            "generate": "バイラルリールを生成",
+            "generating": "リール生成中",
+            "result": "あなたのバイラルリール",
+            "download": "リールをダウンロード",
+            "newReels": "新しいリール",
+            "credits": "クレジット"
         },
         "autoMode": {
             "theme": "テーマ",
@@ -292,6 +386,7 @@
             "autoDescription": "以下の特徴を持つプロモーション画像を受け取ります：",
             "manualDescription": "プロンプトに基づくカスタムクリエイティブ：",
             "reelsDescription": "以下の特徴を持つバイラル動画を受け取ります：",
+            "reelsFullDescription": "お客様の商品の{{contentType}}動画は、{{quality}}を使用して{{duration}}秒の縦型（9:16）出力{{template}}として生成されます。",
             "images": "枚",
             "customPrompt": "カスタムプロンプト",
             "vertical": "縦向き",

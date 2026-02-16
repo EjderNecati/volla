@@ -180,7 +180,10 @@
         "editing": "Bewerken...",
         "generating": "Genereren...",
         "promptPlaceholder": "Plak hier je gegenereerde prompt of schrijf je eigen prompt om een nieuwe afbeelding te genereren...",
-        "editPromptPlaceholder": "Bewerk deze afbeelding: bijv. 'verwijder de auto uit de achtergrond', 'verander de verlichting naar zonsondergang'..."
+        "editPromptPlaceholder": "Bewerk deze afbeelding: bijv. 'verwijder de auto uit de achtergrond', 'verander de verlichting naar zonsondergang'...",
+        "outputPreview": {
+            "description": "Een professionele productafbeelding wordt gegenereerd met {{angle}} camerahoek, {{scale}} kadrering, met {{lens}} lens in {{aspectRatio}} beeldverhouding."
+        }
     },
     "motion": {
         "title": "Beweging",
@@ -234,7 +237,11 @@
         "step1": "Selecteer camerabeweging (pan, zoom, orbit, etc.)",
         "step2": "Kies snelheid en duur",
         "step3": "Selecteer kwaliteitsmodus (Snel of Pro)",
-        "step4": "Klik op Video Genereren en wacht op de magie!"
+        "step4": "Klik op Video Genereren en wacht op de magie!",
+        "processingTip": "Video genereren duurt meestal 1-3 minuten",
+        "outputPreview": {
+            "description": "Een {{duration}}-seconden productvideo wordt gegenereerd met {{movement}} camerabeweging met {{quality}} in {{aspectRatio}} beeldverhouding."
+        }
     },
     "creative": {
         "title": "Creatieve Studio",
@@ -246,7 +253,94 @@
         "modeToggle": {
             "title": "Modus",
             "auto": "Auto",
-            "manual": "Handmatig"
+            "manual": "Handmatig",
+            "reels": "Reels"
+        },
+        "reels": {
+            "contentType": "Type inhoud",
+            "contentTypes": {
+                "product_showcase": "Productpresentatie",
+                "hands_demo": "Hands demo",
+                "avatar_review": "Avatar review",
+                "lifestyle": "Lifestyle",
+                "unboxing": "Unboxing",
+                "hook_teaser": "Hook/Teaser"
+            },
+            "avatarSettings": "Avatar instellingen",
+            "gender": "Geslacht",
+            "genders": {
+                "female": "Vrouw",
+                "male": "Man"
+            },
+            "age": "Leeftijd",
+            "ages": {
+                "young": "Jong (20s)",
+                "adult": "Volwassen (30-40s)",
+                "mature": "Rijp (50+)"
+            },
+            "style": "Stijl",
+            "styles": {
+                "casual": "Casual",
+                "professional": "Professioneel",
+                "trendy": "Trendy",
+                "minimal": "Minimaal"
+            },
+            "mood": "Stemming",
+            "moods": {
+                "enthusiastic": "Enthousiast",
+                "calm": "Kalm",
+                "friendly": "Vriendelijk",
+                "professional": "Professioneel"
+            },
+            "platform": "Platform",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram Reels",
+                "youtube": "YouTube Shorts"
+            },
+            "duration": "Duur",
+            "durations": {
+                "4s": "4s - Snelle hook",
+                "6s": "6s - Korte content",
+                "8s": "8s - Standaard",
+                "15s": "15s - TikTok sweet spot",
+                "30s": "30s - Volledig verhaal",
+                "60s": "60s - Complete video"
+            },
+            "quality": "Modelkwaliteit",
+            "qualities": {
+                "fast": "Snel",
+                "pro": "Pro"
+            },
+            "fastDesc": "Snelle generatie, goede kwaliteit",
+            "proDesc": "Hogere kwaliteit, meer details",
+            "template": "Viraal sjabloon",
+            "templates": {
+                "custom": "Aangepast",
+                "product_reveal": "Product onthulling",
+                "pov_customer": "POV: Klant",
+                "before_after": "Voor/Na",
+                "honest_review": "Eerlijke review",
+                "asmr_unbox": "ASMR Unboxing",
+                "day_in_life": "Een dag in mijn leven",
+                "get_ready": "Maak je klaar met mij"
+            },
+            "templateDescriptions": {
+                "custom": "Maak je eigen unieke stijl",
+                "product_reveal": "\"Wacht erop...\" stijl dramatische onthulling",
+                "pov_customer": "POV stijl herkenbare content",
+                "before_after": "Transformatie content",
+                "honest_review": "Authentieke review stijl",
+                "asmr_unbox": "Bevredigende unboxing content",
+                "day_in_life": "Lifestyle integratie",
+                "get_ready": "GRWM formaat"
+            },
+            "generate": "Genereer virale Reels",
+            "generating": "Reels genereren",
+            "result": "Jouw virale Reels",
+            "download": "Download Reels",
+            "newReels": "Nieuwe Reels",
+            "credits": "credits"
         },
         "autoMode": {
             "theme": "Thema",
@@ -292,6 +386,7 @@
             "autoDescription": "Je ontvangt promotieafbeeldingen met:",
             "manualDescription": "Aangepast creatief gebaseerd op je prompt:",
             "reelsDescription": "Je ontvangt een virale video met:",
+            "reelsFullDescription": "De {{contentType}} video van je product wordt gegenereerd met {{quality}} als een verticale (9:16) uitvoer van {{duration}} seconden{{template}}.",
             "images": "afbeeldingen",
             "customPrompt": "Aangepaste Prompt",
             "vertical": "Verticaal",

@@ -1234,6 +1234,44 @@ export default function MotionMode({ marketplace, onNavigate, initialProject }) 
                             columns={3}
                         />
 
+                        {/* Output Preview */}
+                        {sourceImage && (
+                            <div className="p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                                    <span className="text-[10px] font-semibold text-violet-600 uppercase tracking-wider">
+                                        {t('creative.outputPreview.title') || 'Output Preview'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-violet-800 leading-relaxed">
+                                    {t('motion.outputPreview.description', {
+                                        movement: t(`motion.cameraMovements.${cameraMovement}`) || CAMERA_MOVEMENTS.find(m => m.id === cameraMovement)?.label || cameraMovement,
+                                        duration: duration,
+                                        quality: qualityMode === 'pro' ? 'Google Veo 3.1 Pro' : 'Google Veo 3.1 Fast',
+                                        aspectRatio: aspectRatio
+                                    }) || `A ${duration}-second product video will be generated with ${t(`motion.cameraMovements.${cameraMovement}`) || CAMERA_MOVEMENTS.find(m => m.id === cameraMovement)?.label || cameraMovement} camera movement using ${qualityMode === 'pro' ? 'Google Veo 3.1 Pro' : 'Google Veo 3.1 Fast'} in ${aspectRatio} aspect ratio.`}
+                                </p>
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    <span className="px-2 py-0.5 bg-violet-500 text-white text-[9px] rounded font-medium">
+                                        {t(`motion.cameraMovements.${cameraMovement}`) || CAMERA_MOVEMENTS.find(m => m.id === cameraMovement)?.label || cameraMovement}
+                                    </span>
+                                    <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-[9px] rounded font-medium">
+                                        {duration}s
+                                    </span>
+                                    <span className={`px-2 py-0.5 text-white text-[9px] rounded font-medium ${
+                                        qualityMode === 'pro'
+                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                            : 'bg-[#1A1A1A]'
+                                    }`}>
+                                        {qualityMode === 'pro' ? 'Pro' : 'Fast'}
+                                    </span>
+                                    <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-[9px] rounded font-medium">
+                                        {aspectRatio}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Generate Button with Pulse Glow */}
                         <button
                             onClick={handleGenerateVideo}

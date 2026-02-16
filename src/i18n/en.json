@@ -119,7 +119,10 @@
         "step2": "Choose speed and duration",
         "step3": "Pick quality mode (Fast for quick results, Pro for higher quality)",
         "step4": "Click Generate Video and wait for the magic!",
-        "processingTip": "Video generation typically takes 1-3 minutes"
+        "processingTip": "Video generation typically takes 1-3 minutes",
+        "outputPreview": {
+            "description": "A {{duration}}-second product video will be generated with {{movement}} camera movement using {{quality}} in {{aspectRatio}} aspect ratio."
+        }
     },
     "creative": {
         "title": "Creative Studio",
@@ -247,6 +250,16 @@
                 "day_in_life": "Day in My Life",
                 "get_ready": "Get Ready With Me"
             },
+            "templateDescriptions": {
+                "custom": "Create your own unique style",
+                "product_reveal": "\"Wait for it...\" style dramatic reveal",
+                "pov_customer": "POV style relatable content",
+                "before_after": "Transformation content",
+                "honest_review": "Authentic review style",
+                "asmr_unbox": "Satisfying unboxing content",
+                "day_in_life": "Lifestyle integration",
+                "get_ready": "GRWM format"
+            },
             "script": "Script / Narrative",
             "scriptPlaceholder": "AI will generate a script based on your product, or write your own...",
             "generate": "Generate Viral Reels",
@@ -349,6 +362,7 @@
             "autoDescription": "You will receive promotional images with:",
             "manualDescription": "Custom creative based on your prompt:",
             "reelsDescription": "You will receive a viral video with:",
+            "reelsFullDescription": "Your product's {{contentType}} video will be generated using {{quality}} as a {{duration}}-second vertical (9:16) output{{template}}.",
             "images": "images",
             "customPrompt": "Custom Prompt",
             "vertical": "Vertical",
@@ -501,7 +515,10 @@
         "editing": "Editing...",
         "generating": "Generating...",
         "promptPlaceholder": "Paste your generated prompt here or write your own prompt to generate a new image...",
-        "editPromptPlaceholder": "Edit this image: e.g., 'remove the car in the background', 'change the lighting to sunset'..."
+        "editPromptPlaceholder": "Edit this image: e.g., 'remove the car in the background', 'change the lighting to sunset'...",
+        "outputPreview": {
+            "description": "A professional product image will be generated with {{angle}} camera angle, {{scale}} framing, using {{lens}} lens in {{aspectRatio}} aspect ratio."
+        }
     },
     "camera": {
         "title": "Camera Angle",

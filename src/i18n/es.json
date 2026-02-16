@@ -181,7 +181,10 @@
         "editing": "Editando...",
         "generating": "Generando...",
         "promptPlaceholder": "Pega tu prompt generado aquí o escribe tu propio prompt para generar una nueva imagen...",
-        "editPromptPlaceholder": "Editar esta imagen: ej. 'quitar el coche del fondo', 'cambiar la iluminación a atardecer'..."
+        "editPromptPlaceholder": "Editar esta imagen: ej. 'quitar el coche del fondo', 'cambiar la iluminación a atardecer'...",
+        "outputPreview": {
+            "description": "Se generara una imagen de producto profesional con angulo de camara {{angle}}, encuadre {{scale}}, usando lente {{lens}} en relacion de aspecto {{aspectRatio}}."
+        }
     },
     "motion": {
         "title": "Movimiento",
@@ -235,7 +238,11 @@
         "step1": "Selecciona el movimiento de cámara (pan, zoom, órbita, etc.)",
         "step2": "Elige velocidad y duración",
         "step3": "Selecciona el modo de calidad (Rápido o Pro)",
-        "step4": "¡Haz clic en Generar Video y espera la magia!"
+        "step4": "¡Haz clic en Generar Video y espera la magia!",
+        "processingTip": "La generacion de video generalmente toma 1-3 minutos",
+        "outputPreview": {
+            "description": "Se generara un video de producto de {{duration}} segundos con movimiento de camara {{movement}} usando {{quality}} en relacion de aspecto {{aspectRatio}}."
+        }
     },
     "creative": {
         "title": "Estudio Creativo",
@@ -247,7 +254,94 @@
         "modeToggle": {
             "title": "Modo",
             "auto": "Auto",
-            "manual": "Manual"
+            "manual": "Manual",
+            "reels": "Reels"
+        },
+        "reels": {
+            "contentType": "Tipo de contenido",
+            "contentTypes": {
+                "product_showcase": "Presentacion de producto",
+                "hands_demo": "Demo con manos",
+                "avatar_review": "Resena de avatar",
+                "lifestyle": "Estilo de vida",
+                "unboxing": "Unboxing",
+                "hook_teaser": "Gancho/Teaser"
+            },
+            "avatarSettings": "Configuracion de avatar",
+            "gender": "Genero",
+            "genders": {
+                "female": "Femenino",
+                "male": "Masculino"
+            },
+            "age": "Edad",
+            "ages": {
+                "young": "Joven (20s)",
+                "adult": "Adulto (30-40s)",
+                "mature": "Maduro (50+)"
+            },
+            "style": "Estilo",
+            "styles": {
+                "casual": "Casual",
+                "professional": "Profesional",
+                "trendy": "Moderno",
+                "minimal": "Minimalista"
+            },
+            "mood": "Estado de animo",
+            "moods": {
+                "enthusiastic": "Entusiasta",
+                "calm": "Tranquilo",
+                "friendly": "Amigable",
+                "professional": "Profesional"
+            },
+            "platform": "Plataforma",
+            "platforms": {
+                "tiktok": "TikTok",
+                "instagram": "Instagram Reels",
+                "youtube": "YouTube Shorts"
+            },
+            "duration": "Duracion",
+            "durations": {
+                "4s": "4s - Gancho rapido",
+                "6s": "6s - Contenido corto",
+                "8s": "8s - Estandar",
+                "15s": "15s - Punto ideal TikTok",
+                "30s": "30s - Historia completa",
+                "60s": "60s - Video completo"
+            },
+            "quality": "Calidad del modelo",
+            "qualities": {
+                "fast": "Rapido",
+                "pro": "Pro"
+            },
+            "fastDesc": "Generacion rapida, buena calidad",
+            "proDesc": "Mayor calidad, mas detalles",
+            "template": "Plantilla viral",
+            "templates": {
+                "custom": "Personalizado",
+                "product_reveal": "Revelacion de producto",
+                "pov_customer": "POV: Cliente",
+                "before_after": "Antes/Despues",
+                "honest_review": "Resena honesta",
+                "asmr_unbox": "Unboxing ASMR",
+                "day_in_life": "Un dia en mi vida",
+                "get_ready": "Arreglate conmigo"
+            },
+            "templateDescriptions": {
+                "custom": "Crea tu propio estilo unico",
+                "product_reveal": "Revelacion dramatica estilo \"Espera...\"",
+                "pov_customer": "Contenido relatable estilo POV",
+                "before_after": "Contenido de transformacion",
+                "honest_review": "Estilo de resena autentica",
+                "asmr_unbox": "Contenido de unboxing satisfactorio",
+                "day_in_life": "Integracion de estilo de vida",
+                "get_ready": "Formato GRWM"
+            },
+            "generate": "Generar Reels virales",
+            "generating": "Generando Reels",
+            "result": "Tus Reels virales",
+            "download": "Descargar Reels",
+            "newReels": "Nuevos Reels",
+            "credits": "creditos"
         },
         "autoMode": {
             "theme": "Tema",
@@ -293,6 +387,7 @@
             "autoDescription": "Recibirás imágenes promocionales con:",
             "manualDescription": "Creativo personalizado basado en tu prompt:",
             "reelsDescription": "Recibirás un video viral con:",
+            "reelsFullDescription": "El video {{contentType}} de tu producto sera generado usando {{quality}} como salida vertical (9:16) de {{duration}} segundos{{template}}.",
             "images": "imágenes",
             "customPrompt": "Prompt Personalizado",
             "vertical": "Vertical",

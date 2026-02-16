@@ -561,6 +561,37 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                             t={t}
                         />
 
+                        {/* Output Preview */}
+                        {sourceImage && (
+                            <div className="p-4 bg-gradient-to-r from-[#F5F4F1] to-[#FAFAF9] rounded-xl border border-[#E8E7E4]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                                    <span className="text-[10px] font-semibold text-[#8C8C8C] uppercase tracking-wider">
+                                        {t('creative.outputPreview.title') || 'Output Preview'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-[#1A1A1A] leading-relaxed">
+                                    {t('handsfree.outputPreview.description', {
+                                        angle: t(`camera.angles.${cameraAngle}`) || cameraAngle,
+                                        scale: t(`shotScale.scales.${shotScale}`) || shotScale,
+                                        lens: LENS_OPTIONS.find(l => l.id === lens)?.label || lens,
+                                        aspectRatio: aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio
+                                    }) || `A professional product image will be generated with ${t(`camera.angles.${cameraAngle}`) || cameraAngle} camera angle, ${t(`shotScale.scales.${shotScale}`) || shotScale} framing, using ${LENS_OPTIONS.find(l => l.id === lens)?.label || lens} lens in ${aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio} aspect ratio.`}
+                                </p>
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    <span className="px-2 py-0.5 bg-cyan-500 text-white text-[9px] rounded font-medium">
+                                        {t(`camera.angles.${cameraAngle}`) || cameraAngle}
+                                    </span>
+                                    <span className="px-2 py-0.5 bg-[#1A1A1A] text-white text-[9px] rounded font-medium">
+                                        {t(`shotScale.scales.${shotScale}`) || shotScale}
+                                    </span>
+                                    <span className="px-2 py-0.5 bg-[#E8E7E4] text-[#1A1A1A] text-[9px] rounded font-medium">
+                                        {aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Generate Prompt Button */}
                         <button
                             onClick={handleGeneratePrompt}
