@@ -632,28 +632,37 @@ class handler(BaseHTTPRequestHandler):
             error_message = None
 
             if image_data:
-                # ALWAYS use Gemini Studio - it can see the reference image and preserve the product
-                # For multiple outputs, call Gemini multiple times
-                print(f"🎨 Generating {output_count} studio image(s) with Gemini...")
+                # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
+                print(f"🎨 Generating {output_count} studio image(s) (Imagen 3 PRIMARY, Gemini fallback)...")
 
                 for i in range(output_count):
                     try:
                         print(f"   📸 Generating image {i+1}/{output_count}...")
-                        img_result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
+                        img_result = None
+
+                        # PRIMARY: Imagen 3
+                        print(f"      🎨 Trying Imagen 3 (PRIMARY)...")
+                        img_result = generate_with_imagen3(image_data, None, dynamic_prompt, 1, aspect_ratio)
+
+                        # FALLBACK: Gemini if Imagen 3 fails
+                        if not img_result:
+                            print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+                            img_result = generate_studio_with_gemini(image_data, dynamic_prompt, aspect_ratio)
+
                         if img_result:
                             results_array.append(img_result)
                             if not result:
                                 result = img_result  # First successful result
                             print(f"   ✅ Image {i+1} generated successfully")
                         else:
-                            print(f"   ⚠️ Image {i+1} failed")
+                            print(f"   ⚠️ Image {i+1} failed (both Imagen 3 and Gemini)")
                     except Exception as e:
                         error_message = str(e)
                         print(f"   ⚠️ Image {i+1} error: {str(e)[:50]}")
 
                 if results_array:
-                    method_used = 'Gemini Studio'
-                    print(f"✅ Gemini Studio Success! Generated {len(results_array)}/{output_count} images")
+                    method_used = 'Imagen 3' if 'Imagen' in str(results_array[0][:50]) else 'Gemini Studio'
+                    print(f"✅ Studio Success! Generated {len(results_array)}/{output_count} images")
             else:
                 error_message = "No image provided"
 

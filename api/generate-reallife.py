@@ -45,7 +45,55 @@ try:
 except Exception as e:
     print(f"⚠️ OAuth2 setup failed: {e}")
 
-print("✅ Using REST API for all calls (Gemini PRIMARY, Imagen 3 fallback)")
+print("✅ Using REST API for all calls (Imagen 3 PRIMARY, Gemini fallback)")
+
+
+def generate_with_imagen3(image_bytes, prompt, aspect_ratio='1:1'):
+    """Generate image using Imagen 3 via OAuth2 REST API - PRIMARY ENGINE"""
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("   ⚠️ No OAuth2 token or project_id available for Imagen 3")
+        return None
+
+    # Imagen 3 endpoint
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instances": [{
+            "prompt": prompt
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+
+    try:
+        print(f"   🎨 Calling Imagen 3 via REST API (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+
+    except Exception as e:
+        print(f"   ❌ Imagen 3 REST API error: {e}")
+
+    return None
 
 
 def get_fresh_token():
@@ -575,28 +623,34 @@ class handler(BaseHTTPRequestHandler):
                 if custom_prompt:
                     prompt += f"\n\nADDITIONAL INSTRUCTIONS: {custom_prompt}"
 
-                # Use Gemini as PRIMARY - it can SEE the reference image!
-                print(f"      🔍 Using Gemini (can see reference image)...")
+                # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
+                shot_image = None
 
-                for attempt in range(2):
-                    print(f"      🎨 Attempt {attempt+1}/2...")
-                    shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
+                # PRIMARY: Imagen 3
+                print(f"      🎨 Trying Imagen 3 (PRIMARY)...")
+                shot_image = generate_with_imagen3(image_bytes, prompt, aspect_ratio)
 
-                    if shot_image:
-                        results[shot_key] = shot_image
-                        results['shots'].append({
-                            'image': shot_image,
-                            'label': f'Lifestyle {i+1}'
-                        })
-                        generated_count += 1
-                        print(f"   ✅ {shot_key} complete")
-                        break
+                # FALLBACK: Gemini if Imagen 3 fails
+                if not shot_image:
+                    print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+                    for attempt in range(2):
+                        print(f"      🎨 Gemini attempt {attempt+1}/2...")
+                        shot_image = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
+                        if shot_image:
+                            break
+                        if attempt < 1:
+                            time.sleep(1)
 
-                    if attempt < 1:
-                        time.sleep(1)
-
-                if not results.get(shot_key):
-                    print(f"   ⚠️ {shot_key} failed")
+                if shot_image:
+                    results[shot_key] = shot_image
+                    results['shots'].append({
+                        'image': shot_image,
+                        'label': f'Lifestyle {i+1}'
+                    })
+                    generated_count += 1
+                    print(f"   ✅ {shot_key} complete")
+                else:
+                    print(f"   ⚠️ {shot_key} failed (both Imagen 3 and Gemini)")
 
             results['output_count'] = generated_count
 

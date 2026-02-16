@@ -65,6 +65,60 @@ except ImportError as e:
 _last_errors = []
 
 
+def generate_with_imagen3(prompt, aspect_ratio='1:1'):
+    """Generate image using Imagen 3 via OAuth2 REST API - PRIMARY ENGINE"""
+    global _last_errors
+
+    token = get_fresh_token()
+    if not token or not project_id:
+        _last_errors.append("Imagen 3: No OAuth2 token or project_id")
+        print("   ⚠️ No OAuth2 token or project_id available for Imagen 3")
+        return None
+
+    # Imagen 3 endpoint
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instances": [{
+            "prompt": prompt
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio if aspect_ratio != 'original' else '1:1',
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+
+    try:
+        print(f"   🎨 Calling Imagen 3 via REST API (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+
+        error_text = response.text[:200] if response.text else "Unknown error"
+        _last_errors.append(f"Imagen 3: {response.status_code} - {error_text}")
+        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {error_text}")
+
+    except Exception as e:
+        _last_errors.append(f"Imagen 3: {str(e)[:150]}")
+        print(f"   ❌ Imagen 3 REST API error: {e}")
+
+    return None
+
+
 def get_fresh_token():
     """Get a fresh OAuth2 token (tokens expire after 1 hour)"""
     global oauth2_token
@@ -233,18 +287,25 @@ class handler(BaseHTTPRequestHandler):
             
             result = None
             method_used = 'none'
-            
-            # Method 1: Try REST API with gemini-2.0-flash-exp
-            token = get_fresh_token()
-            if token and project_id:
-                print("🔄 Trying Gemini 3 Pro via REST API...")
-                result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio)
-                if result:
-                    method_used = 'Gemini 3 Pro (REST API)'
-            
-            # Method 2: Fallback to gemini-2.0-flash-exp with API key
+
+            # Method 1: Try Imagen 3 FIRST (PRIMARY)
+            print("🔄 Trying Imagen 3 (PRIMARY)...")
+            result = generate_with_imagen3(custom_prompt, aspect_ratio)
+            if result:
+                method_used = 'Imagen 3'
+
+            # Method 2: Fallback to Gemini 3 Pro via REST API
+            if not result:
+                token = get_fresh_token()
+                if token and project_id:
+                    print("🔄 Imagen 3 failed, trying Gemini 3 Pro via REST API...")
+                    result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio)
+                    if result:
+                        method_used = 'Gemini 3 Pro (REST API)'
+
+            # Method 3: Fallback to gemini-2.0-flash-exp with API key
             if not result and genai_fallback:
-                print("🔄 Trying Gemini 2.0 Flash Exp fallback...")
+                print("🔄 Gemini 3 Pro failed, trying Gemini 2.0 Flash Exp fallback...")
                 result = generate_with_fallback(image_data, custom_prompt, aspect_ratio)
                 if result:
                     method_used = 'Gemini 2.0 Flash Exp'
@@ -462,4 +523,4 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting.""
     return None
 
 
-print("✅ Handsfree Mode - Gemini 3 Pro (OAuth2 REST) ready")
+print("✅ Handsfree Mode ready (Imagen 3 PRIMARY, Gemini fallback)")

@@ -418,22 +418,31 @@ Generate the image now."""
         aspect_desc = aspect_map.get(aspect_ratio, f'{aspect_ratio} aspect ratio')
         prompt += f"\n\nIMAGE FORMAT: Generate this image in {aspect_desc}. The output image dimensions MUST match this aspect ratio."
 
-    # Use Gemini REST API for image generation (can see reference image!)
-    print(f"      🔍 Using Gemini REST API (can see reference image)...")
+    # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
+    result = None
 
-    for attempt in range(3):
-        print(f"      🎨 Attempt {attempt+1}/3...")
+    # PRIMARY: Imagen 3
+    print(f"      🎨 Trying Imagen 3 (PRIMARY)...")
+    result = generate_with_imagen3(prompt, aspect_ratio)
+
+    if result:
+        print(f"      ✅ Angle shot success with Imagen 3!")
+        return result
+
+    # FALLBACK: Gemini if Imagen 3 fails
+    print(f"      🔄 Imagen 3 failed, falling back to Gemini...")
+    for attempt in range(2):
+        print(f"      🎨 Gemini attempt {attempt+1}/2...")
         result = call_gemini_image_generation(prompt, image_bytes, aspect_ratio)
 
         if result:
-            print(f"      ✅ Angle shot success!")
+            print(f"      ✅ Angle shot success with Gemini!")
             return result
 
-        # Wait before retry
-        if attempt < 2:
-            time.sleep(2)
+        if attempt < 1:
+            time.sleep(1)
 
-    print(f"      ❌ All attempts failed for angle shot")
+    print(f"      ❌ All attempts failed for angle shot (both Imagen 3 and Gemini)")
     return None
 
 
@@ -620,4 +629,52 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
 
 
-print("✅ Multi-Angle Generator - REST API Mode ready")
+def generate_with_imagen3(prompt, aspect_ratio='1:1'):
+    """Generate image using Imagen 3 via OAuth2 REST API - PRIMARY ENGINE"""
+    token = get_fresh_token()
+    if not token or not project_id:
+        print("      ⚠️ No OAuth2 token or project_id available for Imagen 3")
+        return None
+
+    # Imagen 3 endpoint
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instances": [{
+            "prompt": prompt
+        }],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "allow_adult",
+            "safetyFilterLevel": "block_only_high"
+        }
+    }
+
+    try:
+        print(f"      🎨 Calling Imagen 3 via REST API (ratio={aspect_ratio})...")
+        response = requests.post(url, headers=headers, json=payload, timeout=120)
+
+        if response.status_code == 200:
+            result = response.json()
+            predictions = result.get("predictions", [])
+
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"      ✅ Imagen 3 success!")
+                return f"data:image/png;base64,{img_b64}"
+
+        print(f"      ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+
+    except Exception as e:
+        print(f"      ❌ Imagen 3 REST API error: {e}")
+
+    return None
+
+
+print("✅ Multi-Angle Generator - REST API Mode ready (Imagen 3 PRIMARY)")
