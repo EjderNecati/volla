@@ -48,24 +48,48 @@ except Exception as e:
 print("✅ Using REST API for all calls (Imagen 3 PRIMARY, Gemini fallback)")
 
 
-def generate_with_imagen3(image_bytes, prompt, aspect_ratio='1:1'):
-    """Generate image using Imagen 3 via OAuth2 REST API - PRIMARY ENGINE"""
+def generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio='1:1'):
+    """Generate image using Imagen 3 Edit/Capability API - WITH REFERENCE IMAGE"""
     token = get_fresh_token()
     if not token or not project_id:
         print("   ⚠️ No OAuth2 token or project_id available for Imagen 3")
         return None
 
-    # Imagen 3 endpoint
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    # Imagen 3 CAPABILITY endpoint (supports reference images!)
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
+    # Encode image to base64
+    if isinstance(image_bytes, bytes):
+        image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    else:
+        image_b64 = image_bytes
+
+    # Clean base64
+    if 'base64,' in image_b64:
+        image_b64 = image_b64.split('base64,')[1]
+    image_b64 = image_b64.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+
+    # Build prompt with reference - [1] refers to the product image
+    full_prompt = f"Generate a professional lifestyle photo featuring [1]. {prompt}"
+
     payload = {
         "instances": [{
-            "prompt": prompt
+            "prompt": full_prompt,
+            "referenceImages": [{
+                "referenceType": "REFERENCE_TYPE_SUBJECT",
+                "referenceId": 1,
+                "referenceImage": {
+                    "bytesBase64Encoded": image_b64
+                },
+                "subjectImageConfig": {
+                    "subjectType": "SUBJECT_TYPE_PRODUCT"
+                }
+            }]
         }],
         "parameters": {
             "sampleCount": 1,
@@ -76,7 +100,7 @@ def generate_with_imagen3(image_bytes, prompt, aspect_ratio='1:1'):
     }
 
     try:
-        print(f"   🎨 Calling Imagen 3 via REST API (ratio={aspect_ratio})...")
+        print(f"   🎨 Calling Imagen 3 Edit API (ratio={aspect_ratio})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
 
         if response.status_code == 200:
@@ -85,13 +109,13 @@ def generate_with_imagen3(image_bytes, prompt, aspect_ratio='1:1'):
 
             if predictions and predictions[0].get("bytesBase64Encoded"):
                 img_b64 = predictions[0]["bytesBase64Encoded"]
-                print(f"   ✅ Imagen 3 success!")
+                print(f"   ✅ Imagen 3 Edit success!")
                 return f"data:image/png;base64,{img_b64}"
 
-        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        print(f"   ⚠️ Imagen 3 Edit response: {response.status_code} - {response.text[:300]}")
 
     except Exception as e:
-        print(f"   ❌ Imagen 3 REST API error: {e}")
+        print(f"   ❌ Imagen 3 Edit API error: {e}")
 
     return None
 
@@ -626,9 +650,9 @@ class handler(BaseHTTPRequestHandler):
                 # Try Imagen 3 FIRST (PRIMARY), then fall back to Gemini
                 shot_image = None
 
-                # PRIMARY: Imagen 3
-                print(f"      🎨 Trying Imagen 3 (PRIMARY)...")
-                shot_image = generate_with_imagen3(image_bytes, prompt, aspect_ratio)
+                # PRIMARY: Imagen 3 Edit API (with reference image)
+                print(f"      🎨 Trying Imagen 3 Edit API (PRIMARY)...")
+                shot_image = generate_with_imagen3_edit(image_bytes, prompt, aspect_ratio)
 
                 # FALLBACK: Gemini if Imagen 3 fails
                 if not shot_image:

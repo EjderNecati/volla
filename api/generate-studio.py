@@ -482,8 +482,8 @@ Generate the studio photo now."""
     return None
 
 
-def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output_count=1, aspect_ratio='1:1'):
-    """Generate studio image(s) using Imagen 3 via OAuth2 REST API"""
+def generate_with_imagen3_edit(image_data, custom_prompt=None, aspect_ratio='1:1'):
+    """Generate studio image using Imagen 3 Edit/Capability API - WITH REFERENCE IMAGE"""
 
     token = get_fresh_token()
     if not token or not project_id:
@@ -502,22 +502,33 @@ def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
 
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    # Imagen 3 CAPABILITY endpoint (supports reference images!)
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
-    # Validate output_count (Imagen 3 supports 1-4)
-    sample_count = max(1, min(4, int(output_count)))
+    # Build prompt with reference - [1] refers to the product image
+    full_prompt = f"Generate a professional studio photo of [1] on a clean beige background. {prompt_to_use}"
 
     payload = {
         "instances": [{
-            "prompt": prompt_to_use
+            "prompt": full_prompt,
+            "referenceImages": [{
+                "referenceType": "REFERENCE_TYPE_SUBJECT",
+                "referenceId": 1,
+                "referenceImage": {
+                    "bytesBase64Encoded": base64_clean
+                },
+                "subjectImageConfig": {
+                    "subjectType": "SUBJECT_TYPE_PRODUCT"
+                }
+            }]
         }],
         "parameters": {
-            "sampleCount": sample_count,
+            "sampleCount": 1,
             "aspectRatio": aspect_ratio,
             "personGeneration": "allow_adult",
             "safetyFilterLevel": "block_only_high"
@@ -525,32 +536,22 @@ def generate_with_imagen3(image_data, api_key_unused, custom_prompt=None, output
     }
 
     try:
-        print(f"   🎨 Calling Imagen 3 via REST API (count={sample_count}, ratio={aspect_ratio})...")
+        print(f"   🎨 Calling Imagen 3 Edit API (ratio={aspect_ratio})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
 
         if response.status_code == 200:
             result = response.json()
             predictions = result.get("predictions", [])
 
-            if predictions:
-                # Return array of images
-                images = []
-                for pred in predictions:
-                    if pred.get("bytesBase64Encoded"):
-                        img_b64 = pred["bytesBase64Encoded"]
-                        images.append(f"data:image/png;base64,{img_b64}")
+            if predictions and predictions[0].get("bytesBase64Encoded"):
+                img_b64 = predictions[0]["bytesBase64Encoded"]
+                print(f"   ✅ Imagen 3 Edit success!")
+                return f"data:image/png;base64,{img_b64}"
 
-                if images:
-                    print(f"   ✅ Imagen 3 success! Generated {len(images)} images")
-                    # Return single image for backward compatibility if only 1 requested
-                    if sample_count == 1:
-                        return images[0]
-                    return images
-
-        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {response.text[:200]}")
+        print(f"   ⚠️ Imagen 3 Edit response: {response.status_code} - {response.text[:300]}")
 
     except Exception as e:
-        print(f"   ❌ Imagen 3 REST API error: {e}")
+        print(f"   ❌ Imagen 3 Edit API error: {e}")
 
     return None
 
@@ -640,9 +641,9 @@ class handler(BaseHTTPRequestHandler):
                         print(f"   📸 Generating image {i+1}/{output_count}...")
                         img_result = None
 
-                        # PRIMARY: Imagen 3
-                        print(f"      🎨 Trying Imagen 3 (PRIMARY)...")
-                        img_result = generate_with_imagen3(image_data, None, dynamic_prompt, 1, aspect_ratio)
+                        # PRIMARY: Imagen 3 Edit API (with reference image)
+                        print(f"      🎨 Trying Imagen 3 Edit API (PRIMARY)...")
+                        img_result = generate_with_imagen3_edit(image_data, dynamic_prompt, aspect_ratio)
 
                         # FALLBACK: Gemini if Imagen 3 fails
                         if not img_result:

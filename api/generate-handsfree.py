@@ -65,8 +65,8 @@ except ImportError as e:
 _last_errors = []
 
 
-def generate_with_imagen3(prompt, aspect_ratio='1:1'):
-    """Generate image using Imagen 3 via OAuth2 REST API - PRIMARY ENGINE"""
+def generate_with_imagen3_edit(image_data, prompt, aspect_ratio='1:1'):
+    """Generate image using Imagen 3 Edit/Capability API - WITH REFERENCE IMAGE"""
     global _last_errors
 
     token = get_fresh_token()
@@ -75,17 +75,41 @@ def generate_with_imagen3(prompt, aspect_ratio='1:1'):
         print("   ⚠️ No OAuth2 token or project_id available for Imagen 3")
         return None
 
-    # Imagen 3 endpoint
-    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    # Clean base64
+    if 'base64,' in image_data:
+        base64_clean = image_data.split('base64,')[1]
+    else:
+        base64_clean = image_data
+
+    base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+    missing_padding = len(base64_clean) % 4
+    if missing_padding:
+        base64_clean += '=' * (4 - missing_padding)
+
+    # Imagen 3 CAPABILITY endpoint (supports reference images!)
+    url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/imagen-3.0-capability-001:predict"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
+    # Build prompt with reference - [1] refers to the product image
+    full_prompt = f"Generate a professional photo of [1]. {prompt}"
+
     payload = {
         "instances": [{
-            "prompt": prompt
+            "prompt": full_prompt,
+            "referenceImages": [{
+                "referenceType": "REFERENCE_TYPE_SUBJECT",
+                "referenceId": 1,
+                "referenceImage": {
+                    "bytesBase64Encoded": base64_clean
+                },
+                "subjectImageConfig": {
+                    "subjectType": "SUBJECT_TYPE_PRODUCT"
+                }
+            }]
         }],
         "parameters": {
             "sampleCount": 1,
@@ -96,7 +120,7 @@ def generate_with_imagen3(prompt, aspect_ratio='1:1'):
     }
 
     try:
-        print(f"   🎨 Calling Imagen 3 via REST API (ratio={aspect_ratio})...")
+        print(f"   🎨 Calling Imagen 3 Edit API (ratio={aspect_ratio})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
 
         if response.status_code == 200:
@@ -105,16 +129,16 @@ def generate_with_imagen3(prompt, aspect_ratio='1:1'):
 
             if predictions and predictions[0].get("bytesBase64Encoded"):
                 img_b64 = predictions[0]["bytesBase64Encoded"]
-                print(f"   ✅ Imagen 3 success!")
+                print(f"   ✅ Imagen 3 Edit success!")
                 return f"data:image/png;base64,{img_b64}"
 
-        error_text = response.text[:200] if response.text else "Unknown error"
-        _last_errors.append(f"Imagen 3: {response.status_code} - {error_text}")
-        print(f"   ⚠️ Imagen 3 response: {response.status_code} - {error_text}")
+        error_text = response.text[:300] if response.text else "Unknown error"
+        _last_errors.append(f"Imagen 3 Edit: {response.status_code} - {error_text}")
+        print(f"   ⚠️ Imagen 3 Edit response: {response.status_code} - {error_text}")
 
     except Exception as e:
-        _last_errors.append(f"Imagen 3: {str(e)[:150]}")
-        print(f"   ❌ Imagen 3 REST API error: {e}")
+        _last_errors.append(f"Imagen 3 Edit: {str(e)[:150]}")
+        print(f"   ❌ Imagen 3 Edit API error: {e}")
 
     return None
 
@@ -288,11 +312,11 @@ class handler(BaseHTTPRequestHandler):
             result = None
             method_used = 'none'
 
-            # Method 1: Try Imagen 3 FIRST (PRIMARY)
-            print("🔄 Trying Imagen 3 (PRIMARY)...")
-            result = generate_with_imagen3(custom_prompt, aspect_ratio)
+            # Method 1: Try Imagen 3 Edit FIRST (PRIMARY) - with reference image
+            print("🔄 Trying Imagen 3 Edit API (PRIMARY)...")
+            result = generate_with_imagen3_edit(image_data, custom_prompt, aspect_ratio)
             if result:
-                method_used = 'Imagen 3'
+                method_used = 'Imagen 3 Edit'
 
             # Method 2: Fallback to Gemini 3 Pro via REST API
             if not result:
@@ -523,4 +547,4 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting.""
     return None
 
 
-print("✅ Handsfree Mode ready (Imagen 3 PRIMARY, Gemini fallback)")
+print("✅ Handsfree Mode ready (Imagen 3 Edit PRIMARY, Gemini fallback)")
