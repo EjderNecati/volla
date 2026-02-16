@@ -101,6 +101,11 @@ STEP 2: DETECT TEXT & LOGOS (CRITICAL)
 
 STEP 3: TRANSPARENCY
 - Is the object glass, plastic, or transparent liquid?
+
+STEP 4: PRODUCT ORIENTATION (VERY IMPORTANT)
+- For clothing: Are we seeing the FRONT or BACK of the garment?
+- For items with prints/graphics: Is the design on the visible side or the opposite side?
+- Which side has the main design/print/logo?
 ═══════════════════════════════════════════════════════════════════════════════
 
 Return JSON:
@@ -110,7 +115,9 @@ Return JSON:
     "is_transparent": true/false,
     "has_text": true/false,
     "text_details": "description of text/logo content and location",
-    "staging": "how to stage it (standing, leaning, hanging, flat lay)"
+    "staging": "how to stage it (standing, leaning, hanging, flat lay)",
+    "visible_side": "front/back/side/unknown - which side of the product we are seeing",
+    "design_location": "where is the main design/print (front side, back side, both sides, no print)"
 }"""
 
 
@@ -190,7 +197,9 @@ def analyze_product_for_studio(image_data):
         "is_transparent": False,
         "has_text": False,
         "text_details": "",
-        "staging": "standard"
+        "staging": "standard",
+        "visible_side": "unknown",
+        "design_location": ""
     }
 
 
@@ -200,15 +209,21 @@ def analyze_product_for_studio(image_data):
 
 def get_angle_aware_prompt(camera_angle, product_placement, is_hanging_product, product_type, product_analysis=None):
     """Generate prompt dynamically based on product and angle"""
-    
+
     base_prompt = """Professional e-commerce product photography studio.
 BACKGROUND:
 - Clean, warm beige studio backdrop (#E8DDD0)
 - Completely solid, no patterns or textures
-- Seamless cyclorama style
+- Seamless cyclorama style with visible floor/surface
 LIGHTING:
 - Soft, diffused studio lighting
 - Professional product photography setup
+
+⚠️ CRITICAL PLACEMENT RULE:
+- The product MUST be physically placed ON the floor/surface
+- There MUST be a visible CONTACT POINT between product and surface
+- Product should appear GROUNDED and STABLE, not floating in mid-air
+- Show realistic CONTACT SHADOW where product meets the surface
 """
 
     angle_instructions = {
@@ -267,11 +282,13 @@ PRODUCT STAGING: HANGING/SUSPENDED ITEM
 - Use a jewelry/ornament display stand or decorative hook
 """,
         "ON_SURFACE": """
-PRODUCT STAGING: ON SURFACE
-- Product MUST be placed on a solid surface
-- Clear contact point between product and surface
-- Visible contact shadow where product meets surface
-- Product appears stable and grounded
+PRODUCT STAGING: ON SURFACE (NOT FLOATING!)
+- Product MUST be physically resting ON a solid floor/surface
+- There MUST be a CLEAR, VISIBLE contact point between product bottom and surface
+- Show a realistic CONTACT SHADOW at the base where product touches surface
+- Product should appear STABLE, GROUNDED, and WEIGHTED - not hovering or floating
+- The floor/surface should be visible around and under the product
+- Think: product placed on a studio floor, shot for e-commerce catalog
 """,
         "FLAT_LAY": """
 PRODUCT STAGING: FLAT LAY
@@ -308,11 +325,17 @@ PRODUCT STAGING: WALL MOUNTED
 """
     }
 
-    # Extract text info if available
+    # Extract text info and orientation if available
     text_rules = ""
     text_content = ""
+    orientation_rules = ""
+
     if product_analysis:
         text_content = product_analysis.get('text_details', '')
+        visible_side = product_analysis.get('visible_side', 'unknown')
+        design_location = product_analysis.get('design_location', '')
+
+        # Text preservation rules
         if product_analysis.get('has_text'):
             text_rules = f"""
 ⚠️ TEXT/LOGO PRESERVATION:
@@ -328,10 +351,37 @@ PRODUCT STAGING: WALL MOUNTED
 - Keep surfaces CLEAN and PLAIN
 """
 
+        # Orientation preservation rules (CRITICAL for clothing and printed items)
+        if visible_side and visible_side != 'unknown':
+            orientation_rules = f"""
+🔄 ORIENTATION PRESERVATION (CRITICAL):
+- We are viewing the {visible_side.upper()} of this product
+- The output image MUST show the SAME {visible_side.upper()} view
+- DO NOT rotate or flip the product to show a different side
+- If the design/print is on the {design_location}, keep showing that EXACT side
+- The visible side in the output MUST match the input image orientation
+"""
+            # Special rules for clothing
+            if 'shirt' in product_type.lower() or 'tshirt' in product_type.lower() or 't-shirt' in product_type.lower():
+                if visible_side == 'back':
+                    orientation_rules += """
+👕 CLOTHING BACK VIEW:
+- This is the BACK of the garment - keep showing the BACK
+- If there's a back print/design, it stays on the BACK (visible)
+- DO NOT flip to show the front of the shirt
+"""
+                elif visible_side == 'front':
+                    orientation_rules += """
+👕 CLOTHING FRONT VIEW:
+- This is the FRONT of the garment - keep showing the FRONT
+- Any front design stays on the visible front side
+- DO NOT flip to show the back of the shirt
+"""
+
     angle_inst = angle_instructions.get(camera_angle, angle_instructions["FRONT"])
     placement_inst = placement_instructions.get(product_placement, placement_instructions["ON_SURFACE"])
-    
-    full_prompt = base_prompt + angle_inst + placement_inst + text_rules
+
+    full_prompt = base_prompt + angle_inst + placement_inst + text_rules + orientation_rules
     return full_prompt
 
 
@@ -380,16 +430,29 @@ CRITICAL RULES - YOU MUST FOLLOW:
 2. DO NOT change, modify, or reimagine the product in ANY way
 3. DO NOT add or remove any features, logos, or text from the product
 4. ONLY change the BACKGROUND to a clean, professional studio setting
+5. Keep the SAME orientation - if showing back of product, output shows back
 
 BACKGROUND:
 - Clean, warm beige/cream studio backdrop (#E8DDD0 to #F5F0EB gradient)
-- Seamless cyclorama style (no visible edges or corners)
-- Soft shadows under the product for depth
+- Seamless cyclorama style with VISIBLE FLOOR/SURFACE
+- Soft contact shadows where product meets surface
 
 LIGHTING:
 - Professional soft studio lighting
 - Gentle highlights, no harsh reflections
 - Natural product appearance
+
+⚠️ PLACEMENT (CRITICAL):
+- Product MUST be placed ON a solid surface (not floating!)
+- Show visible CONTACT POINT between product and floor/surface
+- Product should appear GROUNDED and STABLE
+- Include realistic contact shadow at base of product
+
+🔄 ORIENTATION:
+- Maintain the SAME view/angle as input image
+- If input shows BACK of item, output shows BACK
+- If input shows FRONT of item, output shows FRONT
+- DO NOT rotate or flip to show different side
 
 OUTPUT:
 - High quality professional e-commerce product photo
@@ -597,7 +660,20 @@ ABSOLUTE RULES FOR STUDIO SHOTS:
 - Product shape and proportions MUST NOT change
 - Any text/logos/graphics MUST be preserved exactly
 - ONLY the background changes to clean studio setting
-- Product stays PERFECTLY IDENTICAL"""
+- Product stays PERFECTLY IDENTICAL
+
+⚠️ PLACEMENT RULES (CRITICAL - DO NOT IGNORE):
+- The product MUST be physically resting ON a solid surface (floor/table)
+- There MUST be visible CONTACT between product and surface
+- Product should NOT appear floating in mid-air
+- Show a realistic CONTACT SHADOW where product touches the surface
+- The product should look GROUNDED and STABLE
+
+🔄 ORIENTATION RULES:
+- Keep the SAME view/angle of the product as in the input image
+- If we see the BACK of an item, show the BACK in output
+- If we see the FRONT of an item, show the FRONT in output
+- DO NOT rotate or flip the product to show a different side"""
 
     # Build generation config with aspect ratio
     gen_config = {
