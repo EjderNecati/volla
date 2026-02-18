@@ -46,6 +46,18 @@ function AppContent() {
     const [loadedProject, setLoadedProject] = useState(null);
     const [studioMode, setStudioMode] = useState('standard'); // 'standard' | 'handsfree' | 'motion' | 'creative'
 
+    // Handle mode change - clear loaded project when user explicitly switches modes
+    const handleModeChange = (newMode) => {
+        // If user is changing to a different mode than the loaded project's mode, clear the project
+        const loadedProjectMode = loadedProject?.productInfo?.featureType || 'standard';
+        if (loadedProject && newMode !== loadedProjectMode) {
+            console.log('🔄 Mode changed from', loadedProjectMode, 'to', newMode, '- clearing loaded project');
+            setLoadedProject(null);
+            setLoadedAsset(null);
+        }
+        setStudioMode(newMode);
+    };
+
     // URL sync
     useEffect(() => {
         const handlePopstate = () => {
@@ -125,7 +137,7 @@ function AppContent() {
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
                         studioMode={studioMode}
-                        onModeChange={setStudioMode}
+                        onModeChange={handleModeChange}
                     />
                 );
             case 'studio':
@@ -138,7 +150,7 @@ function AppContent() {
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
                         studioMode={studioMode}
-                        onModeChange={setStudioMode}
+                        onModeChange={handleModeChange}
                     />
                 );
             case 'analysis':
@@ -169,7 +181,7 @@ function AppContent() {
                         marketplace={marketplace}
                         onMarketplaceSelect={setMarketplace}
                         studioMode={studioMode}
-                        onModeChange={setStudioMode}
+                        onModeChange={handleModeChange}
                     />
                 );
         }
@@ -181,7 +193,7 @@ function AppContent() {
             onNavigate={handleNavigate}
             marketplace={marketplace}
             studioMode={studioMode}
-            onModeChange={setStudioMode}
+            onModeChange={handleModeChange}
         >
             {renderView()}
         </Layout>

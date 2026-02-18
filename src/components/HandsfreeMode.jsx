@@ -131,12 +131,18 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
     const [showSourceModal, setShowSourceModal] = useState(false);
     const [addedToLibrary, setAddedToLibrary] = useState(false);
 
+    // Project tracking - to keep edits in the same project
+    const [currentProjectId, setCurrentProjectId] = useState(null);
+
     const fileInputRef = useRef(null);
 
     // Load project data when resuming from history
     useEffect(() => {
         if (initialProject && initialProject.productInfo?.featureType === 'handsfree') {
             console.log('⚡ Loading Handsfree project:', initialProject.id);
+
+            // Save project ID for future saves/edits
+            setCurrentProjectId(initialProject.id);
 
             // Load source image
             const sourceImg = initialProject.originalImage ||
@@ -379,25 +385,29 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
 
             if (result.success && imageUrl) {
                 // Add to generated images array
-                setGeneratedImages(prev => [...prev, imageUrl]);
-                setActiveImageIndex(generatedImages.length); // Select the new image
+                const newImages = [...generatedImages, imageUrl];
+                setGeneratedImages(newImages);
+                setActiveImageIndex(newImages.length - 1); // Select the new image
 
-                // Save to history
+                // Save to history (update existing project if resuming, create new if fresh)
                 try {
                     const handsfreeName = manualDirective
                         ? `Handsfree: ${manualDirective.substring(0, 30)}${manualDirective.length > 30 ? '...' : ''}`
                         : `Handsfree: ${shotScale} ${cameraAngle}`;
 
+                    // Build complete assets array with ALL generated images
+                    const allAssets = newImages.map((url, idx) => ({
+                        id: `handsfree_${Date.now()}_${idx}`,
+                        type: 'HANDSFREE',
+                        url: url,
+                        createdAt: Date.now()
+                    }));
+
                     const project = createProject(
                         handsfreeName,
                         marketplace || 'handsfree',
                         sourceImage,
-                        [{
-                            id: `handsfree_${Date.now()}`,
-                            type: 'HANDSFREE',
-                            url: imageUrl,
-                            createdAt: Date.now()
-                        }],
+                        allAssets,
                         null,
                         {
                             featureType: 'handsfree',
@@ -409,6 +419,17 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                             prompt: imagePrompt
                         }
                     );
+
+                    // Use existing project ID if we're resuming from history
+                    if (currentProjectId) {
+                        project.id = currentProjectId;
+                        console.log('⚡ Updating existing project:', currentProjectId);
+                    } else {
+                        // Save new project ID for future edits
+                        setCurrentProjectId(project.id);
+                        console.log('⚡ Created new project:', project.id);
+                    }
+
                     await saveProject(project);
                 } catch (saveErr) {
                     console.warn('Failed to save handsfree to history:', saveErr);
