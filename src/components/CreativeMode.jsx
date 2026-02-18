@@ -2055,7 +2055,7 @@ export default function CreativeMode({ marketplace, onNavigate, initialProject }
                                         className="px-6 py-3 bg-[#F5F4F1] hover:bg-[#E8E7E4] text-[#1A1A1A] rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors"
                                     >
                                         <RefreshCcw size={16} />
-                                        {t('creative.reels.newVideo') || 'New'}
+                                        {t('creative.reels.newReels')}
                                     </button>
                                 </div>
                             </div>
