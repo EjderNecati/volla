@@ -182,7 +182,8 @@
         "promptPlaceholder": "Collez votre prompt généré ici ou écrivez votre propre prompt pour générer une nouvelle image...",
         "editPromptPlaceholder": "Modifier cette image : ex. 'supprimer la voiture en arrière-plan', 'changer l'éclairage en coucher de soleil'...",
         "outputPreview": {
-            "description": "Une image produit professionnelle sera generee avec un angle de camera {{angle}}, un cadrage {{scale}}, en utilisant un objectif {{lens}} au format {{aspectRatio}}."
+            "description": "Une image produit professionnelle sera generee avec un angle de camera {{angle}}, un cadrage {{scale}}, en utilisant un objectif {{lens}} au format {{aspectRatio}}.",
+            "withDirective": "\"{{directive}}\" - Votre directive personnalisee sera appliquee avec un angle de camera {{angle}}, un cadrage {{scale}}, un objectif {{lens}} au format {{aspectRatio}}."
         }
     },
     "motion": {

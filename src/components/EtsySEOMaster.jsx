@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Copy, Sparkles, Check, X, AlertCircle, Plus, TrendingUp, TrendingDown, Minus, Target, Users, BarChart3, Settings, Key, ShoppingBag, Store, ShoppingCart, Image, FileText, Tag, Search, Type, Camera, Clock, Trash2, Download } from 'lucide-react';
+import { Upload, Copy, Sparkles, Check, X, AlertCircle, Plus, TrendingUp, TrendingDown, Minus, Target, Users, BarChart3, Settings, Key, ShoppingBag, Store, ShoppingCart, Image, FileText, Tag, Search, Type, Camera, Clock, Trash2, Download, Loader2 } from 'lucide-react';
 import { analyzeImage, analyzeText, fileToBase64, generateStudioImage, generateProductAngles, generateRealLifePhotos } from '../utils/aiHelpers';
+import { useTranslation } from '../i18n';
+import MarketInsights from './MarketInsights';
 
 const HISTORY_KEY = 'volla_analysis_history';
 const MAX_HISTORY = 20;
@@ -45,6 +47,7 @@ const createOptimizedImage = (file) => {
 };
 
 const EtsySEOMaster = () => {
+    const { t } = useTranslation();
     const [image, setImage] = useState(null);
     const [imageBase64, setImageBase64] = useState(null); // For localStorage persistence
     const [imageFile, setImageFile] = useState(null);
@@ -60,6 +63,10 @@ const EtsySEOMaster = () => {
     const [marketplace, setMarketplace] = useState('etsy');
     const [inputMode, setInputMode] = useState('image');
     const [textInput, setTextInput] = useState('');
+
+    // Real SEO Market Data (Official APIs only - no scraping)
+    const [marketData, setMarketData] = useState(null); // { market, trends, errors }
+    const [marketDataLoading, setMarketDataLoading] = useState(false);
 
     // Studio Mode State
     const [studioModeEnabled, setStudioModeEnabled] = useState(false);
@@ -378,6 +385,15 @@ const EtsySEOMaster = () => {
             const apiResults = await analyzeImage(base64ForApi, marketplace, savedKey);
 
             const processedResults = processResults(apiResults);
+
+            // Use market data from analyze-seo response (no duplicate API call)
+            if (apiResults._marketData || apiResults._trendsData) {
+                setMarketData({
+                    market: apiResults._marketData || null,
+                    trends: apiResults._trendsData || null,
+                    errors: []
+                });
+            }
 
             // Smart AI Studio Mode: Generate context-aware scene
             let studioResult = null;
@@ -1565,7 +1581,7 @@ const EtsySEOMaster = () => {
                             </div>
                         )}
 
-                        {/* COMMON: Market Insights */}
+                        {/* COMMON: Market Insights (AI-generated) */}
                         {results.marketInsights && (
                             <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'amazon' ? 'border-[#FF9900]/30' : results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
                                 <div className="flex items-center gap-2 mb-4">
@@ -1612,6 +1628,37 @@ const EtsySEOMaster = () => {
                                         <p className="text-[#5C5C5C]"><span className="text-purple-400 font-medium">Opportunity:</span> {results.marketInsights.opportunityReason}</p>
                                     )}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* REAL MARKET DATA - Etsy & Shopify only */}
+                        {(results.marketplace === 'etsy' || results.marketplace === 'shopify') && (
+                            <div className={`bg-[#F5F4F1] border-2 rounded-2xl p-5 shadow-xl ${results.marketplace === 'shopify' ? 'border-[#96BF48]/30' : 'border-[#F1641E]/30'}`}>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className={getLuxuryLabelClass(results.marketplace)}>
+                                        {t('marketInsights.realMarketData') || 'REAL MARKET DATA'}
+                                    </span>
+                                    <span className="text-[9px] px-2 py-0.5 bg-blue-500/20 text-blue-500 rounded-full">
+                                        {t('common.live') || 'LIVE'}
+                                    </span>
+                                    {marketDataLoading && (
+                                        <Loader2 size={12} className="animate-spin text-[#8C8C8C] ml-auto" />
+                                    )}
+                                </div>
+
+                                {marketDataLoading ? (
+                                    <div className="text-center py-6 text-[#8C8C8C] text-sm">
+                                        <Loader2 size={24} className="animate-spin mx-auto mb-2" />
+                                        {t('marketInsights.fetchingData') || 'Fetching real market data...'}
+                                    </div>
+                                ) : (
+                                    <MarketInsights
+                                        marketData={marketData?.market}
+                                        trendsData={marketData?.trends}
+                                        marketplace={results.marketplace}
+                                        errors={marketData?.errors || []}
+                                    />
+                                )}
                             </div>
                         )}
 

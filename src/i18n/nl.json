@@ -182,7 +182,8 @@
         "promptPlaceholder": "Plak hier je gegenereerde prompt of schrijf je eigen prompt om een nieuwe afbeelding te genereren...",
         "editPromptPlaceholder": "Bewerk deze afbeelding: bijv. 'verwijder de auto uit de achtergrond', 'verander de verlichting naar zonsondergang'...",
         "outputPreview": {
-            "description": "Een professionele productafbeelding wordt gegenereerd met {{angle}} camerahoek, {{scale}} kadrering, met {{lens}} lens in {{aspectRatio}} beeldverhouding."
+            "description": "Een professionele productafbeelding wordt gegenereerd met {{angle}} camerahoek, {{scale}} kadrering, met {{lens}} lens in {{aspectRatio}} beeldverhouding.",
+            "withDirective": "\"{{directive}}\" - Jouw aangepaste instructie wordt toegepast met {{angle}} camerahoek, {{scale}} kadrering, {{lens}} lens in {{aspectRatio}} beeldverhouding."
         }
     },
     "motion": {

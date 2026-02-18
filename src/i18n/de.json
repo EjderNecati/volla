@@ -183,7 +183,8 @@
         "promptPlaceholder": "Fügen Sie Ihren generierten Prompt hier ein oder schreiben Sie Ihren eigenen Prompt, um ein neues Bild zu generieren...",
         "editPromptPlaceholder": "Dieses Bild bearbeiten: z.B. 'Auto im Hintergrund entfernen', 'Beleuchtung auf Sonnenuntergang ändern'...",
         "outputPreview": {
-            "description": "Ein professionelles Produktbild wird mit {{angle}} Kamerawinkel, {{scale}} Bildausschnitt, unter Verwendung von {{lens}} Objektiv im {{aspectRatio}} Seitenverhältnis generiert."
+            "description": "Ein professionelles Produktbild wird mit {{angle}} Kamerawinkel, {{scale}} Bildausschnitt, unter Verwendung von {{lens}} Objektiv im {{aspectRatio}} Seitenverhältnis generiert.",
+            "withDirective": "\"{{directive}}\" - Ihre benutzerdefinierte Direktive wird mit {{angle}} Kamerawinkel, {{scale}} Bildausschnitt, {{lens}} Objektiv im {{aspectRatio}} Seitenverhältnis angewendet."
         }
     },
     "motion": {

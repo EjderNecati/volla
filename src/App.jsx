@@ -82,9 +82,11 @@ function AppContent() {
         if (project?.marketplace) {
             setMarketplace(project.marketplace);
         }
-        // Set studio mode based on project feature type
-        if (project?.productInfo?.featureType) {
-            setStudioMode(project.productInfo.featureType);
+        // ALWAYS set studio mode based on project feature type (default to 'standard')
+        if (project) {
+            const targetMode = project.productInfo?.featureType || 'standard';
+            console.log('🔄 Loading project, setting mode to:', targetMode);
+            setStudioMode(targetMode);
         }
     };
 

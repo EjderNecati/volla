@@ -517,7 +517,8 @@
         "promptPlaceholder": "Paste your generated prompt here or write your own prompt to generate a new image...",
         "editPromptPlaceholder": "Edit this image: e.g., 'remove the car in the background', 'change the lighting to sunset'...",
         "outputPreview": {
-            "description": "A professional product image will be generated with {{angle}} camera angle, {{scale}} framing, using {{lens}} lens in {{aspectRatio}} aspect ratio."
+            "description": "A professional product image will be generated with {{angle}} camera angle, {{scale}} framing, using {{lens}} lens in {{aspectRatio}} aspect ratio.",
+            "withDirective": "\"{{directive}}\" - Your custom directive will be applied with {{angle}} camera angle, {{scale}} framing, {{lens}} lens in {{aspectRatio}} aspect ratio."
         }
     },
     "camera": {

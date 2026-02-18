@@ -592,14 +592,29 @@ export default function HandsfreeMode({ marketplace, onBack, onNavigate, initial
                                     </span>
                                 </div>
                                 <p className="text-xs text-[#1A1A1A] leading-relaxed">
-                                    {t('handsfree.outputPreview.description', {
-                                        angle: t(`camera.angles.${cameraAngle}`) || cameraAngle,
-                                        scale: t(`shotScale.scales.${shotScale}`) || shotScale,
-                                        lens: LENS_OPTIONS.find(l => l.id === lens)?.label || lens,
-                                        aspectRatio: aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio
-                                    }) || `A professional product image will be generated with ${t(`camera.angles.${cameraAngle}`) || cameraAngle} camera angle, ${t(`shotScale.scales.${shotScale}`) || shotScale} framing, using ${LENS_OPTIONS.find(l => l.id === lens)?.label || lens} lens in ${aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio} aspect ratio.`}
+                                    {manualDirective && manualDirective.trim() ? (
+                                        t('handsfree.outputPreview.withDirective', {
+                                            directive: manualDirective,
+                                            angle: t(`camera.angles.${cameraAngle}`) || cameraAngle,
+                                            scale: t(`shotScale.scales.${shotScale}`) || shotScale,
+                                            lens: LENS_OPTIONS.find(l => l.id === lens)?.label || lens,
+                                            aspectRatio: aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio
+                                        }) || `"${manualDirective}" - A professional product image with ${t(`camera.angles.${cameraAngle}`)} angle, ${t(`shotScale.scales.${shotScale}`)} framing, ${LENS_OPTIONS.find(l => l.id === lens)?.label} lens in ${aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio} aspect ratio.`
+                                    ) : (
+                                        t('handsfree.outputPreview.description', {
+                                            angle: t(`camera.angles.${cameraAngle}`) || cameraAngle,
+                                            scale: t(`shotScale.scales.${shotScale}`) || shotScale,
+                                            lens: LENS_OPTIONS.find(l => l.id === lens)?.label || lens,
+                                            aspectRatio: aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio
+                                        }) || `A professional product image will be generated with ${t(`camera.angles.${cameraAngle}`) || cameraAngle} camera angle, ${t(`shotScale.scales.${shotScale}`) || shotScale} framing, using ${LENS_OPTIONS.find(l => l.id === lens)?.label || lens} lens in ${aspectRatio === 'original' ? t('aspectRatio.ratios.original') : aspectRatio} aspect ratio.`
+                                    )}
                                 </p>
                                 <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {manualDirective && manualDirective.trim() && (
+                                        <span className="px-2 py-0.5 bg-emerald-500 text-white text-[9px] rounded font-medium truncate max-w-[120px]" title={manualDirective}>
+                                            {manualDirective.length > 15 ? manualDirective.substring(0, 15) + '...' : manualDirective}
+                                        </span>
+                                    )}
                                     <span className="px-2 py-0.5 bg-cyan-500 text-white text-[9px] rounded font-medium">
                                         {t(`camera.angles.${cameraAngle}`) || cameraAngle}
                                     </span>

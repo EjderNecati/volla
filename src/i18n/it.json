@@ -182,7 +182,8 @@
         "promptPlaceholder": "Incolla qui il tuo prompt generato o scrivi il tuo prompt per generare una nuova immagine...",
         "editPromptPlaceholder": "Modifica questa immagine: es. 'rimuovi l'auto dallo sfondo', 'cambia l'illuminazione al tramonto'...",
         "outputPreview": {
-            "description": "Verra generata un'immagine prodotto professionale con angolazione {{angle}}, inquadratura {{scale}}, utilizzando obiettivo {{lens}} con proporzioni {{aspectRatio}}."
+            "description": "Verra generata un'immagine prodotto professionale con angolazione {{angle}}, inquadratura {{scale}}, utilizzando obiettivo {{lens}} con proporzioni {{aspectRatio}}.",
+            "withDirective": "\"{{directive}}\" - La tua direttiva personalizzata verra applicata con angolazione {{angle}}, inquadratura {{scale}}, obiettivo {{lens}} con proporzioni {{aspectRatio}}."
         }
     },
     "motion": {

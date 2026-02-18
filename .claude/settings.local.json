@@ -31,7 +31,14 @@
       "WebFetch(domain:www.adcreative.ai)",
       "WebFetch(domain:ai.google.dev)",
       "Bash(zip:*)",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Bash($timestamp = Get-Date -Format \"yyyyMMdd-HHmmss\")",
+      "Bash(Compress-Archive -Path \"c:\\\\Users\\\\tesko\\\\.gemini\\\\antigravity\\\\playground\\\\shadow-granule\\\\*\" -DestinationPath \"C:\\\\Users\\\\tesko\\\\Desktop\\\\volla-backup-before-real-seo-$timestamp.zip\" -Force)",
+      "Bash(Write-Host \"Backup saved to: C:\\\\Users\\\\tesko\\\\Desktop\\\\volla-backup-before-real-seo-$timestamp.zip\")",
+      "Bash(git pull:*)",
+      "WebFetch(domain:developers.googleblog.com)",
+      "WebFetch(domain:www.philschmid.de)",
+      "WebFetch(domain:www.raymondcamden.com)"
     ]
   }
 }

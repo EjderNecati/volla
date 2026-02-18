@@ -183,7 +183,8 @@
         "promptPlaceholder": "Pega tu prompt generado aquí o escribe tu propio prompt para generar una nueva imagen...",
         "editPromptPlaceholder": "Editar esta imagen: ej. 'quitar el coche del fondo', 'cambiar la iluminación a atardecer'...",
         "outputPreview": {
-            "description": "Se generara una imagen de producto profesional con angulo de camara {{angle}}, encuadre {{scale}}, usando lente {{lens}} en relacion de aspecto {{aspectRatio}}."
+            "description": "Se generara una imagen de producto profesional con angulo de camara {{angle}}, encuadre {{scale}}, usando lente {{lens}} en relacion de aspecto {{aspectRatio}}.",
+            "withDirective": "\"{{directive}}\" - Tu directiva personalizada se aplicara con angulo de camara {{angle}}, encuadre {{scale}}, lente {{lens}} en relacion de aspecto {{aspectRatio}}."
         }
     },
     "motion": {

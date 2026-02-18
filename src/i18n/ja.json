@@ -182,7 +182,8 @@
         "promptPlaceholder": "生成したプロンプトをここに貼り付けるか、新しい画像を生成するために独自のプロンプトを書いてください...",
         "editPromptPlaceholder": "この画像を編集：例「背景から車を削除」「照明を夕暮れに変更」...",
         "outputPreview": {
-            "description": "{{angle}}カメラアングル、{{scale}}フレーミング、{{lens}}レンズを使用し、{{aspectRatio}}のアスペクト比でプロフェッショナルな商品画像が生成されます。"
+            "description": "{{angle}}カメラアングル、{{scale}}フレーミング、{{lens}}レンズを使用し、{{aspectRatio}}のアスペクト比でプロフェッショナルな商品画像が生成されます。",
+            "withDirective": "「{{directive}}」- カスタム指示が{{angle}}カメラアングル、{{scale}}フレーミング、{{lens}}レンズ、{{aspectRatio}}アスペクト比で適用されます。"
         }
     },
     "motion": {

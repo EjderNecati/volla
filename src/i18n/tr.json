@@ -205,7 +205,8 @@
         "promptPlaceholder": "Oluşturulan prompt'unuzu buraya yapıştırın veya yeni bir görsel oluşturmak için kendi prompt'unuzu yazın...",
         "editPromptPlaceholder": "Bu görseli düzenle: örn. 'arka plandaki arabayı kaldır', 'aydınlatmayı gün batımı yap'...",
         "outputPreview": {
-            "description": "{{angle}} kamera açısı, {{scale}} kadrajı, {{lens}} lens ile {{aspectRatio}} en boy oranında profesyonel ürün görseli oluşturulacak."
+            "description": "{{angle}} kamera açısı, {{scale}} kadrajı, {{lens}} lens ile {{aspectRatio}} en boy oranında profesyonel ürün görseli oluşturulacak.",
+            "withDirective": "\"{{directive}}\" - Özel direktifiniz {{angle}} kamera açısı, {{scale}} kadrajı, {{lens}} lens ile {{aspectRatio}} en boy oranında uygulanacak."
         }
     },
     "motion": {

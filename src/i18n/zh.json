@@ -183,7 +183,8 @@
         "promptPlaceholder": "在此粘贴生成的提示词，或编写自己的提示词来生成新图片...",
         "editPromptPlaceholder": "编辑此图片：例如「移除背景中的汽车」「将灯光改为日落效果」...",
         "outputPreview": {
-            "description": "将使用{{angle}}摄像角度、{{scale}}取景、{{lens}}镜头，以{{aspectRatio}}宽高比生成专业产品图片。"
+            "description": "将使用{{angle}}摄像角度、{{scale}}取景、{{lens}}镜头，以{{aspectRatio}}宽高比生成专业产品图片。",
+            "withDirective": "「{{directive}}」- 您的自定义指令将以{{angle}}摄像角度、{{scale}}取景、{{lens}}镜头、{{aspectRatio}}宽高比应用。"
         }
     },
     "motion": {

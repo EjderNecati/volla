@@ -1839,3 +1839,106 @@ export const generateCreativeImage = async (imageBase64, creativeOptions) => {
     throw error;
   }
 };
+
+// =====================================================
+// REAL SEO MARKET DATA FUNCTIONS (100% Legal - No Scraping)
+// =====================================================
+
+/**
+ * Search Etsy market for keyword statistics
+ * Requires ETSY_API_KEY environment variable on server
+ * @param {string} keyword - Search keyword
+ * @param {number} limit - Max results (default 25)
+ * @returns {Promise} - Market data (avgPrice, minPrice, maxPrice, topTags)
+ */
+export const searchEtsyMarket = async (keyword, limit = 25) => {
+  try {
+    log('🔍 Searching Etsy market for:', keyword);
+
+    const response = await fetch('/api/etsy-market-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword, limit })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to search Etsy market');
+    }
+
+    log('✅ Etsy market search successful:', data.data);
+    return data;
+  } catch (error) {
+    console.error('❌ Etsy market search failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get Google Trends data for keywords
+ * @param {string[]} keywords - Array of keywords (max 5)
+ * @returns {Promise} - Trends data (trend, risingKeywords)
+ */
+export const getGoogleTrends = async (keywords) => {
+  try {
+    log('📈 Getting Google Trends for:', keywords);
+
+    const response = await fetch('/api/google-trends', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keywords: keywords.slice(0, 5) })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to get Google Trends');
+    }
+
+    log('✅ Google Trends successful:', data.data);
+    return data;
+  } catch (error) {
+    console.error('❌ Google Trends failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch all market data in parallel for a marketplace
+ * Uses only official APIs - no scraping
+ * @param {string} marketplace - 'etsy', 'shopify', or 'amazon'
+ * @param {string} keyword - Product keyword for market search
+ * @returns {Promise} - Combined market data
+ */
+export const fetchMarketData = async (marketplace, keyword) => {
+  const results = {
+    market: null,
+    trends: null,
+    errors: []
+  };
+
+  const promises = [];
+
+  // Market search (Etsy only - requires API key)
+  if (marketplace === 'etsy' && keyword) {
+    promises.push(
+      searchEtsyMarket(keyword)
+        .then(data => { results.market = data.data; })
+        .catch(err => { results.errors.push(`Market: ${err.message}`); })
+    );
+  }
+
+  // Google Trends (if keyword provided)
+  if (keyword) {
+    promises.push(
+      getGoogleTrends([keyword])
+        .then(data => { results.trends = data.data; })
+        .catch(err => { results.errors.push(`Trends: ${err.message}`); })
+    );
+  }
+
+  await Promise.all(promises);
+
+  return results;
+};

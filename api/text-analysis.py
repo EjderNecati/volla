@@ -1,227 +1,219 @@
 """
-Text Analysis API - SEO from Text or Image
-Supports both text-based and image-based product analysis
+PROFESSIONAL Text-Based SEO Analysis API v2.0
+100% Professional Grade - Real Market Intelligence
 """
 from http.server import BaseHTTPRequestHandler
 import json
-import base64
 import os
 import re
+import requests
+import base64
 
-# API Key from Vercel environment
+# API Keys
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
-
-# Initialize Gemini
-genai = None
-try:
-    import google.generativeai as genai_module
-    if GOOGLE_API_KEY:
-        genai_module.configure(api_key=GOOGLE_API_KEY)
-        genai = genai_module
-        print("✅ Gemini configured for Text Analysis")
-    else:
-        print("⚠️ GOOGLE_API_KEY not set")
-except Exception as e:
-    print(f"❌ Gemini init error: {e}")
+ETSY_API_KEY = os.environ.get('ETSY_API_KEY', '')
 
 
-def safe_parse_json(text):
-    """Robust JSON parser with control character handling"""
-    if not text:
-        raise ValueError("Empty response")
-    
-    clean_text = text.strip()
-    if '```json' in clean_text:
-        clean_text = clean_text.split('```json')[1].split('```')[0]
-    elif '```' in clean_text:
-        clean_text = clean_text.split('```')[1].split('```')[0]
-    
-    json_match = re.search(r'\{[\s\S]*\}', clean_text)
+def call_gemini(prompt, image_bytes=None):
+    """Call Gemini 2.0 Flash via REST API"""
+    if not GOOGLE_API_KEY:
+        raise ValueError("GOOGLE_API_KEY not set")
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
+
+    parts = [{"text": prompt}]
+
+    if image_bytes:
+        image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+        parts.append({
+            "inline_data": {"mime_type": "image/jpeg", "data": image_b64}
+        })
+
+    payload = {
+        "contents": [{"parts": parts}],
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096}
+    }
+
+    response = requests.post(url, json=payload, timeout=60)
+    if response.status_code != 200:
+        raise ValueError(f"Gemini error: {response.status_code}")
+
+    data = response.json()
+    return data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+
+
+def extract_keywords_from_text(text_input):
+    """Extract product info and search keywords from text"""
+    prompt = f"""Analyze this product description carefully.
+
+Product description:
+{text_input}
+
+Extract:
+1. Specific product type
+2. Best 3 Etsy search keywords
+3. Key attributes
+
+Return ONLY JSON:
+{{"productType": "specific type", "searchKeywords": ["kw1", "kw2", "kw3"], "attributes": {{"material": "", "style": "", "color": ""}}}}"""
+
+    response = call_gemini(prompt)
+
+    if '```json' in response:
+        response = response.split('```json')[1].split('```')[0]
+    elif '```' in response:
+        response = response.split('```')[1].split('```')[0]
+
+    json_match = re.search(r'\{[\s\S]*\}', response)
     if json_match:
-        clean_text = json_match.group(0)
-    
-    # Remove control characters (except newline, tab) that break JSON parsing
-    import unicodedata
-    clean_text = ''.join(
-        char for char in clean_text 
-        if unicodedata.category(char) != 'Cc' or char in '\n\r\t'
-    )
-    # Also remove any remaining problematic characters
-    clean_text = clean_text.replace('\x00', '').replace('\x1f', '')
-    
-    return json.loads(clean_text)
+        return json.loads(json_match.group(0))
+
+    return {"productType": "handmade item", "searchKeywords": ["handmade", "gift"]}
 
 
-def analyze_text_content(text_input, marketplace):
-    """Analyze text description and generate SEO content"""
-    
-    if not genai:
-        raise ValueError("Gemini API not configured")
-    
-    prompts = {
-        'etsy': f"""You are a Senior Etsy SEO Expert. Analyze this product description and generate optimized listing content.
+def fetch_etsy_market_data_multi(keywords):
+    """Fetch market data for multiple keywords"""
+    if not ETSY_API_KEY:
+        return None
 
-PRODUCT DESCRIPTION:
-{text_input}
+    all_prices = []
+    all_tags = {}
+    all_titles = []
+    total_listings = 0
+    top_performers = []
 
-══════════════════════════════════════════════════════════════════
-GENERATE:
-1. TITLE (max 140 chars): Front-load best keywords
-2. DESCRIPTION (200+ words): Emotional hook + features + CTA
-3. TAGS: Exactly 13 long-tail keywords (2-4 words each)
-4. PRICE: Estimated price based on product type
-══════════════════════════════════════════════════════════════════
+    for keyword in keywords[:3]:
+        try:
+            url = "https://openapi.etsy.com/v3/application/listings/active"
+            headers = {'x-api-key': ETSY_API_KEY}
+            params = {'keywords': keyword, 'limit': 100, 'sort_on': 'score'}
 
-Return ONLY valid JSON:
-{{
-  "title": "SEO-optimized Etsy title under 140 chars",
-  "description": "Full 200+ word description with emotional hook, features, benefits, CTA",
-  "tags": ["keyword 1", "keyword 2", "keyword 3", "keyword 4", "keyword 5", "keyword 6", "keyword 7", "keyword 8", "keyword 9", "keyword 10", "keyword 11", "keyword 12", "keyword 13"],
-  "suggestedPrice": "$XX.XX",
-  "productType": "Product type",
-  "category": "Etsy category"
-}}""",
+            response = requests.get(url, headers=headers, params=params, timeout=15)
+            if response.status_code != 200:
+                continue
 
-        'amazon': f"""You are an Amazon A9 Algorithm Expert. Analyze this product description.
+            api_data = response.json()
+            results = api_data.get('results', [])
+            total_listings += api_data.get('count', 0)
 
-PRODUCT DESCRIPTION:
-{text_input}
+            for item in results:
+                if 'price' in item:
+                    price = item['price'].get('amount', 0) / item['price'].get('divisor', 100)
+                    all_prices.append(price)
 
-══════════════════════════════════════════════════════════════════
-GENERATE:
-1. TITLE (max 200 chars): Brand + Product + Features
-2. BULLET POINTS (5): Start each with CAPS keyword
-3. DESCRIPTION: A+ content style
-4. SEARCH TERMS (max 249 bytes): Space-separated, no commas
-5. PRICE: Estimated based on product type
-══════════════════════════════════════════════════════════════════
+                if 'tags' in item:
+                    for tag in item['tags']:
+                        if len(tag) <= 20:
+                            tag_lower = tag.lower()
+                            all_tags[tag_lower] = all_tags.get(tag_lower, 0) + 1
 
-Return ONLY valid JSON:
-{{
-  "title": "Amazon A9 optimized title under 200 chars",
-  "bulletPoints": [
-    "KEY BENEFIT: Description",
-    "QUALITY MATERIALS: Description",
-    "PERFECT SIZE: Description",
-    "EASY TO USE: Description",
-    "GREAT GIFT: Description"
-  ],
-  "description": "Detailed A+ content description",
-  "searchTerms": "space separated keywords max 249 bytes",
-  "suggestedPrice": "$XX.XX",
-  "productType": "Product type",
-  "category": "Amazon category"
-}}""",
+                if 'title' in item:
+                    all_titles.append(item['title'][:120])
 
-        'shopify': f"""You are a Shopify and Google SEO Expert. Analyze this product description.
+                favorites = item.get('num_favorers', 0)
+                if favorites > 50:
+                    top_performers.append({
+                        'title': item.get('title', '')[:100],
+                        'price': item['price'].get('amount', 0) / item['price'].get('divisor', 100) if 'price' in item else 0,
+                        'favorites': favorites,
+                        'tags': item.get('tags', [])[:5]
+                    })
 
-PRODUCT DESCRIPTION:
-{text_input}
+            print(f"   📊 '{keyword}': {len(results)} listings")
 
-══════════════════════════════════════════════════════════════════
-GENERATE:
-1. TITLE (max 70 chars): Clean, keyword-rich
-2. META TITLE (max 60 chars): Google SERP optimized
-3. META DESCRIPTION (max 160 chars): Click-worthy with CTA
-4. HTML DESCRIPTION: With <p>, <h3>, <ul> tags
-5. TAGS: 5-10 keywords
-6. PRICE: Estimated
-══════════════════════════════════════════════════════════════════
+        except Exception as e:
+            continue
 
-Return ONLY valid JSON:
-{{
-  "title": "SEO title under 70 chars",
-  "metaTitle": "Google meta title under 60 chars",
-  "metaDescription": "Meta description under 160 chars with CTA",
-  "description": "<p>Opening paragraph...</p><h3>Features</h3><ul><li>Feature 1</li></ul>",
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "suggestedPrice": "$XX.XX",
-  "productType": "Product type"
-}}"""
+    if not all_prices:
+        return None
+
+    sorted_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)
+    top_performers.sort(key=lambda x: x['favorites'], reverse=True)
+
+    all_prices.sort()
+    price_25 = all_prices[len(all_prices)//4] if len(all_prices) > 4 else all_prices[0]
+    price_75 = all_prices[3*len(all_prices)//4] if len(all_prices) > 4 else all_prices[-1]
+
+    return {
+        'totalListings': total_listings,
+        'avgPrice': round(sum(all_prices) / len(all_prices), 2),
+        'minPrice': round(min(all_prices), 2),
+        'maxPrice': round(max(all_prices), 2),
+        'medianPrice': round(all_prices[len(all_prices)//2], 2),
+        'price25th': round(price_25, 2),
+        'price75th': round(price_75, 2),
+        'topTags': [tag[0] for tag in sorted_tags[:30]],
+        'tagFrequency': dict(sorted_tags[:20]),
+        'topTitles': all_titles[:10],
+        'topPerformers': top_performers[:5],
+        'competitionLevel': 'HIGH' if total_listings > 50000 else 'MEDIUM' if total_listings > 10000 else 'LOW'
     }
-    
-    prompt = prompts.get(marketplace, prompts['etsy'])
-    
-    model = genai.GenerativeModel('gemini-2.0-flash')
-    
-    generation_config = genai.GenerationConfig(
-        temperature=0.1,
-        max_output_tokens=4096
-    )
-    
-    response = model.generate_content(
-        prompt,
-        generation_config=generation_config
-    )
-    
-    return safe_parse_json(response.text)
 
 
-def analyze_image_content(image_bytes, mime_type, marketplace):
-    """Analyze product image and generate SEO content"""
-    
-    if not genai:
-        raise ValueError("Gemini API not configured")
-    
-    prompts = {
-        'etsy': """You are a Senior Etsy SEO Expert. Analyze this product image.
+def fetch_google_trends(keywords):
+    """Fetch Google Trends"""
+    try:
+        from pytrends.request import TrendReq
 
-GENERATE:
-1. TITLE (max 140 chars): Front-load best keywords
-2. DESCRIPTION (200+ words): Emotional hook + features + CTA
-3. TAGS: Exactly 13 long-tail keywords (2-4 words each)
-4. PRICE: Estimated based on product
+        pytrends = TrendReq(hl='en-US', tz=360, timeout=(10, 25))
+        pytrends.build_payload(keywords[:5], timeframe='today 3-m')
 
-Return ONLY valid JSON:
-{
-  "title": "SEO-optimized Etsy title under 140 chars",
-  "description": "Full 200+ word description",
-  "tags": ["keyword 1", "keyword 2", "keyword 3", "keyword 4", "keyword 5", "keyword 6", "keyword 7", "keyword 8", "keyword 9", "keyword 10", "keyword 11", "keyword 12", "keyword 13"],
-  "suggestedPrice": "$XX.XX",
-  "productType": "Product type",
-  "category": "Etsy category"
-}""",
+        related = pytrends.related_queries()
+        rising = []
+        top = []
 
-        'amazon': """You are an Amazon A9 Algorithm Expert. Analyze this product image.
+        for kw in keywords[:5]:
+            if kw in related:
+                if related[kw].get('rising') is not None and not related[kw]['rising'].empty:
+                    rising.extend([r['query'] for r in related[kw]['rising'].head(5).to_dict('records') if 'query' in r])
+                if related[kw].get('top') is not None and not related[kw]['top'].empty:
+                    top.extend([t['query'] for t in related[kw]['top'].head(5).to_dict('records') if 'query' in t])
 
-Return ONLY valid JSON:
-{
-  "title": "Amazon A9 optimized title under 200 chars",
-  "bulletPoints": ["KEY BENEFIT: Desc", "QUALITY: Desc", "SIZE: Desc", "EASY: Desc", "GIFT: Desc"],
-  "description": "Detailed A+ content description",
-  "searchTerms": "space separated keywords max 249 bytes",
-  "suggestedPrice": "$XX.XX",
-  "productType": "Product type"
-}""",
+        return {'risingKeywords': list(set(rising))[:10], 'topKeywords': list(set(top))[:10]}
+    except:
+        return None
 
-        'shopify': """You are a Shopify SEO Expert. Analyze this product image.
 
-Return ONLY valid JSON:
-{
-  "title": "SEO title under 70 chars",
-  "metaTitle": "Meta title under 60 chars",
-  "metaDescription": "Meta description under 160 chars",
-  "description": "<p>Description with HTML</p>",
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "suggestedPrice": "$XX.XX"
-}"""
-    }
-    
-    prompt = prompts.get(marketplace, prompts['etsy'])
-    
-    model = genai.GenerativeModel('gemini-2.0-flash')
-    
-    generation_config = genai.GenerationConfig(
-        temperature=0.1,
-        max_output_tokens=4096
-    )
-    
-    response = model.generate_content(
-        [prompt, {"mime_type": mime_type, "data": image_bytes}],
-        generation_config=generation_config
-    )
-    
-    return safe_parse_json(response.text)
+def truncate_tags(tags):
+    """Ensure all tags are max 20 characters"""
+    result = []
+    for tag in tags:
+        if len(tag) <= 20:
+            result.append(tag)
+        else:
+            words = tag.split()
+            truncated = ""
+            for word in words:
+                if len(truncated) + len(word) + 1 <= 20:
+                    truncated = f"{truncated} {word}".strip()
+                else:
+                    break
+            result.append(truncated if truncated else tag[:20])
+    return result
+
+
+def validate_result(result, market_data):
+    """Post-process and validate"""
+    if 'tags' in result:
+        tags = truncate_tags(result['tags'])
+        seen = set()
+        unique = []
+        for tag in tags:
+            if tag.lower() not in seen:
+                seen.add(tag.lower())
+                unique.append(tag)
+
+        if len(unique) < 13 and market_data and 'topTags' in market_data:
+            for mt in market_data['topTags']:
+                if mt.lower() not in seen and len(mt) <= 20:
+                    unique.append(mt)
+                    seen.add(mt.lower())
+                if len(unique) >= 13:
+                    break
+
+        result['tags'] = unique[:13]
+
+    return result
 
 
 class handler(BaseHTTPRequestHandler):
@@ -231,76 +223,181 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-    
+
     def do_POST(self):
         try:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
-            
+
             text_input = data.get('text', '')
-            image_data = data.get('image', '')
             marketplace = data.get('marketplace', 'etsy')
-            
-            print(f"\n{'='*60}")
-            print(f"📊 TEXT/IMAGE ANALYSIS - {marketplace.upper()}")
+
+            print(f"\n{'='*70}")
+            print(f"🚀 PROFESSIONAL TEXT SEO ANALYSIS v2.0")
+            print(f"   Marketplace: {marketplace}")
             print(f"   Text: {len(text_input)} chars")
-            print(f"   Image: {len(image_data)} chars")
-            print(f"   Gemini: {'Ready' if genai else 'Not available'}")
-            print(f"{'='*60}")
-            
-            if not genai:
-                raise ValueError("Gemini API not configured - check GOOGLE_API_KEY")
-            
-            result = None
-            
-            # Text-based analysis
-            if text_input and len(text_input) >= 10:
-                print("   📝 Analyzing text...")
-                result = analyze_text_content(text_input, marketplace)
-            
-            # Image-based analysis
-            elif image_data:
-                print("   🖼️ Analyzing image...")
-                if 'base64,' in image_data:
-                    base64_clean = image_data.split('base64,')[1]
-                    mime_type = 'image/png' if 'png' in image_data.lower() else 'image/jpeg'
-                else:
-                    base64_clean = image_data
-                    mime_type = 'image/jpeg'
-                
-                image_bytes = base64.b64decode(base64_clean)
-                result = analyze_image_content(image_bytes, mime_type, marketplace)
-            
+            print(f"{'='*70}")
+
+            if not GOOGLE_API_KEY:
+                raise ValueError("GOOGLE_API_KEY not set")
+
+            if not text_input or len(text_input) < 10:
+                raise ValueError("Text too short (min 10 chars)")
+
+            # Step 1: Extract keywords
+            print("   🔍 Step 1: Extracting keywords...")
+            product_info = extract_keywords_from_text(text_input)
+            product_type = product_info.get('productType', 'handmade item')
+            search_keywords = product_info.get('searchKeywords', ['handmade'])
+            print(f"   ✅ Product: {product_type}")
+            print(f"   🔑 Keywords: {search_keywords}")
+
+            # Step 2: Market data
+            market_data = None
+            trends_data = None
+
+            if marketplace == 'etsy':
+                print(f"\n   📊 Step 2: Market Analysis...")
+                market_data = fetch_etsy_market_data_multi(search_keywords)
+
+                if market_data:
+                    print(f"   ✅ {market_data['totalListings']:,} listings analyzed")
+                    print(f"   💰 Sweet spot: ${market_data['price25th']} - ${market_data['price75th']}")
+
+                print(f"\n   📈 Step 3: Google Trends...")
+                trends_data = fetch_google_trends(search_keywords)
+
+            # Step 3: AI Analysis
+            print(f"\n   🤖 Step 4: AI Analysis...")
+
+            if marketplace == 'etsy':
+                market_intel = ""
+                if market_data:
+                    market_intel = f"""
+════════════════════════════════════════════════════════════════════════
+📊 REAL ETSY MARKET DATA
+════════════════════════════════════════════════════════════════════════
+MARKET: {market_data['totalListings']:,} listings | Competition: {market_data['competitionLevel']}
+PRICES: ${market_data['minPrice']} - ${market_data['maxPrice']} | Sweet Spot: ${market_data['price25th']} - ${market_data['price75th']}
+
+TOP PROVEN TAGS:
+{', '.join(market_data['topTags'][:20])}
+
+COMPETITOR TITLES:
+{chr(10).join(['→ ' + t for t in market_data['topTitles'][:5]])}
+════════════════════════════════════════════════════════════════════════
+"""
+
+                trends_intel = ""
+                if trends_data:
+                    if trends_data.get('risingKeywords'):
+                        trends_intel = f"\n🔥 RISING: {', '.join(trends_data['risingKeywords'])}\n"
+
+                prompt = f"""You are an ELITE Etsy SEO specialist. Transform this product description into a TOP-PERFORMING listing.
+
+ORIGINAL DESCRIPTION:
+{text_input}
+
+PRODUCT TYPE: {product_type}
+{market_intel}
+{trends_intel}
+
+CREATE:
+1. TITLE (max 140 chars): Front-load keywords from market data
+2. DESCRIPTION (400+ words): Professional, compelling, detailed
+3. TAGS (exactly 13): EACH MAX 20 CHARS - use proven tags from data!
+4. PRICE: Based on market sweet spot
+
+Return ONLY JSON:
+{{
+  "title": "Optimized title under 140 chars",
+  "description": "Full 400+ word professional description",
+  "tags": ["max20char1", "max20char2", "max20char3", "max20char4", "max20char5", "max20char6", "max20char7", "max20char8", "max20char9", "max20char10", "max20char11", "max20char12", "max20char13"],
+  "suggestedPrice": "$XX.XX - $YY.YY",
+  "productType": "{product_type}",
+  "category": "Etsy category"
+}}"""
+
+            elif marketplace == 'amazon':
+                prompt = f"""Transform this into an Amazon listing.
+
+ORIGINAL: {text_input}
+
+Return JSON:
+{{
+  "title": "Amazon title max 200 chars",
+  "bulletPoints": ["BENEFIT: Desc", "QUALITY: Desc", "PERFECT: Desc", "EASY: Desc", "GIFT: Desc"],
+  "description": "A+ content",
+  "searchTerms": "backend keywords",
+  "suggestedPrice": "$XX.XX",
+  "productType": "{product_type}"
+}}"""
+
             else:
-                raise ValueError("No text or image provided")
-            
-            print(f"   ✅ Analysis complete!")
-            
-            # Send response
+                prompt = f"""Transform this into a Shopify listing.
+
+ORIGINAL: {text_input}
+
+Return JSON:
+{{
+  "title": "SEO title max 70 chars",
+  "metaTitle": "Meta max 60 chars",
+  "metaDescription": "Meta max 160 chars",
+  "description": "<p>HTML description</p>",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "suggestedPrice": "$XX.XX",
+  "productType": "{product_type}"
+}}"""
+
+            response_text = call_gemini(prompt)
+
+            # Parse
+            if '```json' in response_text:
+                response_text = response_text.split('```json')[1].split('```')[0]
+            elif '```' in response_text:
+                response_text = response_text.split('```')[1].split('```')[0]
+
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            if json_match:
+                result = json.loads(json_match.group(0))
+            else:
+                raise ValueError("Failed to parse response")
+
+            # Validate
+            print(f"\n   ✨ Step 5: Validating...")
+            result = validate_result(result, market_data)
+
+            if market_data:
+                result['_marketData'] = market_data
+            if trends_data:
+                result['_trendsData'] = trends_data
+
+            print(f"   ✅ COMPLETE!\n")
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
+
             self.wfile.write(json.dumps({
                 'success': True,
                 'data': result,
                 'marketplace': marketplace
             }).encode())
-            
+
         except Exception as e:
             print(f"❌ Error: {e}")
-            
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            
+
             self.wfile.write(json.dumps({
                 'success': False,
                 'error': str(e)
             }).encode())
 
 
-print("✅ Text/Image Analysis API ready")
+print("✅ Professional Text SEO Analysis API v2.0 ready")
