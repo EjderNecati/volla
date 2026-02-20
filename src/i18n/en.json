@@ -61,7 +61,8 @@
         "settings": "Settings",
         "openStudio": "Open Studio",
         "signIn": "Sign In",
-        "billing": "Billing"
+        "billing": "Billing",
+        "businessDNA": "Business DNA"
     },
     "motion": {
         "title": "Motion",
@@ -1036,6 +1037,79 @@
                 "title": "Contact Us",
                 "content": "For privacy-related inquiries, contact us at:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "Business DNA",
+        "subtitle": "Define your brand identity for consistent creatives",
+        "autoDetect": "Auto-Detect",
+        "manualSetup": "Manual Setup",
+        "websiteAnalysis": "Website Analysis",
+        "websiteAnalysisDesc": "Enter your website URL and we'll automatically extract your brand colors, logo, tone, and more.",
+        "analyze": "Analyze",
+        "analyzing": "Analyzing...",
+        "orManual": "or",
+        "manualWithoutWebsite": "Set up manually without website analysis",
+        "brandInfo": "Brand Information",
+        "brandName": "Brand Name",
+        "website": "Website",
+        "tagline": "Tagline",
+        "brandColors": "Brand Colors",
+        "logo": "Logo",
+        "logoUrl": "Logo URL",
+        "brandTone": "Brand Tone",
+        "brandToneDesc": "Select up to 3",
+        "brandValues": "Brand Values",
+        "brandValuesDesc": "Select up to 3",
+        "visualAesthetic": "Visual Aesthetic",
+        "visualAestheticDesc": "Select up to 3",
+        "targetAudience": "Target Audience",
+        "targetAudiencePlaceholder": "e.g., Young professionals aged 25-35, fashion-conscious women",
+        "save": "Save Business DNA",
+        "colors": {
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "accent": "Accent",
+            "background": "Background",
+            "text": "Text"
+        },
+        "tones": {
+            "professional": "Professional",
+            "playful": "Playful",
+            "luxury": "Luxury",
+            "minimalist": "Minimalist",
+            "bold": "Bold",
+            "friendly": "Friendly",
+            "innovative": "Innovative",
+            "traditional": "Traditional",
+            "youthful": "Youthful",
+            "sophisticated": "Sophisticated",
+            "trustworthy": "Trustworthy",
+            "energetic": "Energetic"
+        },
+        "values": {
+            "quality": "Quality",
+            "innovation": "Innovation",
+            "sustainability": "Sustainability",
+            "affordability": "Affordability",
+            "craftsmanship": "Craftsmanship",
+            "customerFocus": "Customer Focus",
+            "authenticity": "Authenticity",
+            "creativity": "Creativity",
+            "reliability": "Reliability",
+            "excellence": "Excellence"
+        },
+        "aesthetics": {
+            "modern": "Modern",
+            "classic": "Classic",
+            "minimal": "Minimal",
+            "bold": "Bold",
+            "elegant": "Elegant",
+            "rustic": "Rustic",
+            "futuristic": "Futuristic",
+            "organic": "Organic",
+            "industrial": "Industrial",
+            "artistic": "Artistic"
         }
     },
     "terms": {

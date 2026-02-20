@@ -60,7 +60,8 @@
         "settings": "Ayarlar",
         "openStudio": "Stüdyo Aç",
         "signIn": "Giriş Yap",
-        "billing": "Fatura"
+        "billing": "Fatura",
+        "businessDNA": "İşletme DNA'sı"
     },
     "login": {
         "subtitle": "AI Destekli Ürün Fotoğrafçılığı",
@@ -1011,6 +1012,79 @@
                 "title": "Bize Ulaşın",
                 "content": "Gizlilikle ilgili sorularınız için bizimle iletişime geçin:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "İşletme DNA'sı",
+        "subtitle": "Tutarlı yaratıcı içerikler için marka kimliğinizi tanımlayın",
+        "autoDetect": "Otomatik Algıla",
+        "manualSetup": "Manuel Kurulum",
+        "websiteAnalysis": "Web Sitesi Analizi",
+        "websiteAnalysisDesc": "Web sitenizin URL'sini girin, marka renklerinizi, logonuzu, tonunuzu ve daha fazlasını otomatik olarak çıkaralım.",
+        "analyze": "Analiz Et",
+        "analyzing": "Analiz ediliyor...",
+        "orManual": "veya",
+        "manualWithoutWebsite": "Web sitesi analizi olmadan manuel kurulum yap",
+        "brandInfo": "Marka Bilgileri",
+        "brandName": "Marka Adı",
+        "website": "Web Sitesi",
+        "tagline": "Slogan",
+        "brandColors": "Marka Renkleri",
+        "logo": "Logo",
+        "logoUrl": "Logo URL",
+        "brandTone": "Marka Tonu",
+        "brandToneDesc": "En fazla 3 tane seçin",
+        "brandValues": "Marka Değerleri",
+        "brandValuesDesc": "En fazla 3 tane seçin",
+        "visualAesthetic": "Görsel Estetik",
+        "visualAestheticDesc": "En fazla 3 tane seçin",
+        "targetAudience": "Hedef Kitle",
+        "targetAudiencePlaceholder": "örn. 25-35 yaş arası genç profesyoneller, moda bilincine sahip kadınlar",
+        "save": "İşletme DNA'sını Kaydet",
+        "colors": {
+            "primary": "Ana Renk",
+            "secondary": "İkincil Renk",
+            "accent": "Vurgu Renk",
+            "background": "Arkaplan",
+            "text": "Metin"
+        },
+        "tones": {
+            "professional": "Profesyonel",
+            "playful": "Eğlenceli",
+            "luxury": "Lüks",
+            "minimalist": "Minimalist",
+            "bold": "Cesur",
+            "friendly": "Samimi",
+            "innovative": "Yenilikçi",
+            "traditional": "Geleneksel",
+            "youthful": "Genç",
+            "sophisticated": "Sofistike",
+            "trustworthy": "Güvenilir",
+            "energetic": "Enerjik"
+        },
+        "values": {
+            "quality": "Kalite",
+            "innovation": "Yenilik",
+            "sustainability": "Sürdürülebilirlik",
+            "affordability": "Uygun Fiyat",
+            "craftsmanship": "Ustalık",
+            "customerFocus": "Müşteri Odaklılık",
+            "authenticity": "Özgünlük",
+            "creativity": "Yaratıcılık",
+            "reliability": "Güvenilirlik",
+            "excellence": "Mükemmellik"
+        },
+        "aesthetics": {
+            "modern": "Modern",
+            "classic": "Klasik",
+            "minimal": "Minimal",
+            "bold": "Cesur",
+            "elegant": "Zarif",
+            "rustic": "Rustik",
+            "futuristic": "Fütüristik",
+            "organic": "Organik",
+            "industrial": "Endüstriyel",
+            "artistic": "Sanatsal"
         }
     },
     "terms": {
