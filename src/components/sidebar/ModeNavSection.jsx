@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Sparkles, Zap, Video, Palette } from 'lucide-react';
+import { Sparkles, Zap, Video, Palette, Camera, Megaphone } from 'lucide-react';
 import { useTranslation } from '../../i18n';
 
 /**
  * ModeNavSection - Sidebar'da mod seçimi için ikonlar
- * 4 mod: Studio (standard), Handsfree, Motion, Creative
+ * 6 mod: Studio, Handsfree, Motion, Creative, Photoshoot (NEW), Campaign (NEW)
  */
 
 const MODES = [
@@ -35,6 +35,22 @@ const MODES = [
         gradient: 'from-pink-500 to-rose-500',
         hoverBg: 'linear-gradient(135deg, #ec4899, #f43f5e)',
         hoverGlow: '0 0 20px rgba(236,72,153,0.3)'
+    },
+    {
+        id: 'photoshoot',
+        icon: Camera,
+        gradient: 'from-emerald-500 to-teal-500',
+        hoverBg: 'linear-gradient(135deg, #10b981, #14b8a6)',
+        hoverGlow: '0 0 20px rgba(16,185,129,0.3)',
+        isNew: true
+    },
+    {
+        id: 'campaign',
+        icon: Megaphone,
+        gradient: 'from-orange-500 to-amber-500',
+        hoverBg: 'linear-gradient(135deg, #f97316, #f59e0b)',
+        hoverGlow: '0 0 20px rgba(249,115,22,0.3)',
+        isNew: true
     }
 ];
 
@@ -64,7 +80,7 @@ export default function ModeNavSection({
                 </p>
             )}
 
-            <div className={collapsed ? 'flex flex-col items-center space-y-2' : 'grid grid-cols-2 gap-2'}>
+            <div className={collapsed ? 'flex flex-col items-center space-y-2' : 'grid grid-cols-3 gap-2'}>
                 {MODES.map((mode) => {
                     const Icon = mode.icon;
                     const isActive = selectedMode === mode.id;
@@ -95,9 +111,20 @@ export default function ModeNavSection({
                             <Icon className={`${collapsed ? 'w-5 h-5' : 'w-4 h-4'} flex-shrink-0`} />
 
                             {!collapsed && (
-                                <span className="text-xs font-medium truncate">
-                                    {t(`modes.${mode.id}`) || mode.id}
-                                </span>
+                                <>
+                                    <span className="text-xs font-medium truncate">
+                                        {t(`modes.${mode.id}`) || mode.id}
+                                    </span>
+                                    {mode.isNew && (
+                                        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[8px] font-bold rounded-full">
+                                            NEW
+                                        </span>
+                                    )}
+                                </>
+                            )}
+
+                            {collapsed && mode.isNew && (
+                                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-400 rounded-full" />
                             )}
                         </button>
                     );

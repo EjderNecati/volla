@@ -96,10 +96,14 @@
         "handsfree": "Eller Serbest",
         "motion": "Video",
         "creative": "Kreatif",
+        "photoshoot": "Çekim",
+        "campaign": "Kampanya",
         "standardDesc": "SEO optimizasyonlu AI ürün fotoğrafçılığı",
         "handsfreeDesc": "Özel çekimler için profesyonel prompt mimarı",
         "motionDesc": "Görsellerden sinematik ürün videoları oluştur",
-        "creativeDesc": "Tema ve indirimlerle promosyon görselleri"
+        "creativeDesc": "Tema ve indirimlerle promosyon görselleri",
+        "photoshootDesc": "Şablon-öncelikli profesyonel ürün fotoğrafçılığı",
+        "campaignDesc": "AI destekli pazarlama kampanya fikirleri"
     },
     "home": {
         "welcomeBack": "Tekrar hoş geldiniz",

@@ -27,6 +27,8 @@ import AssetFilmStrip from '../components/AssetFilmStrip';
 import HandsfreeMode from '../components/HandsfreeMode';
 import MotionMode from '../components/MotionMode';
 import CreativeMode from '../components/CreativeMode';
+import PhotoshootMode from '../components/PhotoshootMode';
+import CampaignSystem from '../components/CampaignSystem';
 import SourceSelectionModal from '../components/SourceSelectionModal';
 import { useTranslation } from '../i18n';
 
@@ -77,7 +79,7 @@ export default function AIStudioView({
     // Dragon animation removed
 
     // ═══════════════════════════════════════════════════════════════════
-    // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion' | 'creative'
+    // STUDIO MODE STATE: 'standard' | 'handsfree' | 'motion' | 'creative' | 'photoshoot' | 'campaign'
     // Use prop if provided (from sidebar), otherwise use internal state
     // ═══════════════════════════════════════════════════════════════════
     const [internalStudioMode, setInternalStudioMode] = useState('standard');
@@ -1179,16 +1181,22 @@ export default function AIStudioView({
                             studioMode === 'handsfree' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white' :
                             studioMode === 'motion' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' :
                             studioMode === 'creative' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' :
+                            studioMode === 'photoshoot' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' :
+                            studioMode === 'campaign' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' :
                             'bg-gradient-to-r from-[#E06847] to-[#C85A3D] text-white'
                         }`}>
                             {studioMode === 'handsfree' ? <Zap size={12} /> :
                              studioMode === 'motion' ? <Video size={12} /> :
                              studioMode === 'creative' ? <Sparkles size={12} /> :
+                             studioMode === 'photoshoot' ? <Camera size={12} /> :
+                             studioMode === 'campaign' ? <Sparkles size={12} /> :
                              <Sparkles size={12} />}
                             <span>
                                 {studioMode === 'handsfree' ? t('studio.handsfree') :
                                  studioMode === 'motion' ? (t('studio.motion') || 'Motion') :
                                  studioMode === 'creative' ? (t('studio.creative') || 'Creative') :
+                                 studioMode === 'photoshoot' ? (t('modes.photoshoot') || 'Photoshoot') :
+                                 studioMode === 'campaign' ? (t('modes.campaign') || 'Campaign') :
                                  t('studio.normal')}
                             </span>
                         </div>
@@ -1235,6 +1243,18 @@ export default function AIStudioView({
                     marketplace={marketplace}
                     onNavigate={onNavigate}
                     initialProject={initialProject?.productInfo?.featureType === 'creative' ? initialProject : null}
+                />
+            ) : studioMode === 'photoshoot' ? (
+                <PhotoshootMode
+                    onBack={() => setStudioMode('standard')}
+                />
+            ) : studioMode === 'campaign' ? (
+                <CampaignSystem
+                    onClose={() => setStudioMode('standard')}
+                    onSelectCampaign={(campaign) => {
+                        console.log('Selected campaign:', campaign);
+                        // Could navigate to creative mode with campaign preset
+                    }}
                 />
             ) : (
                 <main className="flex-1 flex flex-col md:flex-row min-h-0">

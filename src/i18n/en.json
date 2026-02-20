@@ -408,10 +408,14 @@
         "handsfree": "Handsfree",
         "motion": "Motion",
         "creative": "Creative",
+        "photoshoot": "Photoshoot",
+        "campaign": "Campaign",
         "standardDesc": "AI-powered product photography with SEO optimization",
         "handsfreeDesc": "Professional prompt architect for custom shots",
         "motionDesc": "Transform images into cinematic product videos",
-        "creativeDesc": "Promotional graphics with themes and discounts"
+        "creativeDesc": "Promotional graphics with themes and discounts",
+        "photoshootDesc": "Template-first professional product photography",
+        "campaignDesc": "AI-powered marketing campaign ideas"
     },
     "home": {
         "welcomeBack": "Welcome back",
