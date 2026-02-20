@@ -55,7 +55,9 @@
         "realLife": "Vida Real",
         "history": "Histórico",
         "settings": "Configurações",
-        "openStudio": "Abrir Estúdio"
+        "openStudio": "Abrir Estúdio",
+        "businessDNA": "DNA Empresarial",
+        "library": "Biblioteca"
     },
     "sidebar": {
         "modes": "Modos do Estúdio",
@@ -67,10 +69,14 @@
         "handsfree": "Mãos Livres",
         "motion": "Movimento",
         "creative": "Criativo",
+        "photoshoot": "Ensaio Fotográfico",
+        "campaign": "Campanha",
         "standardDesc": "Fotografia de produtos com IA",
         "handsfreeDesc": "Arquiteto de prompts profissional",
         "motionDesc": "Geração de imagem para vídeo",
-        "creativeDesc": "Criador de imagens promocionais"
+        "creativeDesc": "Criador de imagens promocionais",
+        "photoshootDesc": "Fotos de produto baseadas em templates",
+        "campaignDesc": "Suite de campanhas de marketing"
     },
     "app": {
         "name": "Volla",
@@ -857,6 +863,79 @@
                 "title": "Contate-nos",
                 "content": "Para consultas relacionadas à privacidade, entre em contato conosco:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "DNA Empresarial",
+        "subtitle": "Defina sua identidade de marca para criações consistentes",
+        "autoDetect": "Detecção automática",
+        "manualSetup": "Configuração manual",
+        "websiteAnalysis": "Análise do site",
+        "websiteAnalysisDesc": "Digite a URL do seu site e extrairemos automaticamente suas cores de marca, logo, tom e mais.",
+        "analyze": "Analisar",
+        "analyzing": "Analisando...",
+        "orManual": "ou",
+        "manualWithoutWebsite": "Configurar manualmente sem análise de site",
+        "brandInfo": "Informações da marca",
+        "brandName": "Nome da marca",
+        "website": "Site",
+        "tagline": "Slogan",
+        "brandColors": "Cores da marca",
+        "logo": "Logo",
+        "logoUrl": "URL do logo",
+        "brandTone": "Tom da marca",
+        "brandToneDesc": "Selecione até 3",
+        "brandValues": "Valores da marca",
+        "brandValuesDesc": "Selecione até 3",
+        "visualAesthetic": "Estética visual",
+        "visualAestheticDesc": "Selecione até 3",
+        "targetAudience": "Público-alvo",
+        "targetAudiencePlaceholder": "ex. Jovens profissionais de 25-35 anos, mulheres conscientes da moda",
+        "save": "Salvar DNA empresarial",
+        "colors": {
+            "primary": "Primária",
+            "secondary": "Secundária",
+            "accent": "Destaque",
+            "background": "Fundo",
+            "text": "Texto"
+        },
+        "tones": {
+            "professional": "Profissional",
+            "playful": "Divertido",
+            "luxury": "Luxuoso",
+            "minimalist": "Minimalista",
+            "bold": "Ousado",
+            "friendly": "Amigável",
+            "innovative": "Inovador",
+            "traditional": "Tradicional",
+            "youthful": "Jovem",
+            "sophisticated": "Sofisticado",
+            "trustworthy": "Confiável",
+            "energetic": "Energético"
+        },
+        "values": {
+            "quality": "Qualidade",
+            "innovation": "Inovação",
+            "sustainability": "Sustentabilidade",
+            "affordability": "Acessibilidade",
+            "craftsmanship": "Artesanato",
+            "customerFocus": "Foco no cliente",
+            "authenticity": "Autenticidade",
+            "creativity": "Criatividade",
+            "reliability": "Confiabilidade",
+            "excellence": "Excelência"
+        },
+        "aesthetics": {
+            "modern": "Moderno",
+            "classic": "Clássico",
+            "minimal": "Mínimo",
+            "bold": "Ousado",
+            "elegant": "Elegante",
+            "rustic": "Rústico",
+            "futuristic": "Futurista",
+            "organic": "Orgânico",
+            "industrial": "Industrial",
+            "artistic": "Artístico"
         }
     },
     "terms": {

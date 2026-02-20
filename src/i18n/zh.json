@@ -56,7 +56,9 @@
         "realLife": "实景",
         "history": "历史",
         "settings": "设置",
-        "openStudio": "打开工作室"
+        "openStudio": "打开工作室",
+        "businessDNA": "商业DNA",
+        "library": "素材库"
     },
     "sidebar": {
         "modes": "工作室模式",
@@ -68,10 +70,14 @@
         "handsfree": "免提",
         "motion": "动态",
         "creative": "创意",
+        "photoshoot": "产品拍摄",
+        "campaign": "营销活动",
         "standardDesc": "AI驱动的产品摄影",
         "handsfreeDesc": "专业提示词构建器",
         "motionDesc": "图像到视频生成",
-        "creativeDesc": "促销图片创建器"
+        "creativeDesc": "促销图片创建器",
+        "photoshootDesc": "基于模板的产品照片",
+        "campaignDesc": "营销活动套件"
     },
     "app": {
         "name": "Volla",
@@ -842,6 +848,79 @@
                 "title": "联系我们",
                 "content": "有关隐私相关咨询，请联系我们："
             }
+        }
+    },
+    "businessDNA": {
+        "title": "商业DNA",
+        "subtitle": "定义您的品牌身份以实现一致的创意",
+        "autoDetect": "自动检测",
+        "manualSetup": "手动设置",
+        "websiteAnalysis": "网站分析",
+        "websiteAnalysisDesc": "输入您的网站URL，我们将自动提取您的品牌颜色、标志、语调等。",
+        "analyze": "分析",
+        "analyzing": "分析中...",
+        "orManual": "或",
+        "manualWithoutWebsite": "无需网站分析手动设置",
+        "brandInfo": "品牌信息",
+        "brandName": "品牌名称",
+        "website": "网站",
+        "tagline": "标语",
+        "brandColors": "品牌颜色",
+        "logo": "标志",
+        "logoUrl": "标志URL",
+        "brandTone": "品牌语调",
+        "brandToneDesc": "最多选择3个",
+        "brandValues": "品牌价值",
+        "brandValuesDesc": "最多选择3个",
+        "visualAesthetic": "视觉美学",
+        "visualAestheticDesc": "最多选择3个",
+        "targetAudience": "目标受众",
+        "targetAudiencePlaceholder": "例如：25-35岁的年轻专业人士、时尚意识女性",
+        "save": "保存商业DNA",
+        "colors": {
+            "primary": "主色",
+            "secondary": "次色",
+            "accent": "强调色",
+            "background": "背景色",
+            "text": "文字"
+        },
+        "tones": {
+            "professional": "专业",
+            "playful": "活泼",
+            "luxury": "奢华",
+            "minimalist": "极简",
+            "bold": "大胆",
+            "friendly": "友好",
+            "innovative": "创新",
+            "traditional": "传统",
+            "youthful": "年轻",
+            "sophisticated": "精致",
+            "trustworthy": "可信赖",
+            "energetic": "充满活力"
+        },
+        "values": {
+            "quality": "品质",
+            "innovation": "创新",
+            "sustainability": "可持续性",
+            "affordability": "实惠",
+            "craftsmanship": "工艺",
+            "customerFocus": "客户至上",
+            "authenticity": "真实性",
+            "creativity": "创造力",
+            "reliability": "可靠性",
+            "excellence": "卓越"
+        },
+        "aesthetics": {
+            "modern": "现代",
+            "classic": "经典",
+            "minimal": "极简",
+            "bold": "大胆",
+            "elegant": "优雅",
+            "rustic": "质朴",
+            "futuristic": "未来感",
+            "organic": "自然",
+            "industrial": "工业风",
+            "artistic": "艺术"
         }
     },
     "terms": {

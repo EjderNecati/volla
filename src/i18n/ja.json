@@ -55,7 +55,9 @@
         "realLife": "リアルライフ",
         "history": "履歴",
         "settings": "設定",
-        "openStudio": "スタジオを開く"
+        "openStudio": "スタジオを開く",
+        "businessDNA": "ビジネスDNA",
+        "library": "ライブラリ"
     },
     "sidebar": {
         "modes": "スタジオモード",
@@ -67,10 +69,14 @@
         "handsfree": "ハンズフリー",
         "motion": "モーション",
         "creative": "クリエイティブ",
+        "photoshoot": "フォトシュート",
+        "campaign": "キャンペーン",
         "standardDesc": "AI搭載の商品撮影",
         "handsfreeDesc": "プロフェッショナルプロンプトアーキテクト",
         "motionDesc": "画像から動画への生成",
-        "creativeDesc": "プロモーション画像クリエイター"
+        "creativeDesc": "プロモーション画像クリエイター",
+        "photoshootDesc": "テンプレートベースの商品写真",
+        "campaignDesc": "マーケティングキャンペーンスイート"
     },
     "app": {
         "name": "Volla",
@@ -857,6 +863,79 @@
                 "title": "お問い合わせ",
                 "content": "プライバシーに関するお問い合わせは、こちらまでご連絡ください："
             }
+        }
+    },
+    "businessDNA": {
+        "title": "ビジネスDNA",
+        "subtitle": "一貫したクリエイティブのためにブランドアイデンティティを定義",
+        "autoDetect": "自動検出",
+        "manualSetup": "手動設定",
+        "websiteAnalysis": "ウェブサイト分析",
+        "websiteAnalysisDesc": "ウェブサイトのURLを入力すると、ブランドカラー、ロゴ、トーンなどを自動的に抽出します。",
+        "analyze": "分析する",
+        "analyzing": "分析中...",
+        "orManual": "または",
+        "manualWithoutWebsite": "ウェブサイト分析なしで手動設定",
+        "brandInfo": "ブランド情報",
+        "brandName": "ブランド名",
+        "website": "ウェブサイト",
+        "tagline": "タグライン",
+        "brandColors": "ブランドカラー",
+        "logo": "ロゴ",
+        "logoUrl": "ロゴURL",
+        "brandTone": "ブランドトーン",
+        "brandToneDesc": "最大3つ選択",
+        "brandValues": "ブランド価値",
+        "brandValuesDesc": "最大3つ選択",
+        "visualAesthetic": "ビジュアル美学",
+        "visualAestheticDesc": "最大3つ選択",
+        "targetAudience": "ターゲット層",
+        "targetAudiencePlaceholder": "例：25-35歳の若いプロフェッショナル、ファッションに敏感な女性",
+        "save": "ビジネスDNAを保存",
+        "colors": {
+            "primary": "プライマリ",
+            "secondary": "セカンダリ",
+            "accent": "アクセント",
+            "background": "背景",
+            "text": "テキスト"
+        },
+        "tones": {
+            "professional": "プロフェッショナル",
+            "playful": "遊び心",
+            "luxury": "ラグジュアリー",
+            "minimalist": "ミニマリスト",
+            "bold": "大胆",
+            "friendly": "フレンドリー",
+            "innovative": "革新的",
+            "traditional": "伝統的",
+            "youthful": "若々しい",
+            "sophisticated": "洗練された",
+            "trustworthy": "信頼性",
+            "energetic": "エネルギッシュ"
+        },
+        "values": {
+            "quality": "品質",
+            "innovation": "イノベーション",
+            "sustainability": "持続可能性",
+            "affordability": "手頃な価格",
+            "craftsmanship": "職人技",
+            "customerFocus": "顧客重視",
+            "authenticity": "本物志向",
+            "creativity": "創造性",
+            "reliability": "信頼性",
+            "excellence": "卓越性"
+        },
+        "aesthetics": {
+            "modern": "モダン",
+            "classic": "クラシック",
+            "minimal": "ミニマル",
+            "bold": "大胆",
+            "elegant": "エレガント",
+            "rustic": "ラスティック",
+            "futuristic": "フューチャリスティック",
+            "organic": "オーガニック",
+            "industrial": "インダストリアル",
+            "artistic": "アーティスティック"
         }
     },
     "terms": {

@@ -56,7 +56,9 @@
         "realLife": "Vida Real",
         "history": "Historial",
         "settings": "Configuración",
-        "openStudio": "Abrir Estudio"
+        "openStudio": "Abrir Estudio",
+        "businessDNA": "ADN Empresarial",
+        "library": "Biblioteca"
     },
     "sidebar": {
         "modes": "Modos de Estudio",
@@ -68,10 +70,14 @@
         "handsfree": "Manos Libres",
         "motion": "Movimiento",
         "creative": "Creativo",
+        "photoshoot": "Sesión Fotográfica",
+        "campaign": "Campaña",
         "standardDesc": "Fotografía de productos con IA",
         "handsfreeDesc": "Arquitecto de prompts profesional",
         "motionDesc": "Generación de imagen a video",
-        "creativeDesc": "Creador de imágenes promocionales"
+        "creativeDesc": "Creador de imágenes promocionales",
+        "photoshootDesc": "Fotos de producto basadas en plantillas",
+        "campaignDesc": "Suite de campañas de marketing"
     },
     "app": {
         "name": "Volla",
@@ -849,6 +855,79 @@
                 "title": "Contáctanos",
                 "content": "Para consultas relacionadas con la privacidad, contáctanos:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "ADN Empresarial",
+        "subtitle": "Define tu identidad de marca para creaciones consistentes",
+        "autoDetect": "Detección automática",
+        "manualSetup": "Configuración manual",
+        "websiteAnalysis": "Análisis del sitio web",
+        "websiteAnalysisDesc": "Ingresa la URL de tu sitio web y extraeremos automáticamente tus colores de marca, logo, tono y más.",
+        "analyze": "Analizar",
+        "analyzing": "Analizando...",
+        "orManual": "o",
+        "manualWithoutWebsite": "Configurar manualmente sin análisis de sitio web",
+        "brandInfo": "Información de marca",
+        "brandName": "Nombre de marca",
+        "website": "Sitio web",
+        "tagline": "Eslogan",
+        "brandColors": "Colores de marca",
+        "logo": "Logo",
+        "logoUrl": "URL del logo",
+        "brandTone": "Tono de marca",
+        "brandToneDesc": "Selecciona hasta 3",
+        "brandValues": "Valores de marca",
+        "brandValuesDesc": "Selecciona hasta 3",
+        "visualAesthetic": "Estética visual",
+        "visualAestheticDesc": "Selecciona hasta 3",
+        "targetAudience": "Público objetivo",
+        "targetAudiencePlaceholder": "ej. Jóvenes profesionales de 25-35 años, mujeres conscientes de la moda",
+        "save": "Guardar ADN empresarial",
+        "colors": {
+            "primary": "Primario",
+            "secondary": "Secundario",
+            "accent": "Acento",
+            "background": "Fondo",
+            "text": "Texto"
+        },
+        "tones": {
+            "professional": "Profesional",
+            "playful": "Juguetón",
+            "luxury": "Lujoso",
+            "minimalist": "Minimalista",
+            "bold": "Audaz",
+            "friendly": "Amigable",
+            "innovative": "Innovador",
+            "traditional": "Tradicional",
+            "youthful": "Juvenil",
+            "sophisticated": "Sofisticado",
+            "trustworthy": "Confiable",
+            "energetic": "Energético"
+        },
+        "values": {
+            "quality": "Calidad",
+            "innovation": "Innovación",
+            "sustainability": "Sostenibilidad",
+            "affordability": "Accesibilidad",
+            "craftsmanship": "Artesanía",
+            "customerFocus": "Enfoque al cliente",
+            "authenticity": "Autenticidad",
+            "creativity": "Creatividad",
+            "reliability": "Confiabilidad",
+            "excellence": "Excelencia"
+        },
+        "aesthetics": {
+            "modern": "Moderno",
+            "classic": "Clásico",
+            "minimal": "Minimal",
+            "bold": "Audaz",
+            "elegant": "Elegante",
+            "rustic": "Rústico",
+            "futuristic": "Futurista",
+            "organic": "Orgánico",
+            "industrial": "Industrial",
+            "artistic": "Artístico"
         }
     },
     "terms": {

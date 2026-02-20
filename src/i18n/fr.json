@@ -55,7 +55,9 @@
         "realLife": "Vie Réelle",
         "history": "Historique",
         "settings": "Paramètres",
-        "openStudio": "Ouvrir Studio"
+        "openStudio": "Ouvrir Studio",
+        "businessDNA": "ADN Commercial",
+        "library": "Bibliothèque"
     },
     "sidebar": {
         "modes": "Modes Studio",
@@ -67,10 +69,14 @@
         "handsfree": "Mains Libres",
         "motion": "Mouvement",
         "creative": "Créatif",
+        "photoshoot": "Séance Photo",
+        "campaign": "Campagne",
         "standardDesc": "Photographie de produits par IA",
         "handsfreeDesc": "Architecte de prompts professionnel",
         "motionDesc": "Génération image vers vidéo",
-        "creativeDesc": "Créateur d'images promotionnelles"
+        "creativeDesc": "Créateur d'images promotionnelles",
+        "photoshootDesc": "Photos produits basées sur modèles",
+        "campaignDesc": "Suite de campagnes marketing"
     },
     "app": {
         "name": "Volla",
@@ -857,6 +863,79 @@
                 "title": "Nous contacter",
                 "content": "Pour les demandes liées à la confidentialité, contactez-nous :"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "ADN Commercial",
+        "subtitle": "Définissez votre identité de marque pour des créations cohérentes",
+        "autoDetect": "Détection automatique",
+        "manualSetup": "Configuration manuelle",
+        "websiteAnalysis": "Analyse du site web",
+        "websiteAnalysisDesc": "Entrez l'URL de votre site web et nous extrairons automatiquement vos couleurs de marque, logo, ton et plus.",
+        "analyze": "Analyser",
+        "analyzing": "Analyse en cours...",
+        "orManual": "ou",
+        "manualWithoutWebsite": "Configurer manuellement sans analyse de site web",
+        "brandInfo": "Informations de marque",
+        "brandName": "Nom de marque",
+        "website": "Site web",
+        "tagline": "Slogan",
+        "brandColors": "Couleurs de marque",
+        "logo": "Logo",
+        "logoUrl": "URL du logo",
+        "brandTone": "Ton de marque",
+        "brandToneDesc": "Sélectionnez jusqu'à 3",
+        "brandValues": "Valeurs de marque",
+        "brandValuesDesc": "Sélectionnez jusqu'à 3",
+        "visualAesthetic": "Esthétique visuelle",
+        "visualAestheticDesc": "Sélectionnez jusqu'à 3",
+        "targetAudience": "Public cible",
+        "targetAudiencePlaceholder": "ex. Jeunes professionnels de 25-35 ans, femmes soucieuses de la mode",
+        "save": "Enregistrer l'ADN commercial",
+        "colors": {
+            "primary": "Primaire",
+            "secondary": "Secondaire",
+            "accent": "Accent",
+            "background": "Arrière-plan",
+            "text": "Texte"
+        },
+        "tones": {
+            "professional": "Professionnel",
+            "playful": "Ludique",
+            "luxury": "Luxueux",
+            "minimalist": "Minimaliste",
+            "bold": "Audacieux",
+            "friendly": "Amical",
+            "innovative": "Innovant",
+            "traditional": "Traditionnel",
+            "youthful": "Jeune",
+            "sophisticated": "Sophistiqué",
+            "trustworthy": "Digne de confiance",
+            "energetic": "Énergique"
+        },
+        "values": {
+            "quality": "Qualité",
+            "innovation": "Innovation",
+            "sustainability": "Durabilité",
+            "affordability": "Accessibilité",
+            "craftsmanship": "Artisanat",
+            "customerFocus": "Orientation client",
+            "authenticity": "Authenticité",
+            "creativity": "Créativité",
+            "reliability": "Fiabilité",
+            "excellence": "Excellence"
+        },
+        "aesthetics": {
+            "modern": "Moderne",
+            "classic": "Classique",
+            "minimal": "Minimal",
+            "bold": "Audacieux",
+            "elegant": "Élégant",
+            "rustic": "Rustique",
+            "futuristic": "Futuriste",
+            "organic": "Organique",
+            "industrial": "Industriel",
+            "artistic": "Artistique"
         }
     },
     "terms": {

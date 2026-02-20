@@ -55,7 +55,9 @@
         "realLife": "Real Life",
         "history": "Geschiedenis",
         "settings": "Instellingen",
-        "openStudio": "Studio Openen"
+        "openStudio": "Studio Openen",
+        "businessDNA": "Zakelijk DNA",
+        "library": "Bibliotheek"
     },
     "sidebar": {
         "modes": "Studio Modi",
@@ -67,10 +69,14 @@
         "handsfree": "Handsfree",
         "motion": "Beweging",
         "creative": "Creatief",
+        "photoshoot": "Fotoshoot",
+        "campaign": "Campagne",
         "standardDesc": "AI-aangedreven productfotografie",
         "handsfreeDesc": "Professionele prompt architect",
         "motionDesc": "Afbeelding naar video generatie",
-        "creativeDesc": "Promotionele afbeelding maker"
+        "creativeDesc": "Promotionele afbeelding maker",
+        "photoshootDesc": "Template-gebaseerde productfoto's",
+        "campaignDesc": "Marketing campagne suite"
     },
     "app": {
         "name": "Volla",
@@ -857,6 +863,79 @@
                 "title": "Neem contact op",
                 "content": "Voor privacygerelateerde vragen, neem contact met ons op:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "Zakelijk DNA",
+        "subtitle": "Definieer je merkidentiteit voor consistente creaties",
+        "autoDetect": "Automatisch detecteren",
+        "manualSetup": "Handmatige configuratie",
+        "websiteAnalysis": "Website-analyse",
+        "websiteAnalysisDesc": "Voer je website-URL in en we extraheren automatisch je merkkleuren, logo, toon en meer.",
+        "analyze": "Analyseren",
+        "analyzing": "Analyseren...",
+        "orManual": "of",
+        "manualWithoutWebsite": "Handmatig instellen zonder website-analyse",
+        "brandInfo": "Merkinformatie",
+        "brandName": "Merknaam",
+        "website": "Website",
+        "tagline": "Slogan",
+        "brandColors": "Merkkleuren",
+        "logo": "Logo",
+        "logoUrl": "Logo-URL",
+        "brandTone": "Merktoon",
+        "brandToneDesc": "Selecteer maximaal 3",
+        "brandValues": "Merkwaarden",
+        "brandValuesDesc": "Selecteer maximaal 3",
+        "visualAesthetic": "Visuele esthetiek",
+        "visualAestheticDesc": "Selecteer maximaal 3",
+        "targetAudience": "Doelgroep",
+        "targetAudiencePlaceholder": "bijv. Jonge professionals van 25-35 jaar, modebewuste vrouwen",
+        "save": "Zakelijk DNA opslaan",
+        "colors": {
+            "primary": "Primair",
+            "secondary": "Secundair",
+            "accent": "Accent",
+            "background": "Achtergrond",
+            "text": "Tekst"
+        },
+        "tones": {
+            "professional": "Professioneel",
+            "playful": "Speels",
+            "luxury": "Luxueus",
+            "minimalist": "Minimalistisch",
+            "bold": "Gedurfd",
+            "friendly": "Vriendelijk",
+            "innovative": "Innovatief",
+            "traditional": "Traditioneel",
+            "youthful": "Jeugdig",
+            "sophisticated": "Verfijnd",
+            "trustworthy": "Betrouwbaar",
+            "energetic": "Energiek"
+        },
+        "values": {
+            "quality": "Kwaliteit",
+            "innovation": "Innovatie",
+            "sustainability": "Duurzaamheid",
+            "affordability": "Betaalbaarheid",
+            "craftsmanship": "Vakmanschap",
+            "customerFocus": "Klantgerichtheid",
+            "authenticity": "Authenticiteit",
+            "creativity": "Creativiteit",
+            "reliability": "Betrouwbaarheid",
+            "excellence": "Uitmuntendheid"
+        },
+        "aesthetics": {
+            "modern": "Modern",
+            "classic": "Klassiek",
+            "minimal": "Minimaal",
+            "bold": "Gedurfd",
+            "elegant": "Elegant",
+            "rustic": "Rustiek",
+            "futuristic": "Futuristisch",
+            "organic": "Organisch",
+            "industrial": "Industrieel",
+            "artistic": "Artistiek"
         }
     },
     "terms": {

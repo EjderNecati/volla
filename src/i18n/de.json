@@ -56,7 +56,9 @@
         "realLife": "Reales Leben",
         "history": "Verlauf",
         "settings": "Einstellungen",
-        "openStudio": "Studio öffnen"
+        "openStudio": "Studio öffnen",
+        "businessDNA": "Geschäfts-DNA",
+        "library": "Bibliothek"
     },
     "sidebar": {
         "modes": "Studio-Modi",
@@ -68,10 +70,14 @@
         "handsfree": "Freihändig",
         "motion": "Bewegung",
         "creative": "Kreativ",
+        "photoshoot": "Fotoshooting",
+        "campaign": "Kampagne",
         "standardDesc": "KI-gesteuerte Produktfotografie",
         "handsfreeDesc": "Professioneller Prompt-Architekt",
         "motionDesc": "Bild-zu-Video-Generierung",
-        "creativeDesc": "Werbebild-Ersteller"
+        "creativeDesc": "Werbebild-Ersteller",
+        "photoshootDesc": "Vorlagebasierte Produktfotos",
+        "campaignDesc": "Marketing-Kampagnen-Suite"
     },
     "app": {
         "name": "Volla",
@@ -849,6 +855,79 @@
                 "title": "Kontaktieren Sie uns",
                 "content": "Für datenschutzbezogene Anfragen kontaktieren Sie uns:"
             }
+        }
+    },
+    "businessDNA": {
+        "title": "Geschäfts-DNA",
+        "subtitle": "Definieren Sie Ihre Markenidentität für konsistente Kreationen",
+        "autoDetect": "Automatisch erkennen",
+        "manualSetup": "Manuell einrichten",
+        "websiteAnalysis": "Website-Analyse",
+        "websiteAnalysisDesc": "Geben Sie Ihre Website-URL ein und wir extrahieren automatisch Ihre Markenfarben, Logo, Ton und mehr.",
+        "analyze": "Analysieren",
+        "analyzing": "Analysiere...",
+        "orManual": "oder",
+        "manualWithoutWebsite": "Manuell ohne Website-Analyse einrichten",
+        "brandInfo": "Markeninformationen",
+        "brandName": "Markenname",
+        "website": "Website",
+        "tagline": "Slogan",
+        "brandColors": "Markenfarben",
+        "logo": "Logo",
+        "logoUrl": "Logo-URL",
+        "brandTone": "Markenton",
+        "brandToneDesc": "Wählen Sie bis zu 3",
+        "brandValues": "Markenwerte",
+        "brandValuesDesc": "Wählen Sie bis zu 3",
+        "visualAesthetic": "Visuelle Ästhetik",
+        "visualAestheticDesc": "Wählen Sie bis zu 3",
+        "targetAudience": "Zielgruppe",
+        "targetAudiencePlaceholder": "z.B. Junge Berufstätige im Alter von 25-35, modebewusste Frauen",
+        "save": "Geschäfts-DNA speichern",
+        "colors": {
+            "primary": "Primär",
+            "secondary": "Sekundär",
+            "accent": "Akzent",
+            "background": "Hintergrund",
+            "text": "Text"
+        },
+        "tones": {
+            "professional": "Professionell",
+            "playful": "Verspielt",
+            "luxury": "Luxuriös",
+            "minimalist": "Minimalistisch",
+            "bold": "Mutig",
+            "friendly": "Freundlich",
+            "innovative": "Innovativ",
+            "traditional": "Traditionell",
+            "youthful": "Jugendlich",
+            "sophisticated": "Raffiniert",
+            "trustworthy": "Vertrauenswürdig",
+            "energetic": "Energiegeladen"
+        },
+        "values": {
+            "quality": "Qualität",
+            "innovation": "Innovation",
+            "sustainability": "Nachhaltigkeit",
+            "affordability": "Erschwinglichkeit",
+            "craftsmanship": "Handwerkskunst",
+            "customerFocus": "Kundenorientierung",
+            "authenticity": "Authentizität",
+            "creativity": "Kreativität",
+            "reliability": "Zuverlässigkeit",
+            "excellence": "Exzellenz"
+        },
+        "aesthetics": {
+            "modern": "Modern",
+            "classic": "Klassisch",
+            "minimal": "Minimal",
+            "bold": "Mutig",
+            "elegant": "Elegant",
+            "rustic": "Rustikal",
+            "futuristic": "Futuristisch",
+            "organic": "Organisch",
+            "industrial": "Industriell",
+            "artistic": "Künstlerisch"
         }
     },
     "terms": {
