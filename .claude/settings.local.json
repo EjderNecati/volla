@@ -38,7 +38,13 @@
       "Bash(git pull:*)",
       "WebFetch(domain:developers.googleblog.com)",
       "WebFetch(domain:www.philschmid.de)",
-      "WebFetch(domain:www.raymondcamden.com)"
+      "WebFetch(domain:www.raymondcamden.com)",
+      "WebFetch(domain:labs.google.com)",
+      "WebFetch(domain:www.bbntimes.com)",
+      "WebFetch(domain:mlq.ai)",
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:www.testingcatalog.com)",
+      "WebFetch(domain:skywork.ai)"
     ]
   }
 }
