@@ -1,26 +1,28 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  VOLLA_COLORS,
+  SHOT_TYPES,
   TEMPLATE_CATEGORIES,
-  TEMPLATE_TYPES,
-  TEMPLATE_LIBRARY,
-  SEASONAL_TEMPLATES,
+  PLATFORM_SPECS,
+  SEASONAL_THEMES,
   ASPECT_RATIO_PRESETS,
-  getTemplatesForCategory,
-  detectCategory,
+  PROMPT_TEMPLATES,
+  SHOT_SUGGESTIONS,
   buildPromptFromTemplate,
+  detectCategory,
 } from '../config/templates';
 
 /**
- * TemplateLibrary Component - Visual Template Selection
+ * TemplateLibrary Component - Volla Professional Template System
  *
- * Features:
- * - Category-based filtering (Fashion, Beauty, Home, etc.)
- * - Type-based filtering (Model Try On, Flatlay, Studio, etc.)
- * - Seasonal templates
- * - Aspect ratio presets
- * - Template preview with placement zones
- * - Integration with Business DNA for brand styling
+ * Pomelli-level features + Volla exclusives:
+ * - 7 Shot Types with visual previews
+ * - Platform-specific optimization
+ * - Seasonal themes
+ * - Auto shot suggestions
+ * - Business DNA integration
+ * - Volla coral/orange theme
  */
 
 const TemplateLibrary = ({
@@ -32,52 +34,72 @@ const TemplateLibrary = ({
 }) => {
   const { t } = useTranslation();
 
-  // Auto-detect category from product description
+  // Auto-detect category
   const detectedCategory = useMemo(() => {
     return initialCategory || detectCategory(productDescription);
   }, [productDescription, initialCategory]);
 
+  // State
   const [selectedCategory, setSelectedCategory] = useState(detectedCategory);
-  const [selectedType, setSelectedType] = useState(null);
+  const [selectedShotType, setSelectedShotType] = useState(null);
   const [selectedAspectRatio, setSelectedAspectRatio] = useState('1:1');
-  const [showSeasonal, setShowSeasonal] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
+  const [selectedSeason, setSelectedSeason] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [view, setView] = useState('shots'); // 'shots', 'platforms', 'seasonal'
 
-  // Get templates for current category
-  const categoryTemplates = useMemo(() => {
-    return getTemplatesForCategory(selectedCategory);
-  }, [selectedCategory]);
+  // Get suggested shots for category
+  const suggestedShots = useMemo(() => {
+    return SHOT_SUGGESTIONS.getSuggestedShots(selectedCategory, businessDNA);
+  }, [selectedCategory, businessDNA]);
 
-  // Get available types for current category
-  const availableTypes = useMemo(() => {
-    return Object.entries(TEMPLATE_TYPES).filter(([typeId, type]) =>
-      type.categories.includes(selectedCategory)
-    );
-  }, [selectedCategory]);
-
-  // Filter templates by type
+  // Filter templates by shot type
   const filteredTemplates = useMemo(() => {
-    if (!selectedType) {
-      // Show all templates for category
-      const all = [];
-      Object.entries(categoryTemplates).forEach(([typeId, templates]) => {
-        all.push(...templates.map(t => ({ ...t, type: typeId })));
-      });
-      return all;
+    let templates = Object.values(PROMPT_TEMPLATES);
+
+    // Filter by shot type
+    if (selectedShotType) {
+      templates = templates.filter(t => t.shotType === selectedShotType);
     }
-    return (categoryTemplates[selectedType] || []).map(t => ({ ...t, type: selectedType }));
-  }, [categoryTemplates, selectedType]);
+
+    // Filter by category
+    templates = templates.filter(t =>
+      t.categories.includes('all') || t.categories.includes(selectedCategory)
+    );
+
+    // Filter by platform
+    if (selectedPlatform) {
+      templates = templates.filter(t => t.platform === selectedPlatform);
+    }
+
+    // Filter by season
+    if (selectedSeason) {
+      templates = templates.filter(t => t.seasonal === selectedSeason);
+    }
+
+    return templates;
+  }, [selectedShotType, selectedCategory, selectedPlatform, selectedSeason]);
 
   // Handle template selection
   const handleSelectTemplate = (template) => {
-    const promptText = buildPromptFromTemplate(template, '{PRODUCT}', businessDNA);
+    const prompt = buildPromptFromTemplate(
+      template,
+      productDescription || '{PRODUCT}',
+      businessDNA,
+      {
+        seasonalTheme: selectedSeason,
+        platform: selectedPlatform,
+      }
+    );
 
     onSelect({
       template,
-      prompt: promptText,
+      prompt,
       aspectRatio: selectedAspectRatio,
       category: selectedCategory,
-      type: template.type,
+      shotType: template.shotType,
+      platform: selectedPlatform,
+      season: selectedSeason,
     });
   };
 
@@ -85,17 +107,55 @@ const TemplateLibrary = ({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
 
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50 to-blue-50">
+        {/* Header - Volla Theme */}
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+          style={{ background: `linear-gradient(135deg, #FEF3F0 0%, #FFF7ED 100%)` }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-xl">🎨</span>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+              style={{ background: VOLLA_COLORS.gradient.primary }}>
+              <span className="text-2xl">🎨</span>
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Template Library</h2>
-              <p className="text-sm text-gray-500">Choose a template for your product photoshoot</p>
+              <p className="text-sm text-gray-500">
+                Professional templates for stunning product photos
+              </p>
             </div>
           </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center gap-2 mr-4">
+            {[
+              { id: 'shots', label: 'Shot Types', icon: '📸' },
+              { id: 'platforms', label: 'Platforms', icon: '📱', exclusive: true },
+              { id: 'seasonal', label: 'Seasonal', icon: '🎄', exclusive: true },
+            ].map(v => (
+              <button
+                key={v.id}
+                onClick={() => {
+                  setView(v.id);
+                  setSelectedShotType(null);
+                  setSelectedPlatform(null);
+                  setSelectedSeason(null);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  view === v.id
+                    ? 'text-white shadow-md'
+                    : 'bg-white/50 text-gray-600 hover:bg-white'
+                }`}
+                style={view === v.id ? { background: VOLLA_COLORS.gradient.primary } : {}}
+              >
+                <span>{v.icon}</span>
+                <span>{v.label}</span>
+                {v.exclusive && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[9px] font-bold rounded">
+                    VOLLA
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center transition-colors"
@@ -107,89 +167,156 @@ const TemplateLibrary = ({
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* Left Sidebar - Categories & Filters */}
-          <div className="w-64 border-r border-gray-100 overflow-y-auto p-4 bg-gray-50">
+          {/* Left Sidebar */}
+          <div className="w-72 border-r border-gray-100 overflow-y-auto p-4 bg-gray-50/50">
 
-            {/* Categories */}
+            {/* Product Category */}
             <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Categories</h3>
-              <div className="space-y-1">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Product Category
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
                 {Object.values(TEMPLATE_CATEGORIES).map(category => (
                   <button
                     key={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      setSelectedType(null);
-                    }}
-                    className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-all ${
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`p-3 rounded-xl text-left transition-all ${
                       selectedCategory === category.id
-                        ? 'bg-white shadow text-gray-800'
-                        : 'text-gray-600 hover:bg-white/50'
+                        ? 'bg-white shadow-md ring-2'
+                        : 'bg-white/50 hover:bg-white hover:shadow'
                     }`}
+                    style={{
+                      ringColor: selectedCategory === category.id ? VOLLA_COLORS.primary : 'transparent',
+                    }}
                   >
-                    <span>{category.icon}</span>
-                    <span className="font-medium">{category.name}</span>
-                    {selectedCategory === category.id && (
-                      <span className="ml-auto text-purple-500">●</span>
-                    )}
+                    <div className="text-xl mb-1">{category.icon}</div>
+                    <div className="text-xs font-medium text-gray-700">{category.name}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Template Types */}
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Shot Types</h3>
-              <div className="space-y-1">
-                <button
-                  onClick={() => setSelectedType(null)}
-                  className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-all ${
-                    !selectedType
-                      ? 'bg-white shadow text-gray-800'
-                      : 'text-gray-600 hover:bg-white/50'
-                  }`}
-                >
-                  <span>📷</span>
-                  <span className="font-medium">All Types</span>
-                </button>
-                {availableTypes.map(([typeId, type]) => (
+            {/* Shot Types (when in shots view) */}
+            {view === 'shots' && (
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Shot Type
+                </h3>
+                <div className="space-y-1">
                   <button
-                    key={typeId}
-                    onClick={() => setSelectedType(typeId)}
-                    className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-all ${
-                      selectedType === typeId
+                    onClick={() => setSelectedShotType(null)}
+                    className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-3 transition-all ${
+                      !selectedShotType
                         ? 'bg-white shadow text-gray-800'
                         : 'text-gray-600 hover:bg-white/50'
                     }`}
                   >
-                    <span>{type.icon}</span>
-                    <span className="font-medium">{type.name}</span>
+                    <span className="text-lg">📷</span>
+                    <span className="font-medium text-sm">All Shot Types</span>
                   </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Seasonal Templates Toggle */}
-            <div className="mb-6">
-              <button
-                onClick={() => setShowSeasonal(!showSeasonal)}
-                className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-all ${
-                  showSeasonal
-                    ? 'bg-gradient-to-r from-red-100 to-green-100 text-gray-800'
-                    : 'text-gray-600 hover:bg-white/50'
-                }`}
-              >
-                <span>🎄</span>
-                <span className="font-medium">Seasonal</span>
-                <span className="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                  {Object.keys(SEASONAL_TEMPLATES).length}
-                </span>
-              </button>
-            </div>
+                  {Object.values(SHOT_TYPES).map(shot => (
+                    <button
+                      key={shot.id}
+                      onClick={() => setSelectedShotType(shot.id)}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-3 transition-all ${
+                        selectedShotType === shot.id
+                          ? 'bg-white shadow text-gray-800'
+                          : 'text-gray-600 hover:bg-white/50'
+                      }`}
+                    >
+                      <span className="text-lg">{shot.icon}</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm flex items-center gap-1.5">
+                          {shot.name}
+                          {shot.isVollaExclusive && (
+                            <span className="px-1 py-0.5 bg-yellow-100 text-yellow-700 text-[8px] font-bold rounded">
+                              VOLLA
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-400 truncate">{shot.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Platforms (when in platforms view) */}
+            {view === 'platforms' && (
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Marketplace
+                </h3>
+                <div className="space-y-1">
+                  {Object.values(PLATFORM_SPECS).map(platform => (
+                    <button
+                      key={platform.id}
+                      onClick={() => setSelectedPlatform(
+                        selectedPlatform === platform.id ? null : platform.id
+                      )}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-3 transition-all ${
+                        selectedPlatform === platform.id
+                          ? 'bg-white shadow ring-2'
+                          : 'bg-white/50 hover:bg-white'
+                      }`}
+                      style={{
+                        ringColor: selectedPlatform === platform.id ? platform.color : 'transparent',
+                      }}
+                    >
+                      <span className="text-lg">{platform.icon}</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{platform.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {platform.requirements.aspectRatio}
+                        </div>
+                      </div>
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: platform.color }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Seasonal Themes (when in seasonal view) */}
+            {view === 'seasonal' && (
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Seasonal Theme
+                </h3>
+                <div className="space-y-1">
+                  {Object.values(SEASONAL_THEMES).map(season => (
+                    <button
+                      key={season.id}
+                      onClick={() => setSelectedSeason(
+                        selectedSeason === season.id ? null : season.id
+                      )}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-3 transition-all ${
+                        selectedSeason === season.id
+                          ? 'bg-white shadow ring-2'
+                          : 'bg-white/50 hover:bg-white'
+                      }`}
+                      style={{
+                        ringColor: selectedSeason === season.id ? season.color : 'transparent',
+                      }}
+                    >
+                      <span className="text-xl">{season.icon}</span>
+                      <span className="font-medium text-sm">{season.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Aspect Ratio */}
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Aspect Ratio</h3>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Aspect Ratio
+              </h3>
               <div className="grid grid-cols-3 gap-2">
                 {Object.entries(ASPECT_RATIO_PRESETS).map(([key, preset]) => (
                   <button
@@ -197,13 +324,17 @@ const TemplateLibrary = ({
                     onClick={() => setSelectedAspectRatio(preset.ratio)}
                     className={`p-2 rounded-lg text-center transition-all ${
                       selectedAspectRatio === preset.ratio
-                        ? 'bg-purple-500 text-white'
+                        ? 'text-white shadow-md'
                         : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
-                    title={preset.name}
+                    style={selectedAspectRatio === preset.ratio
+                      ? { background: VOLLA_COLORS.gradient.primary }
+                      : {}
+                    }
+                    title={`${preset.name} - ${preset.use}`}
                   >
-                    <div className="text-lg">{preset.icon}</div>
-                    <div className="text-xs mt-1">{preset.ratio}</div>
+                    <div className="text-sm">{preset.icon}</div>
+                    <div className="text-xs mt-0.5 font-medium">{preset.ratio}</div>
                   </button>
                 ))}
               </div>
@@ -216,31 +347,76 @@ const TemplateLibrary = ({
 
             {/* Business DNA Badge */}
             {businessDNA && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center">
-                  <span className="text-white">🧬</span>
+              <div className="mb-4 p-3 rounded-xl flex items-center gap-3"
+                style={{ background: `linear-gradient(135deg, #FEF3F0 0%, #FFF7ED 100%)` }}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: VOLLA_COLORS.gradient.primary }}>
+                  <span className="text-white text-lg">🧬</span>
                 </div>
-                <div>
-                  <div className="font-medium text-gray-800">{businessDNA.brandName || 'Your Brand'}</div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-800">
+                    {businessDNA.brandName || 'Your Brand'}
+                  </div>
                   <div className="text-xs text-gray-500">
-                    Templates will use your brand colors and style
+                    Templates styled with your brand identity
                   </div>
                 </div>
                 {businessDNA.colors?.primary && (
-                  <div
-                    className="w-6 h-6 rounded-full border-2 border-white shadow ml-auto"
-                    style={{ backgroundColor: businessDNA.colors.primary }}
-                  />
+                  <div className="flex gap-1">
+                    {Object.values(businessDNA.colors || {}).filter(Boolean).slice(0, 3).map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-6 h-6 rounded-full border-2 border-white shadow"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Category Header */}
+            {/* Shot Suggestions (Quick Select) */}
+            {view === 'shots' && !selectedShotType && (
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                  <span>⚡</span>
+                  Suggested for {TEMPLATE_CATEGORIES[selectedCategory]?.name}
+                </h4>
+                <div className="flex gap-2 flex-wrap">
+                  {suggestedShots.slice(0, 5).map((shot, i) => (
+                    <button
+                      key={shot.type}
+                      onClick={() => setSelectedShotType(shot.shotType)}
+                      className="px-3 py-2 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow transition-all flex items-center gap-2"
+                    >
+                      <span className="text-lg">{SHOT_TYPES[shot.shotType]?.icon}</span>
+                      <div className="text-left">
+                        <div className="text-sm font-medium text-gray-700">{shot.name}</div>
+                        <div className="text-xs text-gray-400">{shot.description}</div>
+                      </div>
+                      <span className="ml-2 w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center">
+                        {i + 1}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{TEMPLATE_CATEGORIES[selectedCategory]?.icon}</span>
+                {selectedShotType && (
+                  <span className="text-2xl">{SHOT_TYPES[selectedShotType]?.icon}</span>
+                )}
                 <h3 className="text-lg font-bold text-gray-800">
-                  {TEMPLATE_CATEGORIES[selectedCategory]?.name} Templates
+                  {selectedShotType
+                    ? SHOT_TYPES[selectedShotType]?.name
+                    : selectedPlatform
+                    ? PLATFORM_SPECS[selectedPlatform]?.name
+                    : selectedSeason
+                    ? SEASONAL_THEMES[selectedSeason]?.name
+                    : 'All Templates'}
                 </h3>
                 <span className="text-sm text-gray-400">
                   ({filteredTemplates.length} templates)
@@ -248,96 +424,78 @@ const TemplateLibrary = ({
               </div>
             </div>
 
-            {/* Seasonal Templates Section */}
-            {showSeasonal && (
-              <div className="mb-8">
-                <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-                  <span>🎄</span> Seasonal & Holiday
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.values(SEASONAL_TEMPLATES).map(season => (
-                    <div key={season.id} className="bg-gradient-to-br from-red-50 to-green-50 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{season.icon}</span>
-                        <span className="font-medium text-gray-800">{season.name}</span>
-                      </div>
-                      <div className="space-y-2">
-                        {season.templates.map(template => (
-                          <button
-                            key={template.id}
-                            onClick={() => handleSelectTemplate({ ...template, type: 'seasonal' })}
-                            className="w-full text-left px-3 py-2 bg-white/80 rounded-lg text-sm text-gray-600 hover:bg-white hover:shadow transition-all"
-                          >
-                            {template.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Template Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredTemplates.map(template => (
-                <div
-                  key={template.id}
-                  className="group relative bg-gray-100 rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
-                  onMouseEnter={() => setHoveredTemplate(template.id)}
-                  onMouseLeave={() => setHoveredTemplate(null)}
-                  onClick={() => handleSelectTemplate(template)}
-                >
-                  {/* Template Preview */}
-                  <div className="aspect-square relative">
-                    {/* Placeholder - in real app, would show actual template image */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-4xl opacity-30">
-                        {TEMPLATE_TYPES[template.type]?.icon || '📷'}
-                      </span>
-                    </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredTemplates.map(template => {
+                const shotType = SHOT_TYPES[template.shotType];
+                const isHovered = hoveredTemplate === template.id;
 
-                    {/* Placement Zone Indicator */}
-                    {template.placementZone && hoveredTemplate === template.id && (
+                return (
+                  <div
+                    key={template.id}
+                    className="group relative bg-gray-100 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                    onMouseEnter={() => setHoveredTemplate(template.id)}
+                    onMouseLeave={() => setHoveredTemplate(null)}
+                    onClick={() => handleSelectTemplate(template)}
+                  >
+                    {/* Template Preview */}
+                    <div className="aspect-square relative overflow-hidden">
+                      {/* Gradient Background based on shot type */}
                       <div
-                        className="absolute border-2 border-dashed border-purple-400 bg-purple-100/30 rounded-lg transition-all"
-                        style={{
-                          left: `${template.placementZone.x * 100}%`,
-                          top: `${template.placementZone.y * 100}%`,
-                          width: `${template.placementZone.width * 100}%`,
-                          height: `${template.placementZone.height * 100}%`,
-                        }}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center text-purple-600 text-xs font-medium">
-                          Product Zone
-                        </div>
+                        className={`absolute inset-0 bg-gradient-to-br ${shotType?.gradient || 'from-gray-200 to-gray-300'} transition-all duration-300`}
+                        style={{ opacity: isHovered ? 0.9 : 0.6 }}
+                      />
+
+                      {/* Icon */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className={`text-5xl transition-all duration-300 ${isHovered ? 'scale-110' : ''}`}>
+                          {template.icon || shotType?.emoji || '📸'}
+                        </span>
                       </div>
-                    )}
 
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                      <button className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-white rounded-lg font-medium text-gray-800 shadow-lg transition-all transform scale-90 group-hover:scale-100">
-                        Use Template
-                      </button>
+                      {/* Volla Exclusive Badge */}
+                      {shotType?.isVollaExclusive && (
+                        <div className="absolute top-2 right-2">
+                          <span className="px-2 py-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-full shadow">
+                            VOLLA EXCLUSIVE
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Hover Overlay */}
+                      <div className={`absolute inset-0 bg-black/0 transition-all duration-300 flex items-center justify-center ${
+                        isHovered ? 'bg-black/40' : ''
+                      }`}>
+                        <button
+                          className={`px-5 py-2.5 rounded-xl font-medium text-white shadow-lg transition-all duration-300 transform ${
+                            isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                          }`}
+                          style={{ background: VOLLA_COLORS.gradient.primary }}
+                        >
+                          Use Template
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Template Info */}
-                  <div className="p-3">
-                    <div className="font-medium text-gray-800 text-sm">{template.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400">
-                        {TEMPLATE_TYPES[template.type]?.name}
-                      </span>
-                      <div className="flex gap-1">
-                        {(template.aspectRatios || ['1:1']).slice(0, 3).map(ratio => (
+                    {/* Template Info */}
+                    <div className="p-4 bg-white">
+                      <div className="font-semibold text-gray-800 mb-1">{template.name}</div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          {shotType?.name}
+                        </span>
+                        {(template.aspectRatios || ['1:1']).slice(0, 2).map(ratio => (
                           <span
                             key={ratio}
-                            className={`text-xs px-1.5 py-0.5 rounded ${
+                            className={`text-xs px-2 py-0.5 rounded-full ${
                               ratio === selectedAspectRatio
-                                ? 'bg-purple-100 text-purple-600'
+                                ? 'text-white'
                                 : 'bg-gray-100 text-gray-400'
                             }`}
+                            style={ratio === selectedAspectRatio
+                              ? { background: VOLLA_COLORS.primary }
+                              : {}
+                            }
                           >
                             {ratio}
                           </span>
@@ -345,20 +503,30 @@ const TemplateLibrary = ({
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Empty State */}
             {filteredTemplates.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-3">🔍</div>
-                <div className="text-gray-500">No templates found for this combination</div>
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🔍</div>
+                <div className="text-xl font-medium text-gray-800 mb-2">
+                  No templates found
+                </div>
+                <div className="text-gray-500 mb-4">
+                  Try adjusting your filters or selecting a different category
+                </div>
                 <button
-                  onClick={() => setSelectedType(null)}
-                  className="mt-3 text-purple-500 hover:text-purple-600"
+                  onClick={() => {
+                    setSelectedShotType(null);
+                    setSelectedPlatform(null);
+                    setSelectedSeason(null);
+                  }}
+                  className="px-4 py-2 rounded-xl font-medium text-white"
+                  style={{ background: VOLLA_COLORS.gradient.primary }}
                 >
-                  Show all types
+                  Clear Filters
                 </button>
               </div>
             )}
@@ -367,16 +535,34 @@ const TemplateLibrary = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50">
-          <div className="text-sm text-gray-500">
-            Selected: <span className="font-medium text-gray-800">{selectedAspectRatio}</span> aspect ratio
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500">
+              Aspect Ratio: <span className="font-medium text-gray-800">{selectedAspectRatio}</span>
+            </div>
+            {selectedPlatform && (
+              <div className="text-sm text-gray-500">
+                Platform: <span className="font-medium text-gray-800">
+                  {PLATFORM_SPECS[selectedPlatform]?.name}
+                </span>
+              </div>
+            )}
+            {selectedSeason && (
+              <div className="text-sm text-gray-500">
+                Theme: <span className="font-medium text-gray-800">
+                  {SEASONAL_THEMES[selectedSeason]?.name}
+                </span>
+              </div>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            Cancel
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
 
       </div>
