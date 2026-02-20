@@ -1,11 +1,13 @@
 """
-AI Studio Mode - Vertex AI Imagen 3 Integration
+AI Studio Mode - Nano Banana Pro Integration
 Professional product photography with background swap
 
-Uses Imagen 3's edit_image API with OAuth2 Service Account for:
+Uses Nano Banana Pro (gemini-3-pro-image-preview) with:
+- Thinking Mode for complex compositions
 - 100% product preservation (color, text, components)
 - Professional studio background
-- Realistic shadows
+- 4K resolution support
+- Extended aspect ratios
 """
 
 import os
@@ -16,8 +18,25 @@ import requests
 import time
 from http.server import BaseHTTPRequestHandler
 
+# Import Nano Banana Pro configuration
+try:
+    from nano_banana_pro import (
+        MODEL_CONFIG,
+        RESOLUTION_OPTIONS,
+        ASPECT_RATIOS,
+        build_thinking_prompt,
+        calculate_credits
+    )
+    NANO_BANANA_LOADED = True
+except ImportError:
+    NANO_BANANA_LOADED = False
+    MODEL_CONFIG = {"primary": "gemini-3-pro-image-preview", "fallback": "gemini-2.0-flash-exp"}
+    RESOLUTION_OPTIONS = {"1K": {}, "2K": {}, "4K": {}}
+    ASPECT_RATIOS = {"1:1": {}, "9:16": {}, "16:9": {}, "4:5": {}}
+
 print("=" * 60)
-print("🚀 AI Studio - Imagen 3 Mode (OAuth2)")
+print("🚀 AI Studio - Nano Banana Pro Mode")
+print(f"   Config loaded: {NANO_BANANA_LOADED}")
 print("=" * 60)
 
 # Environment
@@ -619,8 +638,8 @@ def generate_with_imagen3_edit(image_data, custom_prompt=None, aspect_ratio='1:1
     return None
 
 
-def generate_with_gemini_3_pro(image_data, custom_prompt=None, aspect_ratio='1:1'):
-    """Generate studio image using Gemini 3 Pro Image via Vertex AI REST API - BEST for product preservation"""
+def generate_with_gemini_3_pro(image_data, custom_prompt=None, aspect_ratio='1:1', resolution='2K', use_thinking=True):
+    """Generate studio image using Nano Banana Pro via Vertex AI REST API - BEST for product preservation"""
 
     token = get_fresh_token()
     if not token or not project_id:
@@ -639,16 +658,61 @@ def generate_with_gemini_3_pro(image_data, custom_prompt=None, aspect_ratio='1:1
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
 
-    # Gemini 3 Pro Image requires global location
-    url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent"
+    # Nano Banana Pro requires global location
+    model_name = MODEL_CONFIG.get('primary', 'gemini-3-pro-image-preview')
+    url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/{model_name}:generateContent"
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
+    # Thinking mode header for complex compositions
+    thinking_header = ""
+    if use_thinking and NANO_BANANA_LOADED:
+        thinking_header = """
+═══════════════════════════════════════════════════════════════════════════════
+🧠 THINK STEP-BY-STEP BEFORE GENERATING
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: PRODUCT ANALYSIS
+- Identify the exact product, its type and category
+- Note all dimensions, proportions, angles
+- List all visible colors with exact shades
+
+STEP 2: TEXT/LOGO INVENTORY (CRITICAL)
+- List EVERY piece of text on the product, character by character
+- Note font style, color, position for each text element
+- Describe all logos: shape, colors, proportions, position
+
+STEP 3: TEXTURE & MATERIAL
+- What material? (fabric, plastic, metal, glass, etc.)
+- Surface texture? (matte, glossy, textured)
+- Any patterns? Describe precisely.
+
+STEP 4: COMPOSITION PLANNING
+- Best placement for studio shot
+- Optimal grounding on surface
+- Lighting for professional look
+
+STEP 5: QUALITY CHECK
+- ALL text will be readable in output
+- ALL logos preserved exactly
+- Colors match original
+
+═══════════════════════════════════════════════════════════════════════════════
+NOW GENERATE THE STUDIO IMAGE
+═══════════════════════════════════════════════════════════════════════════════
+"""
+
+    # Resolution hint
+    resolution_hint = ""
+    if NANO_BANANA_LOADED and resolution in RESOLUTION_OPTIONS:
+        res_config = RESOLUTION_OPTIONS[resolution]
+        resolution_hint = f"\n\nOutput at {res_config['description']} quality."
+
     # Enhanced prompt for studio shots with product preservation
-    enhanced_prompt = f"""CRITICAL: Place this EXACT product on a clean studio background.
+    enhanced_prompt = f"""{thinking_header}CRITICAL: Place this EXACT product on a clean studio background.
 The product MUST remain 100% IDENTICAL - same colors, textures, materials, shape, and ALL details.
 DO NOT modify, change, or alter the product in ANY way. Only change the BACKGROUND.
 
@@ -658,7 +722,7 @@ ABSOLUTE RULES FOR STUDIO SHOTS:
 - Product colors MUST be EXACT (same RGB values)
 - Product textures MUST be IDENTICAL
 - Product shape and proportions MUST NOT change
-- Any text/logos/graphics MUST be preserved exactly
+- Any text/logos/graphics MUST be preserved exactly (spell out each character)
 - ONLY the background changes to clean studio setting
 - Product stays PERFECTLY IDENTICAL
 
@@ -673,13 +737,13 @@ ABSOLUTE RULES FOR STUDIO SHOTS:
 - Keep the SAME view/angle of the product as in the input image
 - If we see the BACK of an item, show the BACK in output
 - If we see the FRONT of an item, show the FRONT in output
-- DO NOT rotate or flip the product to show a different side"""
+- DO NOT rotate or flip the product to show a different side{resolution_hint}"""
 
     # Build generation config with aspect ratio
     gen_config = {
         "responseModalities": ["IMAGE", "TEXT"]
     }
-    if aspect_ratio and aspect_ratio != '1:1':
+    if aspect_ratio and aspect_ratio != '1:1' and aspect_ratio in ASPECT_RATIOS:
         gen_config["aspectRatio"] = aspect_ratio
 
     payload = {
@@ -694,7 +758,7 @@ ABSOLUTE RULES FOR STUDIO SHOTS:
     }
 
     try:
-        print(f"   🎨 Calling Gemini 3 Pro Image API (ratio={aspect_ratio})...")
+        print(f"   🎨 Calling Nano Banana Pro (ratio={aspect_ratio}, res={resolution}, thinking={use_thinking})...")
         response = requests.post(url, headers=headers, json=payload, timeout=120)
 
         if response.status_code == 200:
@@ -706,13 +770,13 @@ ABSOLUTE RULES FOR STUDIO SHOTS:
                             if "inlineData" in part:
                                 img_data = part["inlineData"]["data"]
                                 img_mime = part["inlineData"].get("mimeType", "image/png")
-                                print(f"   ✅ Gemini 3 Pro Image success!")
+                                print(f"   ✅ Nano Banana Pro success!")
                                 return f"data:{img_mime};base64,{img_data}"
 
-        print(f"   ⚠️ Gemini 3 Pro Image: {response.status_code} - {response.text[:200]}")
+        print(f"   ⚠️ Nano Banana Pro: {response.status_code} - {response.text[:200]}")
 
     except Exception as e:
-        print(f"   ❌ Gemini 3 Pro Image error: {e}")
+        print(f"   ❌ Nano Banana Pro error: {e}")
 
     return None
 
@@ -751,14 +815,23 @@ class handler(BaseHTTPRequestHandler):
             aspect_ratio = data.get('aspect_ratio', '1:1')  # Default 1:1
             custom_prompt_extra = data.get('custom_prompt', '')  # Optional extra prompt
 
+            # Nano Banana Pro parameters
+            resolution = data.get('resolution', '2K')  # 1K, 2K, 4K
+            use_thinking = data.get('use_thinking', True)  # Enable thinking mode
+
             # Validate output_count
             output_count = max(1, min(4, int(output_count)))
+
+            # Validate aspect ratio
+            if aspect_ratio not in ASPECT_RATIOS:
+                aspect_ratio = '1:1'
 
             active_vertex_key = request_vertex_key or VERTEX_API_KEY or GOOGLE_API_KEY
 
             print(f"📦 Category: {category}")
             print(f"🖼️ Image: {len(image_data)} chars")
             print(f"📊 Output count: {output_count}, Aspect ratio: {aspect_ratio}")
+            print(f"🧠 Resolution: {resolution}, Thinking Mode: {use_thinking}")
             
             # Analyze product for text/logo preservation
             product_analysis = None
@@ -802,9 +875,9 @@ class handler(BaseHTTPRequestHandler):
                         print(f"   📸 Generating image {i+1}/{output_count}...")
                         img_result = None
 
-                        # PRIMARY: Gemini 3 Pro Image via REST API (best product preservation)
-                        print(f"      🎨 Trying Gemini 3 Pro Image (PRIMARY)...")
-                        img_result = generate_with_gemini_3_pro(image_data, dynamic_prompt, aspect_ratio)
+                        # PRIMARY: Nano Banana Pro via REST API (best product preservation)
+                        print(f"      🎨 Trying Nano Banana Pro (PRIMARY)...")
+                        img_result = generate_with_gemini_3_pro(image_data, dynamic_prompt, aspect_ratio, resolution, use_thinking)
 
                         # FALLBACK: Gemini 2.0 Flash if Gemini 3 Pro fails
                         if not img_result:
@@ -823,7 +896,7 @@ class handler(BaseHTTPRequestHandler):
                         print(f"   ⚠️ Image {i+1} error: {str(e)[:50]}")
 
                 if results_array:
-                    method_used = 'Gemini 3 Pro Image'
+                    method_used = 'Nano Banana Pro'
                     print(f"✅ Studio Success! Generated {len(results_array)}/{output_count} images")
             else:
                 error_message = "No image provided"
@@ -839,15 +912,24 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
 
+            # Calculate credits
+            credits_used = 5 * len(results_array)  # Default
+            if NANO_BANANA_LOADED:
+                credits_used = calculate_credits(resolution, use_thinking, count=len(results_array))
+
             response = {
-                'success': method_used in ['Gemini 3 Pro Image', 'Gemini Studio'],
+                'success': method_used in ['Nano Banana Pro', 'Gemini 3 Pro Image', 'Gemini Studio'],
                 'generated_image': result,
-                'generated_images': results_array,  # NEW: Array of all generated images
+                'generated_images': results_array,  # Array of all generated images
                 'image_url': result,
                 'background_url': FALLBACK_URLS.get(category, FALLBACK_URLS['Other']),
                 'category': category,
                 'method_used': method_used,
                 'output_count': len(results_array),
+                'resolution': resolution,
+                'aspect_ratio': aspect_ratio,
+                'thinking_mode': use_thinking,
+                'credits_used': credits_used,
                 'error_message': error_message
             }
             self.wfile.write(json.dumps(response).encode())
@@ -870,4 +952,6 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
 
 
-print("✅ AI Studio ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")
+print("✅ AI Studio ready (Nano Banana Pro PRIMARY, Thinking Mode enabled)")
+print(f"   Supported aspect ratios: {', '.join(ASPECT_RATIOS.keys())}")
+print(f"   Resolutions: 1K, 2K, 4K")

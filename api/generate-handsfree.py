@@ -1,7 +1,13 @@
 """
-Handsfree Mode - Gemini 3 Pro Image Preview with OAuth2 (REST API)
-Uses Service Account + REST API for gemini-3-pro-image-preview
+Handsfree Mode - Nano Banana Pro (gemini-3-pro-image-preview)
+Uses Service Account + REST API with Thinking Mode for professional output
 ONLY for Handsfree Mode - does not affect Real Life or Shots
+
+Features:
+- Thinking Mode for complex compositions
+- 4K resolution support
+- Extended aspect ratio support
+- Perfect text/logo rendering
 """
 
 import os
@@ -12,8 +18,25 @@ import time
 import requests
 from http.server import BaseHTTPRequestHandler
 
+# Import Nano Banana Pro configuration
+try:
+    from nano_banana_pro import (
+        MODEL_CONFIG,
+        RESOLUTION_OPTIONS,
+        ASPECT_RATIOS,
+        build_thinking_prompt,
+        build_generation_config,
+        calculate_credits
+    )
+    NANO_BANANA_LOADED = True
+except ImportError:
+    NANO_BANANA_LOADED = False
+    MODEL_CONFIG = {"primary": "gemini-3-pro-image-preview", "fallback": "gemini-2.0-flash-exp"}
+    ASPECT_RATIOS = {"1:1": {}, "9:16": {}, "16:9": {}, "4:5": {}}
+
 print("=" * 60)
-print("🎯 Handsfree Mode - Gemini 3 Pro (OAuth2 REST)")
+print("🎯 Handsfree Mode - Nano Banana Pro (Thinking Mode)")
+print(f"   Config loaded: {NANO_BANANA_LOADED}")
 print("=" * 60)
 
 # Get Service Account credentials from environment
@@ -169,33 +192,71 @@ def get_fresh_token():
         return None
 
 
-def build_handsfree_prompt(user_prompt, is_edit_mode=False):
-    """Build the full prompt with product preservation rules"""
+def build_handsfree_prompt(user_prompt, is_edit_mode=False, use_thinking=True):
+    """Build the full prompt with product preservation rules and Thinking mode"""
+
+    # Thinking mode header - triggers step-by-step reasoning for better results
+    thinking_header = """
+═══════════════════════════════════════════════════════════════════════════════
+🧠 THINK STEP-BY-STEP BEFORE GENERATING
+═══════════════════════════════════════════════════════════════════════════════
+
+Before creating the image, carefully analyze and plan:
+
+STEP 1: PRODUCT ANALYSIS
+- Identify the exact product type and category
+- Note all dimensions, proportions, and angles
+- Identify all colors (note exact shades)
+
+STEP 2: TEXT/LOGO INVENTORY (CRITICAL)
+- List EVERY piece of text visible on the product
+- For each text: spell it letter by letter, note font style, color, position
+- For logos: describe exact shape, colors, proportions, position
+- This inventory MUST be preserved 100% in output
+
+STEP 3: TEXTURE & MATERIAL ANALYSIS
+- What material? (fabric, plastic, metal, glass, etc.)
+- Surface texture? (matte, glossy, textured, smooth)
+- Any patterns? Describe precisely.
+
+STEP 4: COMPOSITION PLANNING
+- Best placement for the product
+- Optimal angle to show all text/logos clearly
+- Lighting setup for professional look
+
+STEP 5: QUALITY CHECK (Before generating)
+- Will ALL text be readable?
+- Will ALL logos be exact?
+- Will colors match original?
+
+═══════════════════════════════════════════════════════════════════════════════
+"""
 
     preservation_rules = """
-═══════════════════════════════════════════════════════════════════════════════
 ⚠️ ABSOLUTE PRODUCT PRESERVATION - ZERO TOLERANCE FOR ANY CHANGES ⚠️
 ═══════════════════════════════════════════════════════════════════════════════
 
 THE PRODUCT IN THIS IMAGE IS SACRED AND UNTOUCHABLE:
 
-1. TEXT PRESERVATION (CRITICAL):
+1. TEXT PRESERVATION (CRITICAL - READ EACH CHARACTER):
    - Every letter, number, symbol MUST be PIXEL-PERFECT identical
    - Font style, size, weight, color MUST NOT change
    - Text positioning MUST NOT shift even 1 pixel
-   - If text says "ABC123" it MUST remain "ABC123" exactly
+   - Spell out text character by character to ensure accuracy
+   - If text says "ABC123" it MUST remain "ABC123" exactly - no hallucination
 
-2. LOGO & BRANDING:
+2. LOGO & BRANDING (EXACT COPY):
    - Logos MUST be copied exactly as they appear
    - Logo colors MUST NOT shift even 1% in hue/saturation
    - Logo proportions MUST NOT change at all
+   - Vector-sharp edges, no blur
 
 3. TEXTURE & MATERIAL:
    - Every thread, stitch, weave pattern MUST be visible
    - Surface textures (matte, glossy, rough, smooth) MUST be preserved
    - Material appearance MUST NOT change
 
-4. COLOR:
+4. COLOR (EXACT RGB):
    - Exact RGB values MUST be maintained
    - No color correction on the product
    - Shadows and highlights on product MUST match original
@@ -222,10 +283,18 @@ OUTPUT MUST LOOK LIKE A REAL PHOTOGRAPH:
 - DO NOT change product colors/patterns/textures
 - DO NOT make it look AI-generated or artistic
 - DO NOT use unrealistic lighting
+- DO NOT hallucinate or invent text characters
 """
 
+    # Include thinking header for complex compositions
+    base_prompt = ""
+    if use_thinking and NANO_BANANA_LOADED:
+        base_prompt = thinking_header
+
+    base_prompt += preservation_rules
+
     if is_edit_mode:
-        return f"""{preservation_rules}
+        return f"""{base_prompt}
 
 ═══════════════════════════════════════════════════════════════════════════════
 🔧 EDIT MODE - MODIFY BACKGROUND/ENVIRONMENT ONLY
@@ -236,9 +305,10 @@ USER'S EDIT REQUEST: {user_prompt}
 INSTRUCTIONS:
 1. The PRODUCT must remain 100% IDENTICAL - copy it pixel by pixel
 2. Only modify the BACKGROUND/ENVIRONMENT as requested
-3. Output should look like the same product photographed in a modified environment"""
+3. Output should look like the same product photographed in a modified environment
+4. Text/logos remain EXACTLY as analyzed in Step 2 above"""
     else:
-        return f"""{preservation_rules}
+        return f"""{base_prompt}
 
 ═══════════════════════════════════════════════════════════════════════════════
 🎨 GENERATE NEW PROFESSIONAL PRODUCT PHOTOGRAPH
@@ -250,7 +320,8 @@ INSTRUCTIONS:
 1. PRESERVE THE PRODUCT EXACTLY - pixel-perfect identical to source
 2. Create new background/environment based on user's request
 3. This is like professional product photography - same product, different backdrop
-4. Make it look like a REAL photograph, not AI-generated"""
+4. Make it look like a REAL photograph, not AI-generated
+5. ALL text/logos from Step 2 analysis MUST be preserved exactly"""
 
 
 class handler(BaseHTTPRequestHandler):
@@ -276,16 +347,28 @@ class handler(BaseHTTPRequestHandler):
             is_edit_mode = data.get('isEditMode', False)
             aspect_ratio = data.get('aspectRatio', 'original')
 
+            # New Nano Banana Pro parameters
+            resolution = data.get('resolution', '2K')  # 1K, 2K, 4K
+            use_thinking = data.get('useThinking', True)  # Enable thinking mode by default
+
+            # Validate aspect ratio against supported ratios
+            if aspect_ratio != 'original' and aspect_ratio not in ASPECT_RATIOS:
+                # Try to find closest match or default to 1:1
+                aspect_ratio = '1:1'
+
             print(f"\n{'='*60}")
-            print("🎯 HANDSFREE MODE - Gemini 3 Pro (OAuth2 REST)")
+            print("🎯 HANDSFREE MODE - Nano Banana Pro (Thinking Mode)")
             print(f"   Action: {action}")
             print(f"   Edit Mode: {is_edit_mode}")
+            print(f"   Resolution: {resolution}")
+            print(f"   Thinking Mode: {use_thinking}")
+            print(f"   Aspect Ratio: {aspect_ratio}")
             print(f"   User Prompt: {user_prompt[:100] if user_prompt else '(none)'}...")
             print(f"   OAuth2: {'Available' if oauth2_token else 'Not available'}")
             print(f"{'='*60}")
 
-            # Build full prompt with preservation rules
-            custom_prompt = build_handsfree_prompt(user_prompt, is_edit_mode)
+            # Build full prompt with preservation rules and thinking mode
+            custom_prompt = build_handsfree_prompt(user_prompt, is_edit_mode, use_thinking)
             
             if not image_data:
                 raise ValueError("No image provided")
@@ -312,13 +395,13 @@ class handler(BaseHTTPRequestHandler):
             result = None
             method_used = 'none'
 
-            # Method 1: Try Gemini 3 Pro Image FIRST (PRIMARY) - best for image generation
+            # Method 1: Try Nano Banana Pro (PRIMARY) - best for image generation
             token = get_fresh_token()
             if token and project_id:
-                print("🔄 Trying Gemini 3 Pro Image via REST API (PRIMARY)...")
-                result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio)
+                print("🔄 Trying Nano Banana Pro via REST API (PRIMARY)...")
+                result = generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio, resolution)
                 if result:
-                    method_used = 'Gemini 3 Pro Image'
+                    method_used = 'Nano Banana Pro'
 
             # Method 2: Fallback to gemini-2.0-flash-exp with API key
             if not result and genai_fallback:
@@ -333,12 +416,21 @@ class handler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                
+
+                # Calculate credits used
+                credits_used = 5  # Default
+                if NANO_BANANA_LOADED:
+                    credits_used = calculate_credits(resolution, use_thinking, count=1)
+
                 self.wfile.write(json.dumps({
                     'success': True,
                     'generated_image': result,
                     'image_url': result,
-                    'method_used': method_used
+                    'method_used': method_used,
+                    'resolution': resolution,
+                    'aspect_ratio': aspect_ratio,
+                    'thinking_mode': use_thinking,
+                    'credits_used': credits_used
                 }).encode())
             else:
                 error_details = " | ".join(_last_errors) if _last_errors else "Unknown error"
@@ -362,10 +454,10 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
 
 
-def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio='original'):
-    """Generate using Vertex AI REST API with OAuth2 token"""
+def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_ratio='original', resolution='2K'):
+    """Generate using Vertex AI REST API with OAuth2 token (Nano Banana Pro)"""
     global _last_errors
-    
+
     # Clean base64
     if 'base64,' in image_data:
         base64_clean = image_data.split('base64,')[1]
@@ -373,29 +465,34 @@ def generate_with_rest_api(image_data, custom_prompt, token, project_id, aspect_
     else:
         base64_clean = image_data
         mime_type = 'image/jpeg'
-    
+
     base64_clean = base64_clean.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     missing_padding = len(base64_clean) % 4
     if missing_padding:
         base64_clean += '=' * (4 - missing_padding)
-    
+
     # Build aspect ratio instruction
     aspect_instruction = ''
     if aspect_ratio and aspect_ratio != 'original':
         aspect_instruction = f"\n\nOutput aspect ratio: {aspect_ratio}."
 
-    # Full prompt (custom_prompt already contains preservation rules from build_handsfree_prompt)
-    generation_prompt = f"""{custom_prompt}{aspect_instruction}
+    # Resolution instruction
+    resolution_instruction = ''
+    if NANO_BANANA_LOADED and resolution in RESOLUTION_OPTIONS:
+        res_config = RESOLUTION_OPTIONS[resolution]
+        resolution_instruction = f"\n\nOutput resolution: {res_config['description']} ({res_config['max_dimension']}px)."
+
+    # Full prompt (custom_prompt already contains preservation rules + thinking mode)
+    generation_prompt = f"""{custom_prompt}{aspect_instruction}{resolution_instruction}
 
 QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, sharp focus."""
 
-    # Models to try via Vertex AI OAuth2
-    # Same as old working code from fb09286
+    # Models to try via Vertex AI OAuth2 - Nano Banana Pro primary
     models_to_try = [
-        'gemini-3-pro-image-preview',
-        'gemini-2.0-flash-exp',
+        MODEL_CONFIG.get('primary', 'gemini-3-pro-image-preview'),
+        MODEL_CONFIG.get('fallback', 'gemini-2.0-flash-exp'),
     ]
-    
+
     for model_name in models_to_try:
         try:
             print(f"   Trying {model_name} via REST API...")
@@ -406,12 +503,21 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, s
                 url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/{model_name}:generateContent"
             else:
                 url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/{model_name}:generateContent"
-            
+
             headers = {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
             }
-            
+
+            # Build generation config
+            gen_config = {
+                "responseModalities": ["IMAGE", "TEXT"]
+            }
+
+            # Add aspect ratio to config if supported
+            if aspect_ratio and aspect_ratio != 'original' and aspect_ratio in ASPECT_RATIOS:
+                gen_config["aspectRatio"] = aspect_ratio
+
             payload = {
                 "contents": [
                     {
@@ -427,19 +533,17 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, s
                         ]
                     }
                 ],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"]
-                }
+                "generationConfig": gen_config
             }
-            
-            print(f"   Making request to Vertex AI...")
+
+            print(f"   Making request to Vertex AI (aspect: {aspect_ratio}, resolution: {resolution})...")
             response = requests.post(url, headers=headers, json=payload, timeout=120)
-            
+
             print(f"   Response status: {response.status_code}")
-            
+
             if response.status_code == 200:
                 result = response.json()
-                
+
                 # Extract image from response
                 if "candidates" in result:
                     for candidate in result["candidates"]:
@@ -448,19 +552,19 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting, s
                                 if "inlineData" in part:
                                     img_data = part["inlineData"]["data"]
                                     img_mime = part["inlineData"].get("mimeType", "image/png")
-                                    print(f"   ✅ REST API success with {model_name}!")
+                                    print(f"   ✅ Nano Banana Pro success with {model_name}!")
                                     return f"data:{img_mime};base64,{img_data}"
-                
+
                 _last_errors.append(f"{model_name} (REST): No image in response")
             else:
                 error_text = response.text[:300]
                 _last_errors.append(f"{model_name} (REST): {response.status_code} - {error_text}")
                 print(f"   ⚠️ {model_name} REST error: {response.status_code}")
-                
+
         except Exception as e:
             _last_errors.append(f"{model_name} (REST): {str(e)[:200]}")
             print(f"   ⚠️ {model_name} error: {e}")
-    
+
     return None
 
 
@@ -540,4 +644,6 @@ QUALITY: Ultra-photorealistic, professional DSLR photograph, natural lighting.""
     return None
 
 
-print("✅ Handsfree Mode ready (Gemini 3 Pro Image PRIMARY, Gemini 2.0 Flash fallback)")
+print("✅ Handsfree Mode ready (Nano Banana Pro PRIMARY, Thinking Mode enabled)")
+print(f"   Supported aspect ratios: {', '.join(ASPECT_RATIOS.keys())}")
+print(f"   Resolutions: 1K, 2K, 4K")
